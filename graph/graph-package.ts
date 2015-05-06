@@ -1,7 +1,5 @@
 import PackageInfo from "../base/package-info";
 
-import ComponentRegistry from "./component-registry";
-import Component from "./component";
 import Network from "./network";
 import Node from "./node";
 import Graph from "./graph";
@@ -11,15 +9,13 @@ import PublicPort from "./public-port";
 
 var $packageInfo: PackageInfo =
 {
-  name: "simCore.graph",
+  title: "simCore.graph",
 
   description: "Simulation-Core Graph Classes",
 
   author: "SE:Core Team",
 
   members: {
-    "ComponentRegistry": ComponentRegistry,
-    "Component": Component,
     "Network": Network,
     "Graph": Graph,
     "Node": Node,
@@ -31,8 +27,6 @@ var $packageInfo: PackageInfo =
 
 export {
   $packageInfo,
-  ComponentRegistry,
-  Component,
   Network,
   Graph,
   Node,

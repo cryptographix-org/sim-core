@@ -5,7 +5,7 @@ import Key from "./key";
 
 var $packageInfo: PackageInfo =
 {
-  name: "simCore.crypto",
+  title: "simCore.crypto",
 
   description: "Simulation-Core Cryptographic Classes",
 
