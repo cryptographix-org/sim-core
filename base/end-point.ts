@@ -1,4 +1,4 @@
-import { TaskScheduler, Channel, Packet } from "./base-package";
+import { TaskScheduler, Channel, Message } from "./base-package";
 
 export enum Direction {
   IN,
@@ -7,14 +7,16 @@ export enum Direction {
 };
 
 export type OnEventDelegate = ( fromEndPoint: EndPoint, event: any ) => void;
-export type OnPacketDelegate =  ( fromEndPoint: EndPoint, packet: Packet ) => void;
+export type OnMessageDelegate =  ( fromEndPoint: EndPoint, message: Message ) => void;
+
+export type EndPoints = { [id: string]: EndPoint; };
 
 export default class EndPoint
 {
   protected channel: Channel;
 
   protected eventListeners: OnEventDelegate[];
-  protected packetListeners: OnPacketDelegate[];
+  protected messageListeners: OnMessageDelegate[];
 
   direction: Direction;
 
@@ -23,14 +25,14 @@ export default class EndPoint
     this.direction = direction;
     this.channel = null;
     this.eventListeners = [];
-    this.packetListeners = [];
+    this.messageListeners = [];
   }
 
   public shutdown()
   {
     this.channel = null;
     this.eventListeners = [];
-    this.packetListeners = [];
+    this.messageListeners = [];
   }
 
   public connect( channel: Channel )
@@ -42,22 +44,24 @@ export default class EndPoint
       } );
     };
 
-    function sendPacketToListener( fromPoint: EndPoint, packet: Packet )
+    function sendMessageToListener( fromPoint: EndPoint, message: Message )
     {
-      this.packetListeners.forEach( packetListener => {
-        packetListener( fromPoint, packet );
+      this.messageListeners.forEach( messageListener => {
+        messageListener( fromPoint, message );
       } );
     }
 
     this.channel = channel;
 
-    channel.addEndPoint( this, triggerEventOnListener, sendPacketToListener );
+    channel.addEndPoint( this, triggerEventOnListener, sendMessageToListener );
   }
 
   public disconnect()
   {
     if ( this.channel )
       this.channel.removeEndPoint( this );
+
+    this.channel = null;
   }
 
   get isConnected()
@@ -73,12 +77,12 @@ export default class EndPoint
     this.channel.triggerEvent( this, event );
   }
 
-  public sendPacket( packet: Packet )
+  public sendMessage( message: Message )
   {
     if ( !this.isConnected )
       return;
 
-    this.channel.sendPacket( this, packet );
+    this.channel.sendMessage( this, message );
   }
 
   public onEvent( eventListener: OnEventDelegate )
@@ -86,8 +90,10 @@ export default class EndPoint
     this.eventListeners.push( eventListener );
   }
 
-  public onPacket( packetListener: OnPacketDelegate )
+  public onMessage( messageListener: OnMessageDelegate )
   {
-    this.packetListeners.push( packetListener );
+    this.messageListeners.push( messageListener );
   }
+
+  static Direction: Direction;
 }

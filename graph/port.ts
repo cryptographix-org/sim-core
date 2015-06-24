@@ -8,9 +8,15 @@ export default class Port extends EndPoint
   protected _id: string;
   protected _protocolID: string;
 
+  public view: any;
+
   constructor( owner: Node, attributes: any )
   {
     super( attributes.direction || Direction.INOUT );
+
+    this.view = attributes.view || { x: 100, y: 100 };
+
+    this._protocolID = attributes[ "protocol" ] || "any";
 
     this.ownerNode = owner;
   }

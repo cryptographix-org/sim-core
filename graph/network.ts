@@ -36,7 +36,7 @@ export default class Network
 
     })
 */
-    return this.graph.initializeComponents( this.componentRegistry );
+    return this.graph.initializeComponent( this.componentRegistry );
   }
 
   wireupGraph( router: any )

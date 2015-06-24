@@ -61,7 +61,7 @@ export default class Graph extends Node
     return graph;
   }
 
-  initializeComponents( registry: ComponentRegistry ): Promise<void>
+  initializeComponent( registry: ComponentRegistry ): Promise<void>
   {
     return new Promise<void>( (resolve, reject) => {
       let pendingCount = 0;
@@ -73,7 +73,7 @@ export default class Graph extends Node
         {
           pendingCount++;
 
-          node.initializeComponents( registry )
+          node.initializeComponent( registry )
             .then( () => {
               --pendingCount;
               if ( pendingCount == 0 )

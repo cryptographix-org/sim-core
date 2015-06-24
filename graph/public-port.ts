@@ -2,7 +2,7 @@ import Graph from './graph';
 import Node from './node';
 import Port from "./port";
 
-import Packet from "../base/packet";
+import Message from "../base/message";
 import Channel from "../base/channel";
 import EndPoint from "../base/end-point";
 import { Direction } from "../base/end-point"
@@ -36,8 +36,8 @@ export default class PublicPort extends Port
     });
 
     // Forward incoming packets (from public interface) to private
-    this.proxyEndPoint.onPacket( ( from: EndPoint, packet ) => {
-      this.sendPacket( packet );
+    this.proxyEndPoint.onMessage( ( from: EndPoint, message ) => {
+      this.sendMessage( message );
     });
 
     // Forward outgoing events (from private interface) to public
@@ -46,8 +46,8 @@ export default class PublicPort extends Port
     });
 
     // Forward outgoing packets (from private interface) to public
-    this.onPacket( ( from: EndPoint, packet ) => {
-      this.proxyEndPoint.sendPacket( packet );
+    this.onMessage( ( from: EndPoint, message ) => {
+      this.proxyEndPoint.sendMessage( message );
     });
 
     // not yet connected

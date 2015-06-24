@@ -1,4 +1,5 @@
 /// <reference path="../../typings/forge.d.ts"/>
+/// <reference path="../../typings/jsbn.d.ts"/>
 import PublicKey from "./public-key";
 
 var BN = forge.jsbn.BigInteger;
@@ -11,8 +12,8 @@ export default class CryptographicServiceProvider
 
   makePublicKey( m: string, e: string ): forge.rsa.PublicKey
   {
-    let mod: forge.jsbn.BigInteger = new forge.jsbn.BigInteger( m, 16 );
-    let exp: forge.jsbn.BigInteger = new forge.jsbn.BigInteger( e, 16 );
+    let mod: jsbn.BigInteger = new forge.jsbn.BigInteger( m, 16 );
+    let exp: jsbn.BigInteger = new forge.jsbn.BigInteger( e, 16 );
 
     let pk = forge.rsa.setPublicKey( mod, exp );
 

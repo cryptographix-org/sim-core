@@ -54,10 +54,10 @@ export default class Link
   connect( channel: Channel )
   {
     // identify fromPort in fromNode
-    var fromPort: Port = this.fromNode.identifyPort( this.from.portID, this.protocol );
+    var fromPort: Port = this.fromNode.identifyPort( this.from.portID, this.protocolID );
 
     // identify toPort in toNode
-    var toPort: Port = this.toNode.identifyPort( this.to.portID, this.protocol );
+    var toPort: Port = this.toNode.identifyPort( this.to.portID, this.protocolID );
 
     this.channel = channel;
 
@@ -83,7 +83,7 @@ export default class Link
   {
     var node = this.fromNode;
 
-    return (node) ? node.getPortByID( this.from.portID ) : undefined;
+    return (node) ? node.identifyPort( this.from.portID, this.protocolID ) : undefined;
   }
 
   set fromPort( port: Port )
@@ -105,7 +105,7 @@ export default class Link
   {
     var node = this.toNode;
 
-    return (node) ? node.getPortByID( this.to.portID ) : undefined;
+    return (node) ? node.identifyPort( this.to.portID, this.protocolID ) : undefined;
   }
 
   set toPort( port: Port )
@@ -118,7 +118,7 @@ export default class Link
     this._protocolID = port.protocol;
   }
 
-  get protocol(): string
+  get protocolID(): string
   {
     return this._protocolID;
   }

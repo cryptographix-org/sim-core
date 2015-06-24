@@ -1,17 +1,53 @@
-import Component from "./component";
+import { EndPoints } from "./end-point";
+import ComponentInterface, { InjectType } from "./component-interface";
 
+class Component implements ComponentInterface
+{
+  static $inject : InjectType;
+
+  onCreate( initialData: Object )
+  {
+
+  }
+
+  onDestroy()
+  {
+
+  }
+
+  onStart( endPoints: EndPoints )
+  {
+
+  }
+
+  onPause()
+  {
+
+  }
+
+  onResume()
+  {
+
+  }
+
+  onStop()
+  {
+
+  }
+}
 type ComponentType = typeof Component;
 
 export default class ComponentRegistry
 {
-  components: ComponentType[];
+//  components: ComponentType[];
+  components: ComponentInterface[];
 
   constructor()
   {
     this.components = [];
   }
 
-  setComponent( name: string, comp: ComponentType )
+  setComponent( name: string, comp: ComponentInterface )
   {
     this.components[ name ] = comp;
   }
@@ -21,42 +57,49 @@ export default class ComponentRegistry
     return this.components[ name ];
   }
 
-  protected loadComponent( name: string ): Promise<Component>
+  protected loadComponent( name: string ): Promise<ComponentType>
   {
-    return new Promise<Component>( (resolve, reject) => {
+    return new Promise<ComponentType>( (resolve, reject) => {
       resolve( this.getComponent[ name ] );
     });
   }
 
   getComponentInstance( name: string, initialData: Object ): Promise<Component>
   {
+    let createComponent = function( componentType: ComponentType )
+    {
+      let newInstance: Component = null;
+      let injects: string[] = [];
+
+      if ( componentType.$inject instanceof Array )
+        injects = <string[]>componentType.$inject;
+      else if ( typeof componentType.$inject == "function" )
+        injects = ( <()=>string[]> componentType.$inject )();
+
+      if ( injects && injects.length > 0 )
+        ;
+
+      newInstance = new componentType( );
+      if ( newInstance.onCreate )
+        newInstance.onCreate( initialData );
+
+      return newInstance;
+    }
+
     let componentType: ComponentType = this.getComponent( name );
 
     if ( componentType )
     {
       return new Promise<Component>( (resolve, reject) => {
-        let newInstance: Component = null;
-        let injects: string[] = [];
-
-        if ( componentType.inject instanceof Array )
-          injects = <string[]>componentType.inject;
-        else if ( typeof componentType.inject == "function" )
-          injects = ( <()=>string[]> componentType.inject )();
-
-        if ( injects && injects.length > 0 )
-          ;
-
-        newInstance = new componentType( initialData );
-
-        resolve( newInstance );
+        resolve( createComponent( componentType ) );
       });
     }
 
     return new Promise<Component>( (resolve, reject) => {
       this.loadComponent( name )
-      .then( (comp)=> {
-        resolve( new Component( initialData ) );
-      } );
+            .then( (componentType)=> {
+              resolve( createComponent( componentType ) );
+            } );
     });
   }
 }

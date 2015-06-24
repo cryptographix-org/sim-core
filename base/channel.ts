@@ -1,16 +1,16 @@
-import { TaskScheduler, EndPoint, Packet } from "./base-package";
-import { OnEventDelegate, OnPacketDelegate, Direction } from "./end-point";
+import { TaskScheduler, EndPoint, Message } from "./base-package";
+import { OnEventDelegate, OnMessageDelegate, Direction } from "./end-point";
 
 class EndPointEntry {
   endPoint: EndPoint;
   direction: Direction;
   eventListener: OnEventDelegate;
-  packetListener: OnPacketDelegate;
+  messageListener: OnMessageDelegate;
 }
 
 export default class Channel
 {
-  connected;
+  connected: boolean;
 
   endPointRegistry: EndPointEntry[];
   taskScheduler: TaskScheduler;
@@ -18,7 +18,9 @@ export default class Channel
   constructor()
   {
     this.connected = false;
+
     this.endPointRegistry = [];
+
     this.taskScheduler = null;
   }
 
@@ -30,22 +32,24 @@ export default class Channel
   connect()
   {
     this.taskScheduler = new TaskScheduler();
+
     this.connected = true;
   }
 
   disconnect()
   {
     this.taskScheduler = null;
+
     this.connected = false;
   }
 
-  addEndPoint( endPoint: EndPoint, eventListener: OnEventDelegate, packetListener: OnPacketDelegate )
+  addEndPoint( endPoint: EndPoint, eventListener: OnEventDelegate, messageListener: OnMessageDelegate )
   {
     let regEntry = {
       endPoint: endPoint,
       direction: endPoint.direction,
       eventListener: eventListener.bind( endPoint ),
-      packetListener: packetListener.bind( endPoint ),
+      messageListener: messageListener.bind( endPoint ),
     };
 
     this.endPointRegistry.push( regEntry );
@@ -71,8 +75,8 @@ export default class Channel
     } );
 
     return endPoints;
-
   }
+
   public triggerEvent( origin: EndPoint, event: any )
   {
     if ( !this.connected )
@@ -91,7 +95,7 @@ export default class Channel
     });
   }
 
-  public sendPacket( origin: EndPoint, packet: Packet )
+  public sendMessage( origin: EndPoint, message: Message )
   {
     if ( !this.connected )
       return;
@@ -99,10 +103,10 @@ export default class Channel
     this.endPointRegistry.forEach( regEntry => {
       if ( origin != regEntry.endPoint )
       {
-        if ( regEntry.packetListener && ( regEntry.direction != Direction.OUT ) )
+        if ( regEntry.messageListener && ( regEntry.direction != Direction.OUT ) )
         {
           this.taskScheduler.queueTask( () => {
-            regEntry.packetListener( origin, packet );
+            regEntry.messageListener( origin, message );
           } );
         }
       }

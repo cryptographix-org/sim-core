@@ -1,4 +1,4 @@
-import { ComponentRegistry, Component } from "../base/base-package";
+import { ComponentRegistry, ComponentInterface } from "../base/base-package";
 import { Graph, Port } from "./graph-package";
 
 export default class Node
@@ -11,12 +11,14 @@ export default class Node
   protected componentName: string;
   protected setupData: Object;
 
-  protected component: Component;
+  public view: any;
+
+  protected component: ComponentInterface;
 
   constructor( owner: Graph, attributes )
   {
     this.ownerGraph = owner;
-
+    this.view = attributes.view || { x: 100, y: 100 };
     this.ports = {};
 
     this.component = null;
@@ -43,19 +45,23 @@ export default class Node
     return node;
   }
 
-  initializeComponents( registry: ComponentRegistry ): Promise<void>
+  initializeComponent( registry: ComponentRegistry ): Promise<void>
   {
     let me = this;
 
+    this.component = {};
+
     return new Promise<void>( (resolve, reject) => {
-      registry.getComponentInstance( this.componentName, this.setupData )
-      .then( (newInstance) => {
-        me.component = newInstance;
+      if ( !this.componentName || ( this.componentName == "" ) )
         resolve();
-      })
-      .catch( (err) => {
-        reject( err );
-      });
+      else registry.getComponentInstance( this.componentName, this.setupData )
+            .then( (newInstance) => {
+              me.component = newInstance;
+              resolve();
+            })
+            .catch( (err) => {
+              reject( err );
+            });
     } );
   }
 
@@ -95,8 +101,22 @@ export default class Node
     return this.ports[ id ];
   }
 
-  identifyPort( id: string, protocol: string ): Port
+  identifyPort( id: string, protocol?: string ): Port
   {
-    return this.ports[ id ];
+    var port: Port;
+
+    if ( id )
+      port = this.ports[ id ];
+    else if ( protocol )
+    {
+      Object.keys( this.ports ).forEach( (id) => {
+        let p = this.ports[ id ];
+
+        if ( p.protocol == protocol )
+          port = p;
+      }, this );
+    }
+
+    return port;
   }
 }

@@ -4,10 +4,11 @@ import Kind from "./kind";
 import KindInfo from "./kind-info";
 import TaskScheduler from "./task-scheduler";
 import Channel from "./channel";
-import EndPoint from "./end-point";
-import Packet from "./packet";
+import EndPoint, { EndPoints } from "./end-point";
+import Message from "./message";
 import ComponentRegistry from "./component-registry";
-import Component from "./component";
+//import Component from "./component";
+import ComponentInterface from "./component-interface";
 
 var $packageInfo: PackageInfo =
 {
@@ -19,26 +20,28 @@ var $packageInfo: PackageInfo =
 
   members: {
     "ByteArray": ByteArray,
+//    "PackageInfo": PackageInfo,
 //    "Kind": Kind,
     "KindInfo": KindInfo,
     "TaskScheduler": TaskScheduler,
     "ComponentRegistry": ComponentRegistry,
-    "Component": Component,
     "Channel": Channel,
     "EndPoint": EndPoint,
-    "Packet": Packet,
+    "Message": Message,
   }
 }
 
 export {
   $packageInfo,
+  PackageInfo,
   ByteArray,
   Kind,
   KindInfo,
   TaskScheduler,
   ComponentRegistry,
-  Component,
+  ComponentInterface,
   Channel,
   EndPoint,
-  Packet,
+  EndPoints,
+  Message,
 };
