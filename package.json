@@ -1,0 +1,43 @@
+{
+  "name": "sim-core",
+  "version": "0.0.1",
+  "description": "Extensible framework for simulation of application security building blocks",
+  "keywords": [
+    "cryptographic",
+    "security",
+    "blocks",
+    "simulation",
+    "graph"
+  ],
+  "homepage": "http://cryptographics.net",
+  "bugs": {
+    "url": "https://github.com/cryptographics/sim-core/issues"
+  },
+  "license": "MIT",
+  "author": "Sean Wykes <sean.public@nascent.com.br> (http://nascent.com.br/)",
+  "main": "dist/commonjs/index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/cryptographics/sim-core"
+  },
+  "jspm": {
+    "main": "index",
+    "format": "register",
+    "directories": {
+      "lib": "dist/system"
+    },
+    "dependencies": {
+      "Evgenus/forge-typescript-definitions": "github:Evgenus/forge-typescript-definitions@master",
+      "Evgenus/jsbn-typescript-definitions": "github:Evgenus/jsbn-typescript-definitions@master"
+    }
+  },
+  "devDependencies": {
+    "del": "^1.2.0",
+    "gulp": "^3.9.0",
+    "gulp-typescript": "^2.7.7",
+    "object.assign": "^3.0.0",
+    "require-dir": "^0.3.0",
+    "run-sequence": "^1.1.1",
+    "typescript": "^1.5.0-beta"
+  }
+}
