@@ -1,7 +1,7 @@
 import { TaskScheduler, EndPoint, Message } from "./index";
 import { OnEventDelegate, OnMessageDelegate, Direction } from "./end-point";
 
-class EndPointEntry {
+export class EndPointEntry {
   endPoint: EndPoint;
   direction: Direction;
   eventListener: OnEventDelegate;

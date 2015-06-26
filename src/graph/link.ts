@@ -1,7 +1,7 @@
 import { Graph, Node, Port } from "./index";
 import { Channel, EndPoint } from "../base/index";
 
-type EndPointRef = { nodeID: string, portID: string };
+export type EndPointRef = { nodeID: string, portID: string };
 
 export default class Link
 {

@@ -15,19 +15,19 @@ gulp.task('build-es6', function () {
 
 gulp.task('build-commonjs', function () {
   return gulp.src(paths.source)
-    .pipe(tsc(assign({}, compilerOptions, {modules:'common'})))
+    .pipe(ts(assign({}, compilerOptions, { target:'es5', module: 'commonjs' })))
     .pipe(gulp.dest(paths.output + 'commonjs'));
 });
 
 gulp.task('build-amd', function () {
   return gulp.src(paths.source)
-    .pipe(tsc(assign({}, compilerOptions, {modules:'amd'})))
+    .pipe(ts(assign({}, compilerOptions, { target:'es5', module: 'amd' })))
     .pipe(gulp.dest(paths.output + 'amd'));
 });
 
 gulp.task('build-system', function () {
   return gulp.src(paths.source)
-    .pipe(tsc(assign({}, compilerOptions, {modules:'system'})))
+    .pipe(ts(assign({}, compilerOptions, { target:'es5', module: 'system' })))
     .pipe(gulp.dest(paths.output + 'system'));
 });
 

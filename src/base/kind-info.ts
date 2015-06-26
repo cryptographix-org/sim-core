@@ -2,7 +2,7 @@
 /// @class KindHelper
 ///
 /// Builder for 'Kind' metadata
-class KindHelper
+export class KindHelper
 {
   private kindInfo: KindInfo;
 

@@ -1,7 +1,7 @@
 import { EndPoints } from "./end-point";
 import ComponentInterface, { InjectType } from "./component-interface";
 
-class Component implements ComponentInterface
+export class Component implements ComponentInterface
 {
   static $inject : InjectType;
 
@@ -35,7 +35,7 @@ class Component implements ComponentInterface
 
   }
 }
-type ComponentType = typeof Component;
+export type ComponentType = typeof Component;
 
 export default class ComponentRegistry
 {

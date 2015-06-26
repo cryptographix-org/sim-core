@@ -1,5 +1,5 @@
-type Task = () => void;
-type FlushFunc = () => void;
+export type Task = () => void;
+export type FlushFunc = () => void;
 
 export default class TaskScheduler
 {
