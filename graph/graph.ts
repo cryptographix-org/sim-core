@@ -1,5 +1,5 @@
-import { ComponentRegistry } from "../base/base-package";
-import { Network, Link, Port, PublicPort } from "./graph-package";
+import { ComponentRegistry } from "../base/index";
+import { Network, Link, Port, PublicPort } from "./index";
 
 // Separate import for Node base-class!
 import Node from "./node";

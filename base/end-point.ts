@@ -1,4 +1,4 @@
-import { TaskScheduler, Channel, Message } from "./base-package";
+import { TaskScheduler, Channel, Message } from "./index";
 
 export enum Direction {
   IN,

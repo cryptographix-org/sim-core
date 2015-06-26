@@ -1,5 +1,5 @@
-import { Graph, Node, Link, Port, PublicPort } from "./graph-package";
-import { ComponentRegistry, Channel, EndPoint } from "../base/base-package";
+import { Graph, Node, Link, Port, PublicPort } from "./index";
+import { ComponentRegistry, Channel, EndPoint } from "../base/index";
 
 declare class Promise<T> {};
 

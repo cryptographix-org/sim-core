@@ -1,4 +1,4 @@
-import { TaskScheduler, EndPoint, Message } from "./base-package";
+import { TaskScheduler, EndPoint, Message } from "./index";
 import { OnEventDelegate, OnMessageDelegate, Direction } from "./end-point";
 
 class EndPointEntry {

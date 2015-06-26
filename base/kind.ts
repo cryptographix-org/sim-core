@@ -1,4 +1,4 @@
-import { KindInfo } from "./base-package";
+import { KindInfo } from "./index";
 
 ///
 /// @interface Kind

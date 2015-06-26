@@ -1,5 +1,5 @@
-import { Graph, Node, Port } from "./graph-package";
-import { Channel, EndPoint } from "../base/base-package";
+import { Graph, Node, Port } from "./index";
+import { Channel, EndPoint } from "../base/index";
 
 type EndPointRef = { nodeID: string, portID: string };
 

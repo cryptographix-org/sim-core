@@ -1,5 +1,5 @@
-import { ComponentRegistry, ComponentInterface } from "../base/base-package";
-import { Graph, Port } from "./graph-package";
+import { ComponentRegistry, ComponentInterface } from "../base/index";
+import { Graph, Port } from "./index";
 
 export default class Node
 {
