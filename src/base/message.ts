@@ -1,5 +1,4 @@
-import Kind from '../base/kind';
-import KindInfo from "./kind-info";
+import { Kind } from '../base/kind';
 
 export default class Message
 {

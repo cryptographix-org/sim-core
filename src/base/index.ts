@@ -1,7 +1,6 @@
 import PackageInfo from "./package-info";
 import ByteArray from "./byte-array";
-import Kind from "./kind";
-import KindInfo from "./kind-info";
+import { Kind, KindInfo }  from "./kind";
 import TaskScheduler from "./task-scheduler";
 import Channel from "./channel";
 import EndPoint, { EndPoints } from "./end-point";

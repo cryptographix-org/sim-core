@@ -13,7 +13,7 @@ gulp.task('build-es6', function () {
     .js.pipe(gulp.dest(paths.output + 'es6'));
 });
 
-gulp.task('build-commonjs', function () {
+gulp.task('build-cjs', function () {
   return gulp.src(paths.source)
     .pipe(ts(assign({}, compilerOptions, { target:'es5', module: 'commonjs' })))
     .pipe(gulp.dest(paths.output + 'commonjs'));
@@ -34,7 +34,7 @@ gulp.task('build-system', function () {
 gulp.task('build', function(callback) {
   return runSequence(
     'clean',
-    ['build-es6', 'build-commonjs', 'build-amd', 'build-system'],
+    ['build-es6', 'build-cjs', 'build-amd', 'build-system'],
     callback
   );
 });

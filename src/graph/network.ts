@@ -1,8 +1,6 @@
 import { Graph, Node, Link, Port, PublicPort } from "./index";
 import { ComponentRegistry, Channel, EndPoint } from "../base/index";
 
-declare class Promise<T> {};
-
 export default class Network
 {
   private graph: Graph;
