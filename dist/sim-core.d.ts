@@ -1,3 +1,5 @@
+declare module 'sim-core' {
+
 export declare class ByteArray {
     byteArray: Uint8Array;
     length: Number;
@@ -126,13 +128,12 @@ export declare class ComponentRegistry {
     getComponentInstance(name: string, initialData: Object): Promise<Component>;
 }
 
-interface PackageInfo {
+export interface PackageInfo {
     title: String;
     description: String;
     author: String;
     members: {};
 }
-export default PackageInfo;
 
 export declare class Key {
     protected id: string;
@@ -264,4 +265,5 @@ export declare class Graph extends Node {
 export default class GraphTester {
     graph: any;
     execTests(): void;
+}
 }

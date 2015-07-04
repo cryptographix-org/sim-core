@@ -14,13 +14,12 @@ var tools = require('aurelia-tools');
 //var dbg = require('gulp-debug');
 
 gulp.task('build-index-and-dts', function () {
-  var importsToAdd = [];
   var tscOut = gulp.src(paths.source)
     .pipe(ts(assign({}, tscOptions, {target:'es6',typescript: require('typescript')})));
 
   var js = tscOut.js
     .pipe(through2.obj(function(file, enc, callback) {
-      file.contents = new Buffer(tools.extractImports(file.contents.toString("utf8"), importsToAdd));
+      file.contents = new Buffer(tools.extractImports(file.contents.toString("utf8")));
       this.push(file);
       return callback();
     }))
@@ -28,11 +27,16 @@ gulp.task('build-index-and-dts', function () {
   
   var dts = tscOut.dts //.pipe(dbg())
     .pipe(through2.obj(function(file, enc, callback) {
-      file.contents = new Buffer(tools.extractImports(file.contents.toString("utf8"), importsToAdd));
+      file.contents = new Buffer(tools.extractImports(file.contents.toString("utf8")));
       this.push(file);
       return callback();
     }))
-    .pipe(concat(paths.packageName+'.d.ts'));
+    .pipe(concat(paths.packageName+'.d.ts'))
+    .pipe(through2.obj(function(file, enc, callback) {
+      file.contents = new Buffer("declare module '" + paths.packageName + "' {\n\n" + tools.extractImports(file.contents.toString("utf8") + "}\n"));
+      this.push(file);
+      return callback();
+    }));
 
   return merge([
     dts.pipe(gulp.dest(paths.output)),

@@ -1,4 +1,4 @@
-interface PackageInfo
+export interface PackageInfo
 {
   title: String;
 
@@ -9,4 +9,3 @@ interface PackageInfo
   members: {};
 }
 
-export default PackageInfo;
