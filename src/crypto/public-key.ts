@@ -1,8 +1,6 @@
-import Key from "./key";
+import { Key } from './key';
 
-class PublicKey extends Key
+export class PublicKey extends Key
 {
-  
-}
 
-export default PublicKey;
+}

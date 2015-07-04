@@ -1,7 +1,7 @@
 export type Task = () => void;
 export type FlushFunc = () => void;
 
-export default class TaskScheduler
+export class TaskScheduler
 {
   static makeRequestFlushFromMutationObserver(flush): FlushFunc
   {

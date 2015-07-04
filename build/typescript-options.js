@@ -1,3 +1,3 @@
 module.exports = {
-  declarationFiles: true
+  declaration: true
 };

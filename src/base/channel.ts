@@ -1,5 +1,6 @@
-import { TaskScheduler, EndPoint, Message } from "./index";
-import { OnEventDelegate, OnMessageDelegate, Direction } from "./end-point";
+import { TaskScheduler } from './task-scheduler';
+import { EndPoint, OnEventDelegate, OnMessageDelegate, Direction } from './end-point';
+import { Message } from './message';
 
 export class EndPointEntry {
   endPoint: EndPoint;
@@ -8,7 +9,7 @@ export class EndPointEntry {
   messageListener: OnMessageDelegate;
 }
 
-export default class Channel
+export class Channel
 {
   connected: boolean;
 

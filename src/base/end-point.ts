@@ -1,4 +1,6 @@
-import { TaskScheduler, Channel, Message } from "./index";
+import { TaskScheduler } from './task-scheduler';
+import { Message } from './message';
+import { Channel } from './channel';
 
 export enum Direction {
   IN,
@@ -11,7 +13,7 @@ export type OnMessageDelegate =  ( fromEndPoint: EndPoint, message: Message ) =>
 
 export type EndPoints = { [id: string]: EndPoint; };
 
-export default class EndPoint
+export class EndPoint
 {
   protected channel: Channel;
 

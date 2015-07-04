@@ -1,5 +1,5 @@
-import { EndPoints } from "./end-point";
-import ComponentInterface, { InjectType } from "./component-interface";
+import { EndPoints } from './end-point';
+import { ComponentInterface, InjectType } from './component-interface';
 
 export class Component implements ComponentInterface
 {
@@ -37,7 +37,7 @@ export class Component implements ComponentInterface
 }
 export type ComponentType = typeof Component;
 
-export default class ComponentRegistry
+export class ComponentRegistry
 {
 //  components: ComponentType[];
   components: ComponentInterface[];

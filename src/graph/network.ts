@@ -1,7 +1,13 @@
-import { Graph, Node, Link, Port, PublicPort } from "./index";
-import { ComponentRegistry, Channel, EndPoint } from "../base/index";
+import { ComponentRegistry } from '../base/component-registry';
+import { EndPoint } from '../base/end-point';
+import { Channel } from '../base/channel';
 
-export default class Network
+import { Graph } from './graph';
+import { Node } from './node';
+import { Link } from './link';
+import { Port, PublicPort } from './port';
+
+export class Network
 {
   private graph: Graph;
   private nodes: Node[];

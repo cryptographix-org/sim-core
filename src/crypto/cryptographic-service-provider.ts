@@ -1,10 +1,10 @@
 /// <reference path="../../types/forge/forge.d.ts"/>
 /// <reference path="../../types/jsbn/jsbn.d.ts"/>
-import PublicKey from "./public-key";
+import { PublicKey } from './public-key';
 
 var BN = forge.jsbn.BigInteger;
 
-export default class CryptographicServiceProvider
+export class CryptographicServiceProvider
 {
   constructor()
   {

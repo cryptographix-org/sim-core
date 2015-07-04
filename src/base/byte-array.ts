@@ -1,4 +1,4 @@
-export default class ByteArray
+export class ByteArray
 {
   public byteArray: Uint8Array;
   public length: Number;

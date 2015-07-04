@@ -1,5 +1,5 @@
 
-export default class SimulationEngine
+export class SimulationEngine
 {
 
 }

@@ -1,13 +1,14 @@
-import { ComponentRegistry } from "../base/index";
-import { Network, Link, Port, PublicPort } from "./index";
+import { ComponentRegistry } from '../base/component-registry';
 
-// Separate import for Node base-class!
-import Node from "./node";
+import { Network } from './network';
+import { Node } from './node';
+import { Link } from './link';
+import { Port, PublicPort } from './port';
 
 /*
  * Graph is
  */
-export default class Graph extends Node
+export class Graph extends Node
 {
   // Nodes in this graph. Each node may be:
   //   1. A Component

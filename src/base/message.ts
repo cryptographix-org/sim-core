@@ -1,6 +1,6 @@
-import { Kind } from '../base/kind';
+import { Kind } from './kind';
 
-export default class Message
+export class Message
 {
   private header: {};
   private payload: Kind;

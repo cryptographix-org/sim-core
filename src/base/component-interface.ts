@@ -1,8 +1,8 @@
-import { EndPoints } from "./end-point";
+import { EndPoints } from './end-point';
 
 export type InjectType = ( string[] | ( () => string[] ) );
 
-interface ComponentInterface
+export interface ComponentInterface
 {
 //  static $inject : InjectType;
 
@@ -12,5 +12,3 @@ interface ComponentInterface
   onStart?( endPoints: EndPoints );
   onStop?();
 }
-
-export default ComponentInterface;

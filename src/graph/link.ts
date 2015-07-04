@@ -1,9 +1,13 @@
-import { Graph, Node, Port } from "./index";
-import { Channel, EndPoint } from "../base/index";
+import { EndPoint } from '../base/end-point';
+import { Channel } from '../base/channel';
+
+import { Graph } from './graph';
+import { Node } from './node';
+import { Port } from './port';
 
 export type EndPointRef = { nodeID: string, portID: string };
 
-export default class Link
+export class Link
 {
   protected ownerGraph: Graph;
   protected _id: string;

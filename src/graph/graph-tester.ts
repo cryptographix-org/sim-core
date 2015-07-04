@@ -1,4 +1,5 @@
-import { Graph, Node } from "./index";
+import { Graph } from './graph';
+import { Node } from './node';
 
 export default class GraphTester {
   graph;

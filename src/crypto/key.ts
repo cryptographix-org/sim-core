@@ -1,4 +1,4 @@
-class Key
+export class Key
 {
   protected id: string;
   protected keyComponents: any[];
@@ -19,5 +19,3 @@ class Key
     this.keyComponents[ componentID ] = value;
   }
 }
-
-export default Key;

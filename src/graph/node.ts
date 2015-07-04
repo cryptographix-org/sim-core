@@ -1,7 +1,10 @@
-import { ComponentRegistry, ComponentInterface } from "../base/index";
-import { Graph, Port } from "./index";
+import { ComponentRegistry} from '../base/component-registry';
+import { ComponentInterface } from '../base/component-interface';
 
-export default class Node
+import { Graph } from './graph';
+import { Port } from './port';
+
+export class Node
 {
   protected ownerGraph: Graph;
   protected _id: string;
