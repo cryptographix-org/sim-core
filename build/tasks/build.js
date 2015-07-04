@@ -39,9 +39,17 @@ gulp.task('build-index-and-dts', function () {
     }));
 
   return merge([
-    dts.pipe(gulp.dest(paths.output)),
+    dts.pipe(gulp.dest(paths.output))
+      .pipe(gulp.dest(paths.output + 'es6'))
+      .pipe(gulp.dest(paths.output + 'commonjs'))
+      .pipe(gulp.dest(paths.output + 'amd')),
     js.pipe(gulp.dest(paths.output))
     ]);
+});
+
+gulp.task('build-es6', function () {
+  return gulp.src(paths.output + 'index.js')
+    .pipe(gulp.dest(paths.output + 'es6'));
 });
 
 gulp.task('build-commonjs', function () {
@@ -60,7 +68,7 @@ gulp.task('build', function(callback) {
   return runSequence(
     'clean',
     'build-index-and-dts',
-    ['build-commonjs', 'build-amd'],
+    ['build-es6', 'build-commonjs', 'build-amd'],
     callback
   );
 });
