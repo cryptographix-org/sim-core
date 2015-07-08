@@ -87,6 +87,11 @@ export class Graph extends Node
       } );
     } );
   }
+  
+  getNodes(): { [id: string]: Node; }
+  {
+    return this.nodes;
+  }
 
   getAllNodes(): Node[]
   {
@@ -103,6 +108,11 @@ export class Graph extends Node
     } );
 
     return nodes;
+  }
+
+  getLinks(): { [id: string]: Link; }
+  {
+    return this.links;
   }
 
   getAllLinks(): Link[]
@@ -169,6 +179,11 @@ export class Graph extends Node
   removeNode( id: string )
   {
     delete this.nodes[ id ];
+  }
+
+  getLinkByID( id: string ): Link
+  {
+    return this.links[ id ];
   }
 
   addLink( id: string, attributes: {} )

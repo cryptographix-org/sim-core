@@ -2,7 +2,7 @@ import { EndPoints } from './end-point';
 
 export type InjectType = ( string[] | ( () => string[] ) );
 
-export interface ComponentInterface
+export interface Component
 {
 //  static $inject : InjectType;
 

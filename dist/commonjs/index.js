@@ -8,6 +8,69 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Key = (function () {
+    function Key(id, attributes) {
+        _classCallCheck(this, Key);
+
+        this.id = id;
+        this.keyComponents = attributes;
+    }
+
+    Key.prototype.getComponent = function getComponent(componentID) {
+        return this.keyComponents[componentID];
+    };
+
+    Key.prototype.setComponent = function setComponent(componentID, value) {
+        this.keyComponents[componentID] = value;
+    };
+
+    return Key;
+})();
+
+exports.Key = Key;
+
+var PublicKey = (function (_Key) {
+    function PublicKey() {
+        _classCallCheck(this, PublicKey);
+
+        _Key.apply(this, arguments);
+    }
+
+    _inherits(PublicKey, _Key);
+
+    return PublicKey;
+})(Key);
+
+exports.PublicKey = PublicKey;
+
+var BN = forge.jsbn.BigInteger;
+
+var CryptographicServiceProvider = (function () {
+    function CryptographicServiceProvider() {
+        _classCallCheck(this, CryptographicServiceProvider);
+    }
+
+    CryptographicServiceProvider.prototype.makePublicKey = function makePublicKey(m, e) {
+        var mod = new forge.jsbn.BigInteger(m, 16);
+        var exp = new forge.jsbn.BigInteger(e, 16);
+        var pk = forge.rsa.setPublicKey(mod, exp);
+        console.log(pk.n);
+        console.log(pk.e);
+        return pk;
+    };
+
+    CryptographicServiceProvider.prototype.decrypt = function decrypt(cg, pk) {
+        var xx = pk.encrypt(cg, "RAW");
+        return xx;
+    };
+
+    return CryptographicServiceProvider;
+})();
+
+exports.CryptographicServiceProvider = CryptographicServiceProvider;
+
+CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
+
 var ByteArray = (function () {
     function ByteArray(bytes, opt) {
         _classCallCheck(this, ByteArray);
@@ -370,27 +433,27 @@ var Channel = (function () {
 
 exports.Channel = Channel;
 
-var Component = (function () {
-    function Component() {
-        _classCallCheck(this, Component);
+var xComponent = (function () {
+    function xComponent() {
+        _classCallCheck(this, xComponent);
     }
 
-    Component.prototype.onCreate = function onCreate(initialData) {};
+    xComponent.prototype.onCreate = function onCreate(initialData) {};
 
-    Component.prototype.onDestroy = function onDestroy() {};
+    xComponent.prototype.onDestroy = function onDestroy() {};
 
-    Component.prototype.onStart = function onStart(endPoints) {};
+    xComponent.prototype.onStart = function onStart(endPoints) {};
 
-    Component.prototype.onPause = function onPause() {};
+    xComponent.prototype.onPause = function onPause() {};
 
-    Component.prototype.onResume = function onResume() {};
+    xComponent.prototype.onResume = function onResume() {};
 
-    Component.prototype.onStop = function onStop() {};
+    xComponent.prototype.onStop = function onStop() {};
 
-    return Component;
+    return xComponent;
 })();
 
-exports.Component = Component;
+exports.xComponent = xComponent;
 
 var ComponentRegistry = (function () {
     function ComponentRegistry() {
@@ -444,69 +507,6 @@ var ComponentRegistry = (function () {
 })();
 
 exports.ComponentRegistry = ComponentRegistry;
-
-var Key = (function () {
-    function Key(id, attributes) {
-        _classCallCheck(this, Key);
-
-        this.id = id;
-        this.keyComponents = attributes;
-    }
-
-    Key.prototype.getComponent = function getComponent(componentID) {
-        return this.keyComponents[componentID];
-    };
-
-    Key.prototype.setComponent = function setComponent(componentID, value) {
-        this.keyComponents[componentID] = value;
-    };
-
-    return Key;
-})();
-
-exports.Key = Key;
-
-var PublicKey = (function (_Key) {
-    function PublicKey() {
-        _classCallCheck(this, PublicKey);
-
-        _Key.apply(this, arguments);
-    }
-
-    _inherits(PublicKey, _Key);
-
-    return PublicKey;
-})(Key);
-
-exports.PublicKey = PublicKey;
-
-var BN = forge.jsbn.BigInteger;
-
-var CryptographicServiceProvider = (function () {
-    function CryptographicServiceProvider() {
-        _classCallCheck(this, CryptographicServiceProvider);
-    }
-
-    CryptographicServiceProvider.prototype.makePublicKey = function makePublicKey(m, e) {
-        var mod = new forge.jsbn.BigInteger(m, 16);
-        var exp = new forge.jsbn.BigInteger(e, 16);
-        var pk = forge.rsa.setPublicKey(mod, exp);
-        console.log(pk.n);
-        console.log(pk.e);
-        return pk;
-    };
-
-    CryptographicServiceProvider.prototype.decrypt = function decrypt(cg, pk) {
-        var xx = pk.encrypt(cg, "RAW");
-        return xx;
-    };
-
-    return CryptographicServiceProvider;
-})();
-
-exports.CryptographicServiceProvider = CryptographicServiceProvider;
-
-CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
 
 var SimulationEngine = function SimulationEngine() {
     _classCallCheck(this, SimulationEngine);
@@ -564,25 +564,19 @@ var PublicPort = (function (_Port) {
 
         _Port.call(this, owner, attributes);
         var proxyDirection = this.direction == Direction.IN ? Direction.OUT : this.direction == Direction.OUT ? Direction.IN : Direction.INOUT;
-
         this.proxyEndPoint = new EndPoint(proxyDirection);
-
         this.proxyEndPoint.onEvent(function (from, evt) {
             _this5.triggerEvent(evt);
         });
-
         this.proxyEndPoint.onMessage(function (from, message) {
             _this5.sendMessage(message);
         });
-
         this.onEvent(function (from, evt) {
             _this5.proxyEndPoint.triggerEvent(evt);
         });
-
         this.onMessage(function (from, message) {
             _this5.proxyEndPoint.sendMessage(message);
         });
-
         this.proxyChannel = null;
     }
 
@@ -725,7 +719,6 @@ var Link = (function () {
 
     Link.prototype.connect = function connect(channel) {
         var fromPort = this.fromNode.identifyPort(this.from.portID, this.protocolID);
-
         var toPort = this.toNode.identifyPort(this.to.portID, this.protocolID);
         this.channel = channel;
         fromPort.connect(channel);
@@ -820,11 +813,9 @@ var Network = (function () {
     Network.prototype.wireupGraph = function wireupGraph(router) {
         var me = this;
         this.nodes.forEach(function (node) {});
-
         this.links.forEach(function (link) {
             var fromNode = link.fromNode;
             var toNode = link.toNode;
-
             var channel = new Channel();
             link.connect(channel);
             channel.connect();
@@ -846,7 +837,6 @@ var Graph = (function (_Node) {
         this.id = attributes.id || "<graph>";
         this.nodes = {};
         this.links = {};
-
         this.nodes[this.id] = this;
         Object.keys(attributes.nodes || {}).forEach(function (id) {
             _this11.addNode(id, attributes.nodes[id]);
@@ -894,17 +884,24 @@ var Graph = (function (_Node) {
         });
     };
 
+    Graph.prototype.getNodes = function getNodes() {
+        return this.nodes;
+    };
+
     Graph.prototype.getAllNodes = function getAllNodes() {
         var _this14 = this;
 
         var nodes = [];
         Object.keys(this.nodes).forEach(function (id) {
             var node = _this14.nodes[id];
-
             if (node != _this14 && node instanceof Graph) nodes = nodes.concat(node.getAllNodes());
             nodes.push(node);
         });
         return nodes;
+    };
+
+    Graph.prototype.getLinks = function getLinks() {
+        return this.links;
     };
 
     Graph.prototype.getAllLinks = function getAllLinks() {
@@ -952,6 +949,10 @@ var Graph = (function (_Node) {
 
     Graph.prototype.removeNode = function removeNode(id) {
         delete this.nodes[id];
+    };
+
+    Graph.prototype.getLinkByID = function getLinkByID(id) {
+        return this.links[id];
     };
 
     Graph.prototype.addLink = function addLink(id, attributes) {

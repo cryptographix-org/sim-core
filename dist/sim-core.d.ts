@@ -1,5 +1,26 @@
 declare module 'sim-core' {
 
+export declare class Key {
+    protected id: string;
+    protected keyComponents: any[];
+    constructor(id: string, attributes: any);
+    getComponent(componentID: string): any;
+    setComponent(componentID: string, value: any): void;
+}
+
+
+export declare class PublicKey extends Key {
+}
+
+/// <reference path="../../../sim-core/types/forge/forge.d.ts" />
+/// <reference path="../../../sim-core/types/jsbn/jsbn.d.ts" />
+export declare class CryptographicServiceProvider {
+    constructor();
+    makePublicKey(m: string, e: string): forge.rsa.PublicKey;
+    decrypt(cg: string, pk: forge.rsa.PublicKey): string;
+    static BN: typeof jsbn.BigInteger;
+}
+
 export declare class ByteArray {
     byteArray: Uint8Array;
     length: Number;
@@ -45,6 +66,7 @@ export interface Kind {
     properties: {};
 }
 
+
 export declare class Message {
     private header;
     private payload;
@@ -52,6 +74,8 @@ export declare class Message {
     getHeader(): Object;
     getPayload(): Kind;
 }
+
+
 
 export declare enum Direction {
     IN = 0,
@@ -80,6 +104,9 @@ export declare class EndPoint {
     static Direction: Direction;
 }
 
+
+
+
 export declare class EndPointEntry {
     endPoint: EndPoint;
     direction: Direction;
@@ -101,15 +128,18 @@ export declare class Channel {
     sendMessage(origin: EndPoint, message: Message): void;
 }
 
+
 export declare type InjectType = (string[] | (() => string[]));
-export interface ComponentInterface {
+export interface Component {
     onCreate?(initialData: Object): any;
     onDestroy?(): any;
     onStart?(endPoints: EndPoints): any;
     onStop?(): any;
 }
 
-export declare class Component implements ComponentInterface {
+
+
+export declare class xComponent implements Component {
     static $inject: InjectType;
     onCreate(initialData: Object): void;
     onDestroy(): void;
@@ -118,11 +148,11 @@ export declare class Component implements ComponentInterface {
     onResume(): void;
     onStop(): void;
 }
-export declare type ComponentType = typeof Component;
+export declare type ComponentType = typeof xComponent;
 export declare class ComponentRegistry {
-    components: ComponentInterface[];
+    components: Component[];
     constructor();
-    setComponent(name: string, comp: ComponentInterface): void;
+    setComponent(name: string, comp: Component): void;
     getComponent(name: string): ComponentType;
     protected loadComponent(name: string): Promise<ComponentType>;
     getComponentInstance(name: string, initialData: Object): Promise<Component>;
@@ -135,28 +165,12 @@ export interface PackageInfo {
     members: {};
 }
 
-export declare class Key {
-    protected id: string;
-    protected keyComponents: any[];
-    constructor(id: string, attributes: any);
-    getComponent(componentID: string): any;
-    setComponent(componentID: string, value: any): void;
-}
-
-export declare class PublicKey extends Key {
-}
-
-/// <reference path="../../types/forge/forge.d.ts" />
-/// <reference path="../../types/jsbn/jsbn.d.ts" />
-export declare class CryptographicServiceProvider {
-    constructor();
-    makePublicKey(m: string, e: string): forge.rsa.PublicKey;
-    decrypt(cg: string, pk: forge.rsa.PublicKey): string;
-    static BN: typeof jsbn.BigInteger;
-}
-
 export declare class SimulationEngine {
 }
+
+
+
+
 
 export declare class Port extends EndPoint {
     protected ownerNode: Node;
@@ -179,6 +193,10 @@ export declare class PublicPort extends Port {
     toObject(opts?: any): Object;
 }
 
+
+
+
+
 export declare class Node {
     protected ownerGraph: Graph;
     protected _id: string;
@@ -188,7 +206,7 @@ export declare class Node {
     protected componentName: string;
     protected setupData: Object;
     view: any;
-    protected component: ComponentInterface;
+    protected component: Component;
     constructor(owner: Graph, attributes: any);
     toObject(opts?: any): Object;
     initializeComponent(registry: ComponentRegistry): Promise<void>;
@@ -198,6 +216,10 @@ export declare class Node {
     getPortByID(id: string): Port;
     identifyPort(id: string, protocol?: string): Port;
 }
+
+
+
+
 
 export declare type EndPointRef = {
     nodeID: string;
@@ -227,6 +249,8 @@ export declare class Link {
     protocolID: string;
 }
 
+
+
 export declare class Network {
     private graph;
     private nodes;
@@ -239,6 +263,10 @@ export declare class Network {
     wireupGraph(router: any): void;
 }
 
+
+
+
+
 export declare class Graph extends Node {
     protected nodes: {
         [id: string]: Node;
@@ -249,13 +277,20 @@ export declare class Graph extends Node {
     constructor(owner: Graph, attributes: any);
     toObject(opts: any): Object;
     initializeComponent(registry: ComponentRegistry): Promise<void>;
+    getNodes(): {
+        [id: string]: Node;
+    };
     getAllNodes(): Node[];
+    getLinks(): {
+        [id: string]: Link;
+    };
     getAllLinks(): Link[];
     getAllPorts(): Port[];
     getNodeByID(id: string): Node;
     addNode(id: string, attributes: {}): Node;
     renameNode(id: string, newID: string): void;
     removeNode(id: string): void;
+    getLinkByID(id: string): Link;
     addLink(id: string, attributes: {}): Link;
     renameLink(id: string, newID: string): void;
     removeLink(id: string): void;

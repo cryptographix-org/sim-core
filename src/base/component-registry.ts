@@ -1,7 +1,7 @@
 import { EndPoints } from './end-point';
-import { ComponentInterface, InjectType } from './component-interface';
+import { Component, InjectType } from './component-interface';
 
-export class Component implements ComponentInterface
+export class xComponent implements Component
 {
   static $inject : InjectType;
 
@@ -35,19 +35,18 @@ export class Component implements ComponentInterface
 
   }
 }
-export type ComponentType = typeof Component;
+export type ComponentType = typeof xComponent;
 
 export class ComponentRegistry
 {
-//  components: ComponentType[];
-  components: ComponentInterface[];
+  components: Component[];
 
   constructor()
   {
     this.components = [];
   }
 
-  setComponent( name: string, comp: ComponentInterface )
+  setComponent( name: string, comp: Component )
   {
     this.components[ name ] = comp;
   }

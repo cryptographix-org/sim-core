@@ -1,5 +1,5 @@
 import { ComponentRegistry} from '../base/component-registry';
-import { ComponentInterface } from '../base/component-interface';
+import { Component } from '../base/component-interface';
 
 import { Graph } from './graph';
 import { Port } from './port';
@@ -16,7 +16,7 @@ export class Node
 
   public view: any;
 
-  protected component: ComponentInterface;
+  protected component: Component;
 
   constructor( owner: Graph, attributes )
   {

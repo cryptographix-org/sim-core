@@ -1,3 +1,40 @@
+export class Key {
+    constructor(id, attributes) {
+        this.id = id;
+        this.keyComponents = attributes;
+    }
+    getComponent(componentID) {
+        return this.keyComponents[componentID];
+    }
+    setComponent(componentID, value) {
+        this.keyComponents[componentID] = value;
+    }
+}
+
+
+export class PublicKey extends Key {
+}
+
+var BN = forge.jsbn.BigInteger;
+export class CryptographicServiceProvider {
+    constructor() {
+    }
+    makePublicKey(m, e) {
+        let mod = new forge.jsbn.BigInteger(m, 16);
+        let exp = new forge.jsbn.BigInteger(e, 16);
+        let pk = forge.rsa.setPublicKey(mod, exp);
+        console.log(pk.n);
+        console.log(pk.e);
+        return pk;
+    }
+    decrypt(cg, pk) {
+        //var bb = new forge.util.ByteBuffer( cg, 16 );
+        var xx = pk.encrypt(cg, "RAW");
+        return xx;
+    }
+}
+CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
+
 export class ByteArray {
     constructor(bytes, opt) {
         if (bytes instanceof ByteArray)
@@ -120,14 +157,9 @@ TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["We
 TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
 TaskScheduler.taskQueueCapacity = 1024;
 
-///
-/// @class KindHelper
-///
-/// Builder for 'Kind' metadata
 export class KindHelper {
     init(kindName, description) {
         this.kindInfo = {
-            //"$schema": "http://json-schema.org/draft-04/schema#",
             title: kindName,
             description: description,
             type: "object",
@@ -148,30 +180,6 @@ export class KindHelper {
         return ki;
     }
 }
-/*  makeKind( kindConstructor, kindOptions )
-  {
-    var $kindInfo = kindOptions.kindInfo;
-
-    kindConstructor.$kindName = $kindInfo.title;
-
-    var keys = Object.keys( kindOptions.kindMethods );
-
-    for ( var j = 0, jj = keys.length; j < jj; j++ ) {
-      var key = keys[j];
-      kindConstructor[key] = kindOptions.kindMethods[key];
-    }
-
-    kindConstructor.getKindInfo = kindConstructor.prototype.getKindInfo = function getKindInfo() {
-      return $kindInfo;
-    }
-
-    return kindConstructor;
-  }
-*/
-///
-/// @class KindInfo
-///
-/// Metadata about a 'Kind'
 export class KindInfo {
 }
 KindInfo.$kindHelper = new KindHelper();
@@ -249,6 +257,8 @@ export class EndPoint {
     }
 }
 
+
+
 export class EndPointEntry {
 }
 export class Channel {
@@ -321,7 +331,7 @@ export class Channel {
 
 
 
-export class Component {
+export class xComponent {
     onCreate(initialData) {
     }
     onDestroy() {
@@ -382,45 +392,9 @@ export class ComponentRegistry {
 
 
 
-export class Key {
-    constructor(id, attributes) {
-        this.id = id;
-        this.keyComponents = attributes;
-    }
-    getComponent(componentID) {
-        return this.keyComponents[componentID];
-    }
-    setComponent(componentID, value) {
-        this.keyComponents[componentID] = value;
-    }
-}
-
-export class PublicKey extends Key {
-}
-
-var BN = forge.jsbn.BigInteger;
-export class CryptographicServiceProvider {
-    constructor() {
-    }
-    makePublicKey(m, e) {
-        let mod = new forge.jsbn.BigInteger(m, 16);
-        let exp = new forge.jsbn.BigInteger(e, 16);
-        let pk = forge.rsa.setPublicKey(mod, exp);
-        console.log(pk.n);
-        console.log(pk.e);
-        return pk;
-    }
-    decrypt(cg, pk) {
-        //var bb = new forge.util.ByteBuffer( cg, 16 );
-        //    var xx = forge.rsa.decrypt( em, pk, true, false );
-        var xx = pk.encrypt(cg, "RAW");
-        return xx;
-    }
-}
-CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
-
 export class SimulationEngine {
 }
+
 
 export class Port extends EndPoint {
     constructor(owner, attributes) {
@@ -454,31 +428,21 @@ export class PublicPort extends Port {
             : (this.direction == Direction.OUT)
                 ? Direction.IN
                 : Direction.INOUT;
-        // Create an EndPoint to proxy between the Public and Private (internal)
-        // sides of the Port.
         this.proxyEndPoint = new EndPoint(proxyDirection);
-        // Wire-up proxy -
-        // Forward incoming events (from public interface) to private
         this.proxyEndPoint.onEvent((from, evt) => {
             this.triggerEvent(evt);
         });
-        // Forward incoming packets (from public interface) to private
         this.proxyEndPoint.onMessage((from, message) => {
             this.sendMessage(message);
         });
-        // Forward outgoing events (from private interface) to public
         this.onEvent((from, evt) => {
             this.proxyEndPoint.triggerEvent(evt);
         });
-        // Forward outgoing packets (from private interface) to public
         this.onMessage((from, message) => {
             this.proxyEndPoint.sendMessage(message);
         });
-        // not yet connected
         this.proxyChannel = null;
     }
-    // Connect to Private (internal) EndPoint. To be called during graph
-    // wireUp phase
     connectPrivate(channel) {
         this.proxyChannel = channel;
         this.proxyEndPoint.connect(channel);
@@ -491,6 +455,7 @@ export class PublicPort extends Port {
         return port;
     }
 }
+
 
 export class Node {
     constructor(owner, attributes) {
@@ -590,9 +555,7 @@ export class Link {
         this._id = id;
     }
     connect(channel) {
-        // identify fromPort in fromNode
         var fromPort = this.fromNode.identifyPort(this.from.portID, this.protocolID);
-        // identify toPort in toNode
         var toPort = this.toNode.identifyPort(this.to.portID, this.protocolID);
         this.channel = channel;
         fromPort.connect(channel);
@@ -642,6 +605,7 @@ Link.propertyMap = {
     to: "to",
 };
 
+
 export class Network {
     constructor(graph, componentRegistry) {
         this.graph = graph;
@@ -654,28 +618,15 @@ export class Network {
         return this.initializeGraph();
     }
     initializeGraph() {
-        /*    return new Promise<void>( (resolve, reject) => {
-        
-              .then( return this.wireupGraph() => { resolve() } );
-              .then( () => { resolve() } );
-        
-            })
-        */
         return this.graph.initializeComponent(this.componentRegistry);
     }
     wireupGraph(router) {
         var me = this;
         this.nodes.forEach(function (node) {
-            //node.router = router;
-            //node.mapPorts();
         });
-        // Build linkList from config link elements
-        // Each element links ports on two nodes
         this.links.forEach((link) => {
-            // find linked nodes
             var fromNode = link.fromNode;
             var toNode = link.toNode;
-            //debugMessage( "Link("+link.id+"): " + link.from + " -> " + link.to + " proto="+link.protocol );
             let channel = new Channel();
             link.connect(channel);
             channel.connect();
@@ -683,19 +634,15 @@ export class Network {
     }
 }
 
-/*
- * Graph is
- */
+
+
+
 export class Graph extends Node {
-    // Public Ports in this graph. Inherited from Node
-    // private Ports;
     constructor(owner, attributes) {
         super(owner, attributes);
         this.id = attributes.id || "<graph>";
         this.nodes = {};
         this.links = {};
-        // Add ourselves as a Node, so that Links can reference PublicPorts
-        // on containing Graph
         this.nodes[this.id] = this;
         Object.keys(attributes.nodes || {}).forEach((id) => {
             this.addNode(id, attributes.nodes[id]);
@@ -738,16 +685,21 @@ export class Graph extends Node {
             });
         });
     }
+    getNodes() {
+        return this.nodes;
+    }
     getAllNodes() {
         let nodes = [];
         Object.keys(this.nodes).forEach((id) => {
             let node = this.nodes[id];
-            // Don't recurse on graph's pseudo-node
             if ((node != this) && (node instanceof Graph))
                 nodes = nodes.concat(node.getAllNodes());
             nodes.push(node);
         });
         return nodes;
+    }
+    getLinks() {
+        return this.links;
     }
     getAllLinks() {
         let links = [];
@@ -790,6 +742,9 @@ export class Graph extends Node {
     removeNode(id) {
         delete this.nodes[id];
     }
+    getLinkByID(id) {
+        return this.links[id];
+    }
     addLink(id, attributes) {
         let link = new Link(this, attributes);
         link.id = id;
@@ -812,6 +767,7 @@ export class Graph extends Node {
         return port;
     }
 }
+
 
 export default class GraphTester {
     execTests() {
