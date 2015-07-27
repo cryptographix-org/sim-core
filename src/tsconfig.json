@@ -7,6 +7,6 @@
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "noLib": false,
-	"outDir": "../dist/es6"
+        "outDir": "../dist/es6"
     }
 }

@@ -1,3 +1,5 @@
+import * as forge from 'forge';
+
 export class Key {
     constructor(id, attributes) {
         this.id = id;
@@ -34,6 +36,9 @@ export class CryptographicServiceProvider {
     }
 }
 CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
+
+export class SimulationEngine {
+}
 
 export class ByteArray {
     constructor(bytes, opt) {
@@ -391,9 +396,6 @@ export class ComponentRegistry {
 }
 
 
-
-export class SimulationEngine {
-}
 
 
 export class Port extends EndPoint {

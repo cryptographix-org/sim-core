@@ -1,6 +1,8 @@
-/// <reference path="../../types/forge/forge.d.ts"/>
-/// <reference path="../../types/jsbn/jsbn.d.ts"/>
+/// <xreference path="../../types/forge/forge.d.ts"/>
+/// <xreference path="../../types/jsbn/jsbn.d.ts"/>
 import { PublicKey } from './public-key';
+import * as forge from 'forge';
+import * as jsbn from 'jsbn';
 
 var BN = forge.jsbn.BigInteger;
 

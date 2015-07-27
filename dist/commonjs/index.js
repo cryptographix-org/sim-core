@@ -4,9 +4,15 @@ exports.__esModule = true;
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _forge = require('forge');
+
+var forge = _interopRequireWildcard(_forge);
 
 var Key = (function () {
     function Key(id, attributes) {
@@ -30,13 +36,13 @@ var Key = (function () {
 exports.Key = Key;
 
 var PublicKey = (function (_Key) {
+    _inherits(PublicKey, _Key);
+
     function PublicKey() {
         _classCallCheck(this, PublicKey);
 
         _Key.apply(this, arguments);
     }
-
-    _inherits(PublicKey, _Key);
 
     return PublicKey;
 })(Key);
@@ -70,6 +76,12 @@ var CryptographicServiceProvider = (function () {
 exports.CryptographicServiceProvider = CryptographicServiceProvider;
 
 CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
+
+var SimulationEngine = function SimulationEngine() {
+    _classCallCheck(this, SimulationEngine);
+};
+
+exports.SimulationEngine = SimulationEngine;
 
 var ByteArray = (function () {
     function ByteArray(bytes, opt) {
@@ -115,7 +127,7 @@ var TaskScheduler = (function () {
 
         this.taskQueue = [];
         var self = this;
-        if (typeof TaskScheduler.BrowserMutationObserver === "function") {
+        if (typeof TaskScheduler.BrowserMutationObserver === 'function') {
             this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromMutationObserver(function () {
                 return self.flushTaskQueue();
             });
@@ -129,7 +141,7 @@ var TaskScheduler = (function () {
     TaskScheduler.makeRequestFlushFromMutationObserver = function makeRequestFlushFromMutationObserver(flush) {
         var toggle = 1;
         var observer = new TaskScheduler.BrowserMutationObserver(flush);
-        var node = document.createTextNode("");
+        var node = document.createTextNode('');
         observer.observe(node, { characterData: true });
         return function requestFlush() {
             toggle = -toggle;
@@ -181,7 +193,7 @@ var TaskScheduler = (function () {
     };
 
     TaskScheduler.prototype.onError = function onError(error, task) {
-        if ("onError" in task) {
+        if ('onError' in task) {
             task.onError(error);
         } else if (TaskScheduler.hasSetImmediate) {
             setImmediate(function () {
@@ -200,7 +212,7 @@ var TaskScheduler = (function () {
 exports.TaskScheduler = TaskScheduler;
 
 TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["WebKitMutationObserver"];
-TaskScheduler.hasSetImmediate = typeof setImmediate === "function";
+TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
 TaskScheduler.taskQueueCapacity = 1024;
 
 var KindHelper = (function () {
@@ -508,13 +520,9 @@ var ComponentRegistry = (function () {
 
 exports.ComponentRegistry = ComponentRegistry;
 
-var SimulationEngine = function SimulationEngine() {
-    _classCallCheck(this, SimulationEngine);
-};
-
-exports.SimulationEngine = SimulationEngine;
-
 var Port = (function (_EndPoint) {
+    _inherits(Port, _EndPoint);
+
     function Port(owner, attributes) {
         _classCallCheck(this, Port);
 
@@ -523,8 +531,6 @@ var Port = (function (_EndPoint) {
         this._protocolID = attributes["protocol"] || "any";
         this.ownerNode = owner;
     }
-
-    _inherits(Port, _EndPoint);
 
     Port.prototype.toObject = function toObject(opts) {
         var port = {};
@@ -557,6 +563,8 @@ var Port = (function (_EndPoint) {
 exports.Port = Port;
 
 var PublicPort = (function (_Port) {
+    _inherits(PublicPort, _Port);
+
     function PublicPort(owner, attributes) {
         var _this5 = this;
 
@@ -579,8 +587,6 @@ var PublicPort = (function (_Port) {
         });
         this.proxyChannel = null;
     }
-
-    _inherits(PublicPort, _Port);
 
     PublicPort.prototype.connectPrivate = function connectPrivate(channel) {
         this.proxyChannel = channel;
@@ -828,6 +834,8 @@ var Network = (function () {
 exports.Network = Network;
 
 var Graph = (function (_Node) {
+    _inherits(Graph, _Node);
+
     function Graph(owner, attributes) {
         var _this11 = this;
 
@@ -845,8 +853,6 @@ var Graph = (function (_Node) {
             _this11.addLink(id, attributes.links[id]);
         });
     }
-
-    _inherits(Graph, _Node);
 
     Graph.prototype.toObject = function toObject(opts) {
         var _this12 = this;

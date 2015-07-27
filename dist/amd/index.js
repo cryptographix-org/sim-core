@@ -1,11 +1,11 @@
-define(["exports"], function (exports) {
+define(["exports", "forge"], function (exports, _forge) {
     "use strict";
 
     exports.__esModule = true;
 
     var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -31,20 +31,20 @@ define(["exports"], function (exports) {
     exports.Key = Key;
 
     var PublicKey = (function (_Key) {
+        _inherits(PublicKey, _Key);
+
         function PublicKey() {
             _classCallCheck(this, PublicKey);
 
             _Key.apply(this, arguments);
         }
 
-        _inherits(PublicKey, _Key);
-
         return PublicKey;
     })(Key);
 
     exports.PublicKey = PublicKey;
 
-    var BN = forge.jsbn.BigInteger;
+    var BN = _forge.jsbn.BigInteger;
 
     var CryptographicServiceProvider = (function () {
         function CryptographicServiceProvider() {
@@ -52,9 +52,9 @@ define(["exports"], function (exports) {
         }
 
         CryptographicServiceProvider.prototype.makePublicKey = function makePublicKey(m, e) {
-            var mod = new forge.jsbn.BigInteger(m, 16);
-            var exp = new forge.jsbn.BigInteger(e, 16);
-            var pk = forge.rsa.setPublicKey(mod, exp);
+            var mod = new _forge.jsbn.BigInteger(m, 16);
+            var exp = new _forge.jsbn.BigInteger(e, 16);
+            var pk = _forge.rsa.setPublicKey(mod, exp);
             console.log(pk.n);
             console.log(pk.e);
             return pk;
@@ -70,7 +70,13 @@ define(["exports"], function (exports) {
 
     exports.CryptographicServiceProvider = CryptographicServiceProvider;
 
-    CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
+    CryptographicServiceProvider.BN = _forge.jsbn.BigInteger;
+
+    var SimulationEngine = function SimulationEngine() {
+        _classCallCheck(this, SimulationEngine);
+    };
+
+    exports.SimulationEngine = SimulationEngine;
 
     var ByteArray = (function () {
         function ByteArray(bytes, opt) {
@@ -116,7 +122,7 @@ define(["exports"], function (exports) {
 
             this.taskQueue = [];
             var self = this;
-            if (typeof TaskScheduler.BrowserMutationObserver === "function") {
+            if (typeof TaskScheduler.BrowserMutationObserver === 'function') {
                 this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromMutationObserver(function () {
                     return self.flushTaskQueue();
                 });
@@ -130,7 +136,7 @@ define(["exports"], function (exports) {
         TaskScheduler.makeRequestFlushFromMutationObserver = function makeRequestFlushFromMutationObserver(flush) {
             var toggle = 1;
             var observer = new TaskScheduler.BrowserMutationObserver(flush);
-            var node = document.createTextNode("");
+            var node = document.createTextNode('');
             observer.observe(node, { characterData: true });
             return function requestFlush() {
                 toggle = -toggle;
@@ -182,7 +188,7 @@ define(["exports"], function (exports) {
         };
 
         TaskScheduler.prototype.onError = function onError(error, task) {
-            if ("onError" in task) {
+            if ('onError' in task) {
                 task.onError(error);
             } else if (TaskScheduler.hasSetImmediate) {
                 setImmediate(function () {
@@ -201,7 +207,7 @@ define(["exports"], function (exports) {
     exports.TaskScheduler = TaskScheduler;
 
     TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["WebKitMutationObserver"];
-    TaskScheduler.hasSetImmediate = typeof setImmediate === "function";
+    TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
     TaskScheduler.taskQueueCapacity = 1024;
 
     var KindHelper = (function () {
@@ -509,13 +515,9 @@ define(["exports"], function (exports) {
 
     exports.ComponentRegistry = ComponentRegistry;
 
-    var SimulationEngine = function SimulationEngine() {
-        _classCallCheck(this, SimulationEngine);
-    };
-
-    exports.SimulationEngine = SimulationEngine;
-
     var Port = (function (_EndPoint) {
+        _inherits(Port, _EndPoint);
+
         function Port(owner, attributes) {
             _classCallCheck(this, Port);
 
@@ -524,8 +526,6 @@ define(["exports"], function (exports) {
             this._protocolID = attributes["protocol"] || "any";
             this.ownerNode = owner;
         }
-
-        _inherits(Port, _EndPoint);
 
         Port.prototype.toObject = function toObject(opts) {
             var port = {};
@@ -558,6 +558,8 @@ define(["exports"], function (exports) {
     exports.Port = Port;
 
     var PublicPort = (function (_Port) {
+        _inherits(PublicPort, _Port);
+
         function PublicPort(owner, attributes) {
             var _this5 = this;
 
@@ -580,8 +582,6 @@ define(["exports"], function (exports) {
             });
             this.proxyChannel = null;
         }
-
-        _inherits(PublicPort, _Port);
 
         PublicPort.prototype.connectPrivate = function connectPrivate(channel) {
             this.proxyChannel = channel;
@@ -829,6 +829,8 @@ define(["exports"], function (exports) {
     exports.Network = Network;
 
     var Graph = (function (_Node) {
+        _inherits(Graph, _Node);
+
         function Graph(owner, attributes) {
             var _this11 = this;
 
@@ -846,8 +848,6 @@ define(["exports"], function (exports) {
                 _this11.addLink(id, attributes.links[id]);
             });
         }
-
-        _inherits(Graph, _Node);
 
         Graph.prototype.toObject = function toObject(opts) {
             var _this12 = this;
