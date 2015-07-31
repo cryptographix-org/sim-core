@@ -1,15 +1,53 @@
-export class Key
+export class Key //implements CryptoKey
 {
   protected id: string;
-  protected keyComponents: any[];
 
-  constructor( id: string, attributes: any )
+  protected cryptoKey: CryptoKey;
+
+  constructor( id: string, key?: CryptoKey )
   {
     this.id = id;
-    this.keyComponents = attributes;
+
+    if ( key )
+      this.cryptoKey = key;
+    else
+    {
+      this.cryptoKey =
+      {
+        type: "",
+        algorithm: "",
+        extractable: true,
+        usages: []
+      };
+    }
+
   }
 
-  getComponent( componentID: string ): any
+  public get type(): string
+  {
+    return this.cryptoKey.type;
+  }
+
+  public get algorithm(): KeyAlgorithm
+  {
+    return this.cryptoKey.algorithm;
+  }
+
+  public get extractable(): boolean
+  {
+    return this.cryptoKey.extractable;
+  }
+
+  public get usages(): string[]
+  {
+    return this.cryptoKey.usages;
+  }
+
+  public get innerKey(): CryptoKey
+  {
+    return this.cryptoKey;
+  }
+/*  getComponent( componentID: string ): any
   {
     return this.keyComponents[ componentID ];
   }
@@ -17,5 +55,5 @@ export class Key
   setComponent( componentID: string, value: any )
   {
     this.keyComponents[ componentID ] = value;
-  }
+  }*/
 }

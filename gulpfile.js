@@ -6,7 +6,7 @@ var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
 paths = {
   root: appRoot,
-  project: './src/tsconfig.json',
+  project: appRoot + 'tsconfig.json',
   source: appRoot + '**/*.ts',
   output: 'dist/',
   packageName: pkg.name

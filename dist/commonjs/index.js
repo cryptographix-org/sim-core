@@ -1,97 +1,162 @@
-"use strict";
 
+'use strict';
 exports.__esModule = true;
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _forge = require('forge');
-
-var forge = _interopRequireWildcard(_forge);
-
-var Key = (function () {
-    function Key(id, attributes) {
-        _classCallCheck(this, Key);
-
-        this.id = id;
-        this.keyComponents = attributes;
+var HexCodec = (function () {
+    function HexCodec() {
+        _classCallCheck(this, HexCodec);
     }
 
-    Key.prototype.getComponent = function getComponent(componentID) {
-        return this.keyComponents[componentID];
+    HexCodec.decode = function decode(a) {
+        if (HexCodec.hexDecodeMap == undefined) {
+            var hex = "0123456789ABCDEF";
+            var allow = " \f\n\r\t \u2028\u2029";
+            var dec = [];
+            for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
+            hex = hex.toLowerCase();
+            for (var i = 10; i < 16; ++i) dec[hex.charAt(i)] = i;
+            for (var i = 0; i < allow.length; ++i) dec[allow.charAt(i)] = -1;
+            HexCodec.hexDecodeMap = dec;
+        }
+        var out = [];
+        var bits = 0,
+            char_count = 0;
+        for (var i = 0; i < a.length; ++i) {
+            var c = a.charAt(i);
+            if (c == '=') break;
+            var b = HexCodec.hexDecodeMap[c];
+            if (b == -1) continue;
+            if (b == undefined) throw 'Illegal character at offset ' + i;
+            bits |= b;
+            if (++char_count >= 2) {
+                out.push(bits);
+                bits = 0;
+                char_count = 0;
+            } else {
+                bits <<= 4;
+            }
+        }
+        if (char_count) throw "Hex encoding incomplete: 4 bits missing";
+        return Uint8Array.from(out);
     };
 
-    Key.prototype.setComponent = function setComponent(componentID, value) {
-        this.keyComponents[componentID] = value;
-    };
-
-    return Key;
+    return HexCodec;
 })();
 
-exports.Key = Key;
+var BASE64SPECIALS;
+(function (BASE64SPECIALS) {
+    BASE64SPECIALS[BASE64SPECIALS["PLUS"] = '+'.charCodeAt(0)] = "PLUS";
+    BASE64SPECIALS[BASE64SPECIALS["SLASH"] = '/'.charCodeAt(0)] = "SLASH";
+    BASE64SPECIALS[BASE64SPECIALS["NUMBER"] = '0'.charCodeAt(0)] = "NUMBER";
+    BASE64SPECIALS[BASE64SPECIALS["LOWER"] = 'a'.charCodeAt(0)] = "LOWER";
+    BASE64SPECIALS[BASE64SPECIALS["UPPER"] = 'A'.charCodeAt(0)] = "UPPER";
+    BASE64SPECIALS[BASE64SPECIALS["PLUS_URL_SAFE"] = '-'.charCodeAt(0)] = "PLUS_URL_SAFE";
+    BASE64SPECIALS[BASE64SPECIALS["SLASH_URL_SAFE"] = '_'.charCodeAt(0)] = "SLASH_URL_SAFE";
+})(BASE64SPECIALS || (BASE64SPECIALS = {}));
 
-var PublicKey = (function (_Key) {
-    _inherits(PublicKey, _Key);
-
-    function PublicKey() {
-        _classCallCheck(this, PublicKey);
-
-        _Key.apply(this, arguments);
+var Base64Codec = (function () {
+    function Base64Codec() {
+        _classCallCheck(this, Base64Codec);
     }
 
-    return PublicKey;
-})(Key);
-
-exports.PublicKey = PublicKey;
-
-var BN = forge.jsbn.BigInteger;
-
-var CryptographicServiceProvider = (function () {
-    function CryptographicServiceProvider() {
-        _classCallCheck(this, CryptographicServiceProvider);
-    }
-
-    CryptographicServiceProvider.prototype.makePublicKey = function makePublicKey(m, e) {
-        var mod = new forge.jsbn.BigInteger(m, 16);
-        var exp = new forge.jsbn.BigInteger(e, 16);
-        var pk = forge.rsa.setPublicKey(mod, exp);
-        console.log(pk.n);
-        console.log(pk.e);
-        return pk;
+    Base64Codec.decode = function decode(b64) {
+        var i, j, l, tmp, placeHolders, arr;
+        if (b64.length % 4 > 0) {
+            throw new Error('Invalid base64 string. Length must be a multiple of 4');
+        }
+        function decode(elt) {
+            var code = elt.charCodeAt(0);
+            if (code === BASE64SPECIALS.PLUS || code === BASE64SPECIALS.PLUS_URL_SAFE) return 62;
+            if (code === BASE64SPECIALS.SLASH || code === BASE64SPECIALS.SLASH_URL_SAFE) return 63;
+            if (code >= BASE64SPECIALS.NUMBER) {
+                if (code < BASE64SPECIALS.NUMBER + 10) return code - BASE64SPECIALS.NUMBER + 26 + 26;
+                if (code < BASE64SPECIALS.UPPER + 26) return code - BASE64SPECIALS.UPPER;
+                if (code < BASE64SPECIALS.LOWER + 26) return code - BASE64SPECIALS.LOWER + 26;
+            }
+            throw new Error('Invalid base64 string. Character not valid');
+        }
+        var len = b64.length;
+        placeHolders = b64.charAt(len - 2) === '=' ? 2 : b64.charAt(len - 1) === '=' ? 1 : 0;
+        arr = new Uint8Array(b64.length * 3 / 4 - placeHolders);
+        l = placeHolders > 0 ? b64.length - 4 : b64.length;
+        var L = 0;
+        function push(v) {
+            arr[L++] = v;
+        }
+        for (i = 0, j = 0; i < l; i += 4, j += 3) {
+            tmp = decode(b64.charAt(i)) << 18 | decode(b64.charAt(i + 1)) << 12 | decode(b64.charAt(i + 2)) << 6 | decode(b64.charAt(i + 3));
+            push((tmp & 0xFF0000) >> 16);
+            push((tmp & 0xFF00) >> 8);
+            push(tmp & 0xFF);
+        }
+        if (placeHolders === 2) {
+            tmp = decode(b64.charAt(i)) << 2 | decode(b64.charAt(i + 1)) >> 4;
+            push(tmp & 0xFF);
+        } else if (placeHolders === 1) {
+            tmp = decode(b64.charAt(i)) << 10 | decode(b64.charAt(i + 1)) << 4 | decode(b64.charAt(i + 2)) >> 2;
+            push(tmp >> 8 & 0xFF);
+            push(tmp & 0xFF);
+        }
+        return arr;
     };
 
-    CryptographicServiceProvider.prototype.decrypt = function decrypt(cg, pk) {
-        var xx = pk.encrypt(cg, "RAW");
-        return xx;
+    Base64Codec.encode = function encode(uint8) {
+        var i;
+        var extraBytes = uint8.length % 3;
+        var output = '';
+        var temp, length;
+        var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        function encode(num) {
+            return lookup.charAt(num);
+        }
+        function tripletToBase64(num) {
+            return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F);
+        }
+        for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+            temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + uint8[i + 2];
+            output += tripletToBase64(temp);
+        }
+        switch (extraBytes) {
+            case 1:
+                temp = uint8[uint8.length - 1];
+                output += encode(temp >> 2);
+                output += encode(temp << 4 & 0x3F);
+                output += '==';
+                break;
+            case 2:
+                temp = (uint8[uint8.length - 2] << 8) + uint8[uint8.length - 1];
+                output += encode(temp >> 10);
+                output += encode(temp >> 4 & 0x3F);
+                output += encode(temp << 2 & 0x3F);
+                output += '=';
+                break;
+            default:
+                break;
+        }
+        return output;
     };
 
-    return CryptographicServiceProvider;
+    return Base64Codec;
 })();
-
-exports.CryptographicServiceProvider = CryptographicServiceProvider;
-
-CryptographicServiceProvider.BN = forge.jsbn.BigInteger;
-
-var SimulationEngine = function SimulationEngine() {
-    _classCallCheck(this, SimulationEngine);
-};
-
-exports.SimulationEngine = SimulationEngine;
 
 var ByteArray = (function () {
     function ByteArray(bytes, opt) {
         _classCallCheck(this, ByteArray);
 
-        if (bytes instanceof ByteArray) this.byteArray = bytes.byteArray;else if (bytes instanceof Array) this.byteArray = new Uint8Array(bytes);else if (typeof bytes == "string") {
-            var str = bytes.replace(/ /g, "");
-            var len = str.length / 2;
-            this.byteArray = new Uint8Array(len);
-            for (var ii = 0, jj = 0; ii < len; ++ii, jj += 2) this.byteArray[ii] = parseInt(str.substring(jj, jj + 2), 16);
+        if (bytes instanceof ArrayBuffer) this.byteArray = new Uint8Array(bytes);else if (bytes instanceof ByteArray) this.byteArray = bytes.byteArray;else if (bytes instanceof Array) this.byteArray = new Uint8Array(bytes);else if (typeof bytes == "string") {
+            if (opt.format && opt.format.toLowerCase() == 'base64') {
+                this.byteArray = Base64Codec.decode(bytes);
+            } else if (opt.format && opt.format.toLowerCase() == 'hex') {
+                this.byteArray = HexCodec.decode(bytes);
+            } else {
+                this.byteArray = new Uint8Array(bytes);
+            }
         } else if (bytes instanceof Uint8Array) this.byteArray = bytes;
         this.length = bytes ? this.byteArray.length : 0;
     }
@@ -115,6 +180,8 @@ var ByteArray = (function () {
     ByteArray.prototype.bytes = function bytes(offset, count) {
         return new ByteArray(this.byteArray.subarray(offset, offset + count));
     };
+
+    ByteArray.prototype.toString = function toString(opt) {};
 
     return ByteArray;
 })();
@@ -520,6 +587,194 @@ var ComponentRegistry = (function () {
 
 exports.ComponentRegistry = ComponentRegistry;
 
+var Key = (function () {
+    function Key(id, key) {
+        _classCallCheck(this, Key);
+
+        this.id = id;
+        if (key) this.cryptoKey = key;else {
+            this.cryptoKey = {
+                type: "",
+                algorithm: "",
+                extractable: true,
+                usages: []
+            };
+        }
+    }
+
+    _createClass(Key, [{
+        key: "type",
+        get: function get() {
+            return this.cryptoKey.type;
+        }
+    }, {
+        key: "algorithm",
+        get: function get() {
+            return this.cryptoKey.algorithm;
+        }
+    }, {
+        key: "extractable",
+        get: function get() {
+            return this.cryptoKey.extractable;
+        }
+    }, {
+        key: "usages",
+        get: function get() {
+            return this.cryptoKey.usages;
+        }
+    }, {
+        key: "innerKey",
+        get: function get() {
+            return this.cryptoKey;
+        }
+    }]);
+
+    return Key;
+})();
+
+exports.Key = Key;
+
+var PrivateKey = (function (_Key) {
+    _inherits(PrivateKey, _Key);
+
+    function PrivateKey() {
+        _classCallCheck(this, PrivateKey);
+
+        _Key.apply(this, arguments);
+    }
+
+    return PrivateKey;
+})(Key);
+
+exports.PrivateKey = PrivateKey;
+
+var PublicKey = (function (_Key2) {
+    _inherits(PublicKey, _Key2);
+
+    function PublicKey() {
+        _classCallCheck(this, PublicKey);
+
+        _Key2.apply(this, arguments);
+    }
+
+    return PublicKey;
+})(Key);
+
+exports.PublicKey = PublicKey;
+
+var KeyPair = function KeyPair() {
+    _classCallCheck(this, KeyPair);
+};
+
+exports.KeyPair = KeyPair;
+
+var CryptographicServiceProvider = (function () {
+    function CryptographicServiceProvider() {
+        _classCallCheck(this, CryptographicServiceProvider);
+
+        this.crypto = window.crypto.subtle;
+        if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
+    }
+
+    CryptographicServiceProvider.prototype.decrypt = function decrypt(algorithm, key, data) {
+        var _this5 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this5.crypto.decrypt(algorithm, key.innerKey, data.byteArray).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.digest = function digest(algorithm, data) {
+        var _this6 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this6.crypto.digest(algorithm, data.byteArray).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.encrypt = function encrypt(algorithm, key, data) {
+        var _this7 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this7.crypto.encrypt(algorithm, key.innerKey, data.byteArray).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.exportKey = function exportKey(format, key) {
+        var _this8 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this8.crypto.exportKey(format, key.innerKey).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
+        return new Promise(function (resolve, reject) {});
+    };
+
+    CryptographicServiceProvider.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+        var _this9 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this9.crypto.importKey(format, keyData.byteArray, algorithm, extractable, keyUsages).then(function (res) {
+                resolve(res);
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.sign = function sign(algorithm, key, data) {
+        var _this10 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this10.crypto.sign(algorithm, key.innerKey, data.byteArray).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    CryptographicServiceProvider.prototype.verify = function verify(algorithm, key, signature, data) {
+        var _this11 = this;
+
+        return new Promise(function (resolve, reject) {
+            _this11.crypto.verify(algorithm, key.innerKey, signature.byteArray, data.byteArray).then(function (res) {
+                resolve(new ByteArray(res));
+            })["catch"](function (err) {
+                reject(err);
+            });
+        });
+    };
+
+    return CryptographicServiceProvider;
+})();
+
+exports.CryptographicServiceProvider = CryptographicServiceProvider;
+
+var SimulationEngine = function SimulationEngine() {
+    _classCallCheck(this, SimulationEngine);
+};
+
+exports.SimulationEngine = SimulationEngine;
+
 var Port = (function (_EndPoint) {
     _inherits(Port, _EndPoint);
 
@@ -566,7 +821,7 @@ var PublicPort = (function (_Port) {
     _inherits(PublicPort, _Port);
 
     function PublicPort(owner, attributes) {
-        var _this5 = this;
+        var _this12 = this;
 
         _classCallCheck(this, PublicPort);
 
@@ -574,16 +829,16 @@ var PublicPort = (function (_Port) {
         var proxyDirection = this.direction == Direction.IN ? Direction.OUT : this.direction == Direction.OUT ? Direction.IN : Direction.INOUT;
         this.proxyEndPoint = new EndPoint(proxyDirection);
         this.proxyEndPoint.onEvent(function (from, evt) {
-            _this5.triggerEvent(evt);
+            _this12.triggerEvent(evt);
         });
         this.proxyEndPoint.onMessage(function (from, message) {
-            _this5.sendMessage(message);
+            _this12.sendMessage(message);
         });
         this.onEvent(function (from, evt) {
-            _this5.proxyEndPoint.triggerEvent(evt);
+            _this12.proxyEndPoint.triggerEvent(evt);
         });
         this.onMessage(function (from, message) {
-            _this5.proxyEndPoint.sendMessage(message);
+            _this12.proxyEndPoint.sendMessage(message);
         });
         this.proxyChannel = null;
     }
@@ -609,7 +864,7 @@ exports.PublicPort = PublicPort;
 
 var Node = (function () {
     function Node(owner, attributes) {
-        var _this6 = this;
+        var _this13 = this;
 
         _classCallCheck(this, Node);
 
@@ -620,30 +875,30 @@ var Node = (function () {
         this.componentName = attributes.componentName || "";
         this.setupData = attributes.setupData || {};
         Object.keys(attributes.ports || {}).forEach(function (id) {
-            _this6.addPort(id, attributes.ports[id]);
+            _this13.addPort(id, attributes.ports[id]);
         });
     }
 
     Node.prototype.toObject = function toObject(opts) {
-        var _this7 = this;
+        var _this14 = this;
 
         var node = {
             id: this.id,
             ports: {}
         };
         Object.keys(this.ports).forEach(function (id) {
-            node.ports[id] = _this7.ports[id].toObject();
+            node.ports[id] = _this14.ports[id].toObject();
         });
         return node;
     };
 
     Node.prototype.initializeComponent = function initializeComponent(registry) {
-        var _this8 = this;
+        var _this15 = this;
 
         var me = this;
         this.component = {};
         return new Promise(function (resolve, reject) {
-            if (!_this8.componentName || _this8.componentName == "") resolve();else registry.getComponentInstance(_this8.componentName, _this8.setupData).then(function (newInstance) {
+            if (!_this15.componentName || _this15.componentName == "") resolve();else registry.getComponentInstance(_this15.componentName, _this15.setupData).then(function (newInstance) {
                 me.component = newInstance;
                 resolve();
             })["catch"](function (err) {
@@ -660,11 +915,11 @@ var Node = (function () {
     };
 
     Node.prototype.getPorts = function getPorts() {
-        var _this9 = this;
+        var _this16 = this;
 
         var ports = [];
         Object.keys(this.ports).forEach(function (id) {
-            ports.push(_this9.ports[id]);
+            ports.push(_this16.ports[id]);
         });
         return ports;
     };
@@ -674,12 +929,12 @@ var Node = (function () {
     };
 
     Node.prototype.identifyPort = function identifyPort(id, protocol) {
-        var _this10 = this;
+        var _this17 = this;
 
         var port;
         if (id) port = this.ports[id];else if (protocol) {
             Object.keys(this.ports).forEach(function (id) {
-                var p = _this10.ports[id];
+                var p = _this17.ports[id];
                 if (p.protocol == protocol) port = p;
             }, this);
         }
@@ -837,7 +1092,7 @@ var Graph = (function (_Node) {
     _inherits(Graph, _Node);
 
     function Graph(owner, attributes) {
-        var _this11 = this;
+        var _this18 = this;
 
         _classCallCheck(this, Graph);
 
@@ -847,37 +1102,37 @@ var Graph = (function (_Node) {
         this.links = {};
         this.nodes[this.id] = this;
         Object.keys(attributes.nodes || {}).forEach(function (id) {
-            _this11.addNode(id, attributes.nodes[id]);
+            _this18.addNode(id, attributes.nodes[id]);
         });
         Object.keys(attributes.links || {}).forEach(function (id) {
-            _this11.addLink(id, attributes.links[id]);
+            _this18.addLink(id, attributes.links[id]);
         });
     }
 
     Graph.prototype.toObject = function toObject(opts) {
-        var _this12 = this;
+        var _this19 = this;
 
         var graph = _Node.prototype.toObject.call(this);
         var nodes = graph["nodes"] = {};
         Object.keys(this.nodes).forEach(function (id) {
-            var node = _this12.nodes[id];
-            if (node != _this12) nodes[id] = node.toObject();
+            var node = _this19.nodes[id];
+            if (node != _this19) nodes[id] = node.toObject();
         });
         var links = graph["links"] = {};
         Object.keys(this.links).forEach(function (id) {
-            links[id] = _this12.links[id].toObject();
+            links[id] = _this19.links[id].toObject();
         });
         return graph;
     };
 
     Graph.prototype.initializeComponent = function initializeComponent(registry) {
-        var _this13 = this;
+        var _this20 = this;
 
         return new Promise(function (resolve, reject) {
             var pendingCount = 0;
-            Object.keys(_this13.nodes).forEach(function (id) {
-                var node = _this13.nodes[id];
-                if (node != _this13) {
+            Object.keys(_this20.nodes).forEach(function (id) {
+                var node = _this20.nodes[id];
+                if (node != _this20) {
                     pendingCount++;
                     node.initializeComponent(registry).then(function () {
                         --pendingCount;
@@ -895,12 +1150,12 @@ var Graph = (function (_Node) {
     };
 
     Graph.prototype.getAllNodes = function getAllNodes() {
-        var _this14 = this;
+        var _this21 = this;
 
         var nodes = [];
         Object.keys(this.nodes).forEach(function (id) {
-            var node = _this14.nodes[id];
-            if (node != _this14 && node instanceof Graph) nodes = nodes.concat(node.getAllNodes());
+            var node = _this21.nodes[id];
+            if (node != _this21 && node instanceof Graph) nodes = nodes.concat(node.getAllNodes());
             nodes.push(node);
         });
         return nodes;
@@ -911,27 +1166,27 @@ var Graph = (function (_Node) {
     };
 
     Graph.prototype.getAllLinks = function getAllLinks() {
-        var _this15 = this;
+        var _this22 = this;
 
         var links = [];
         Object.keys(this.nodes).forEach(function (id) {
-            var node = _this15.nodes[id];
-            if (node != _this15 && node instanceof Graph) links = links.concat(node.getAllLinks());
+            var node = _this22.nodes[id];
+            if (node != _this22 && node instanceof Graph) links = links.concat(node.getAllLinks());
         });
         Object.keys(this.links).forEach(function (id) {
-            var link = _this15.links[id];
+            var link = _this22.links[id];
             links.push(link);
         });
         return links;
     };
 
     Graph.prototype.getAllPorts = function getAllPorts() {
-        var _this16 = this;
+        var _this23 = this;
 
         var ports = _Node.prototype.getPorts.call(this);
         Object.keys(this.nodes).forEach(function (id) {
-            var node = _this16.nodes[id];
-            if (node != _this16 && node instanceof Graph) ports = ports.concat(node.getAllPorts());else ports = ports.concat(node.getPorts());
+            var node = _this23.nodes[id];
+            if (node != _this23 && node instanceof Graph) ports = ports.concat(node.getAllPorts());else ports = ports.concat(node.getPorts());
         });
         return ports;
     };

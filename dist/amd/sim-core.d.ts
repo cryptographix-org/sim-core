@@ -1,38 +1,16 @@
 declare module 'sim-core'
 {
-import * as forge from 'forge';
 
-  export class Key {
-      protected id: string;
-      protected keyComponents: any[];
-      constructor(id: string, attributes: any);
-      getComponent(componentID: string): any;
-      setComponent(componentID: string, value: any): void;
-  }
-  
-  
-  export class PublicKey extends Key {
-  }
-  
-  export class CryptographicServiceProvider {
-      constructor();
-      makePublicKey(m: string, e: string): forge.rsa.PublicKey;
-      decrypt(cg: string, pk: forge.rsa.PublicKey): string;
-      static BN: any;
-  }
-  
-  export class SimulationEngine {
-  }
-  
   export class ByteArray {
       byteArray: Uint8Array;
       length: Number;
-      constructor(bytes: any | ByteArray | number | Array<number> | String, opt?: any);
+      constructor(bytes: any | ByteArray | number | Array<number> | String | ArrayBuffer, opt?: any);
       byteAt(offset: number): Number;
       wordAt(offset: number): number;
       littleEndianWordAt(offset: any): number;
       dwordAt(offset: number): number;
       bytes(offset: any, count: any): ByteArray;
+      toString(opt: {}): void;
   }
   
   export type Task = () => void;
@@ -166,6 +144,51 @@ import * as forge from 'forge';
       description: String;
       author: String;
       members: {};
+  }
+  
+  export class Key {
+      protected id: string;
+      protected cryptoKey: CryptoKey;
+      constructor(id: string, key?: CryptoKey);
+      type: string;
+      algorithm: KeyAlgorithm;
+      extractable: boolean;
+      usages: string[];
+      innerKey: CryptoKey;
+  }
+  
+  
+  export class PrivateKey extends Key {
+  }
+  
+  
+  export class PublicKey extends Key {
+  }
+  
+  
+  
+  export class KeyPair {
+      privateKey: PrivateKey;
+      publicKey: PublicKey;
+  }
+  
+  
+  
+  
+  export class CryptographicServiceProvider {
+      crypto: SubtleCrypto;
+      constructor();
+      decrypt(algorithm: string | Algorithm, key: Key, data: ByteArray): Promise<ByteArray>;
+      digest(algorithm: string | Algorithm, data: ByteArray): any;
+      encrypt(algorithm: string | Algorithm, key: Key, data: ByteArray): Promise<ByteArray>;
+      exportKey(format: string, key: Key): Promise<ByteArray>;
+      generateKey(algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<Key | KeyPair>;
+      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      sign(algorithm: string | Algorithm, key: Key, data: ByteArray): Promise<ByteArray>;
+      verify(algorithm: string | Algorithm, key: Key, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
+  }
+  
+  export class SimulationEngine {
   }
   
   
