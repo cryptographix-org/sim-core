@@ -34,7 +34,13 @@
   },
   "devDependencies": {
     "cgfx-build-tools": "^0.1.1",
-    "gulp": "^3.9.0"
+    "gulp": "^3.9.0",
+    "karma": "^0.13.14",
+    "karma-babel-preprocessor": "^6.0.1",
+    "karma-chrome-launcher": "^0.2.1",
+    "karma-jasmine": "^0.3.6",
+    "karma-jasmine-html-reporter": "^0.1.8",
+    "karma-jspm": "^2.0.2"
   },
   "scripts": {
     "build": "gulp build"
