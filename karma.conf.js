@@ -31,22 +31,6 @@ module.exports = function(config) {
     exclude: [
     ],
 
-    preprocessors: {
-      'dist/**/*.js': ['babel']
-    },
-    'babelPreprocessor': {
-      options: {
-        sourceMap: 'inline',
-        modules: 'system',
-        moduleIds: false,
-        loose: "all",
-        optional: [
-          "es7.decorators",
-          "es7.classProperties"
-        ]
-      }
-    },
-
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
