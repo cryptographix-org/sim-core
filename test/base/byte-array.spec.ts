@@ -1,18 +1,5 @@
 import { ByteArray } from 'sim-core';
 
-function isEqual( ba1: ByteArray, ba2: ByteArray ): boolean
-{
-  let ok = ba1.length == ba2.length;
-
-  if ( ok )
-  {
-    for( let i = 0; ok && ( i < ba1.length ); ++i )
-      ok = ok && (ba1.byteAt(i) == ba2.byteAt(i) );
-  }
-
-  return ok;
-}
-
 describe('A ByteArray', () => {
   it('stores a sequence of bytes', () => {
     let bs = new ByteArray( [ 0, 1, 2, 3, 4 ] );
@@ -31,11 +18,14 @@ describe('A ByteArray', () => {
     expect( bs.length ).toBe( 10000 );
   } );
 
-  it('can be compared to another', () => {
+  it('can be compared (equal)', () => {
     let bs1 = new ByteArray( [ 0, 1, 2, 3, 4 ] );
     let bs2 = new ByteArray( "00 01 02 03 04", ByteArray.HEX );
+    let bs3 = bs1.clone().setByteAt( 1, 0x99 );
 
-    expect( isEqual( bs1, bs2 ) ).toBe(true);
+    expect( bs1.equals( bs1 ) ).toBe(true);
+    expect( bs1.equals( bs2 ) ).toBe(true);
+    expect( bs1.equals( bs3 ) ).not.toBe(true);
   } )
 
 } );

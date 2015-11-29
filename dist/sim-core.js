@@ -177,7 +177,11 @@ export class ByteArray {
     bytes(offset, count) {
         return new ByteArray(this.byteArray.subarray(offset, offset + count));
     }
-    toString(opt) {
+    toString(opt = {}) {
+        let s = "";
+        for (var i = 0; i < this.length; ++i)
+            s += ("0" + this.byteArray[i].toString(16)).substring(-2);
+        return s;
     }
 }
 

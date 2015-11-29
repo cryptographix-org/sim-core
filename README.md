@@ -36,4 +36,15 @@ To build the code, follow these steps.
   gulp build
   ```
 5. You will find the compiled code in the `dist` folder, available in three module formats: AMD, CommonJS and ES6.
+6. To run the tests, you can simply run:
+
+  ```shell
+  gulp test
+  ```
+  You make need to install and configure jspm beforehand
+  ```shell
+  npm install -g jspm-cli
+  jspm install -y
+  ```
+
 
