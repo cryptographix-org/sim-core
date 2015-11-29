@@ -1,3 +1,7 @@
+//enum KeyType { "public", "private", "secret" };
+
+//enum KeyUsage { "encrypt", "decrypt", "sign", "verify", "deriveKey", "deriveBits", "wrapKey", "unwrapKey" };
+
 export class Key //implements CryptoKey
 {
   protected id: string;

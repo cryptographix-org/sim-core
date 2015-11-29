@@ -15,10 +15,10 @@ module.exports = function(config) {
     jspm: {
       // Edit this to your needs
       paths: {
-        'sim-core': 'dist/index'
+        'sim-core': 'dist/sim-core'
       },
       loadFiles: [
-        'dist/index.js',
+        'dist/sim-core.js',
         'dist/sim-core.tests.js'
       ]
     },

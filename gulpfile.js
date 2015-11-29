@@ -1,3 +1,4 @@
+var gulp = require('gulp');
 //var path = require('path');
 var fs = require('fs');
 
@@ -17,3 +18,4 @@ config = {
 };
 
 require('cgfx-build-tools');
+

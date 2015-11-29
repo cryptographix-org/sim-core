@@ -2,22 +2,22 @@ import { Kind } from './kind';
 
 export class Message
 {
-  private header: {};
-  private payload: Kind;
+  private _header: {};
+  private _payload: Kind;
 
   constructor( header: {}, payload: Kind )
   {
-    this.header = header;
-    this.payload = payload;
+    this._header = header;
+    this._payload = payload;
   }
 
-  getHeader(): Object
+  get header(): Object
   {
-    return this.header;
+    return this._header;
   }
 
-  getPayload(): Kind
+  get payload(): Kind
   {
-    return this.payload;
+    return this._payload;
   }
 }
