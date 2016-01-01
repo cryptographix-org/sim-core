@@ -1,6 +1,6 @@
-import { ComponentRegistry } from '../base/component-registry';
-import { EndPoint } from '../base/end-point';
-import { Channel } from '../base/channel';
+import { ComponentFactory } from '../runtime/component-factory';
+import { EndPoint } from '../messaging/end-point';
+import { Channel } from '../messaging/channel';
 
 import { Graph } from './graph';
 import { Node } from './node';
@@ -14,12 +14,12 @@ export class Network
   private links: Link[];
   private ports: Port[];
 
-  private componentRegistry: ComponentRegistry;
+  private factory: ComponentFactory;
 
-  constructor( graph: Graph, componentRegistry: ComponentRegistry )
+  constructor( graph: Graph, factory: ComponentFactory )
   {
     this.graph = graph;
-    this.componentRegistry = componentRegistry;
+    this.factory = factory;
   }
 
   initialize( ): Promise<void>
@@ -40,7 +40,7 @@ export class Network
 
     })
 */
-    return this.graph.initializeComponent( this.componentRegistry );
+    return this.graph.initComponent( this.factory );
   }
 
   wireupGraph( router: any )
@@ -67,7 +67,7 @@ export class Network
 
       link.connect( channel );
 
-      channel.connect();
+      channel.activate();
     } );
   }
 }

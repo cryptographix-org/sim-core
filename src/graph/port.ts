@@ -1,52 +1,52 @@
-import { EndPoint, Direction } from '../base/end-point';
-import { Channel } from '../base/channel';
+import { EndPoint, Direction } from '../messaging/end-point';
+import { Channel } from '../messaging/channel';
 
 import { Graph } from './graph';
 import { Node } from './node';
 
 export class Port extends EndPoint
 {
-  protected ownerNode: Node;
-  protected _id: string;
+  protected _owner: Node;
   protected _protocolID: string;
 
-  public view: any;
+  public metadata: any;
 
-  constructor( owner: Node, attributes: any )
+  constructor( owner: Node, id: string, attributes: any = {} )
   {
-    super( attributes.direction || Direction.INOUT );
+    super( id, attributes.direction || Direction.INOUT );
 
-    this.view = attributes.view || { x: 100, y: 100 };
+    this._owner = owner;
+    this._protocolID = attributes[ 'protocol' ] || 'any';
 
-    this._protocolID = attributes[ "protocol" ] || "any";
-
-    this.ownerNode = owner;
+    this.metadata = attributes.metadata || { x: 100, y: 100 };
   }
 
+  /**
+   * Return POJO for serialization
+   */
   toObject( opts?: any ): Object
   {
     var port = {
-
+      id: this.id,
+      direction: this.direction,
+      protocol: ( this._protocolID != 'any' ) ? this._protocolID : undefined,
+      metadata: this.metadata,
     };
 
     return port;
   }
 
-  get id(): string
-  {
-    return this._id;
-  }
-  set id( id: string )
-  {
-    this._id = id;
+  /**
+   * Get the Port's owner
+   */
+  get owner(): Node {
+    return this._owner
   }
 
-  get node(): Node
-  {
-    return this.ownerNode;
-  }
-
-  get protocol(): string
+  /**
+   * Get the Port's protocol ID
+   */
+  get protocolID(): string
   {
     return this._protocolID;
   }
@@ -71,27 +71,17 @@ export class PublicPort extends Port
 
     // Create an EndPoint to proxy between the Public and Private (internal)
     // sides of the Port.
-    this.proxyEndPoint = new EndPoint( proxyDirection );
+    this.proxyEndPoint = new EndPoint( this.id, proxyDirection );
 
     // Wire-up proxy -
 
-    // Forward incoming events (from public interface) to private
-    this.proxyEndPoint.onEvent( ( from: EndPoint, evt ) => {
-      this.triggerEvent( evt );
-    });
-
     // Forward incoming packets (from public interface) to private
-    this.proxyEndPoint.onMessage( ( from: EndPoint, message ) => {
+    this.proxyEndPoint.onMessage( ( message, from: EndPoint ) => {
       this.sendMessage( message );
     });
 
-    // Forward outgoing events (from private interface) to public
-    this.onEvent( ( from: EndPoint, evt ) => {
-      this.proxyEndPoint.triggerEvent( evt );
-    });
-
     // Forward outgoing packets (from private interface) to public
-    this.onMessage( ( from: EndPoint, message ) => {
+    this.onMessage( ( message, from: EndPoint ) => {
       this.proxyEndPoint.sendMessage( message );
     });
 
@@ -105,12 +95,12 @@ export class PublicPort extends Port
   {
     this.proxyChannel = channel;
 
-    this.proxyEndPoint.connect( channel );
+    this.proxyEndPoint.attach( channel );
   }
 
   public disconnectPrivate()
   {
-    this.proxyEndPoint.disconnect();
+    this.proxyEndPoint.detach( this.proxyChannel );
   }
 
   toObject( opts?: any ): Object

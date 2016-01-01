@@ -6,7 +6,7 @@ import { KeyPair } from './key-pair';
 
 declare var msrcrypto;
 
-export class CryptographicServiceProvider {
+export class CryptographicService {
   protected crypto: SubtleCrypto;
 
   constructor() {

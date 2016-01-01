@@ -85,5 +85,6 @@ export class KindInfo
 export interface Kind
 {
   kindInfo: KindInfo;
+
   properties: {};
 }

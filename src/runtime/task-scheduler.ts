@@ -1,5 +1,6 @@
 export type Task = () => void;
 export type FlushFunc = () => void;
+var window = window || {};
 
 export class TaskScheduler
 {
@@ -61,6 +62,13 @@ export class TaskScheduler
         return self.flushTaskQueue();
       });
     }
+  }
+
+  /**
+  * Cleanup the TaskScheduler, cancelling any pending communications.
+  */
+  shutdown()
+  {
   }
 
   queueTask( task)

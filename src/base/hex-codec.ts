@@ -8,7 +8,7 @@ export class HexCodec
     {
       var hex = "0123456789ABCDEF";
       var allow = " \f\n\r\t\u00A0\u2028\u2029";
-      var dec = [];
+      var dec: number[] = [];
       for (var i = 0; i < 16; ++i)
           dec[hex.charAt(i)] = i;
       hex = hex.toLowerCase();
@@ -19,7 +19,7 @@ export class HexCodec
       HexCodec.hexDecodeMap = dec;
     }
 
-    var out = [];
+    var out: number[] = [];
     var bits = 0, char_count = 0;
     for (var i = 0; i < a.length; ++i)
     {

@@ -1,5 +1,5 @@
-import { EndPoint } from '../base/end-point';
-import { Channel } from '../base/channel';
+import { EndPoint } from '../messaging/end-point';
+import { Channel } from '../messaging/channel';
 
 import { Graph } from './graph';
 import { Node } from './node';
@@ -9,42 +9,36 @@ export type EndPointRef = { nodeID: string, portID: string };
 
 export class Link
 {
-  protected ownerGraph: Graph;
+  protected _owner: Graph;
   protected _id: string;
 
-  protected channel: Channel;
-  protected from: EndPointRef;
-  protected to: EndPointRef;
+  protected _channel: Channel;
+  protected _from: EndPointRef;
+  protected _to: EndPointRef;
 
   protected _protocolID: string;
+  protected metadata: any;
 
-  protected static propertyMap = {
-    protocol: "_protocolID",
-    from: "from",
-    to: "to",
-  };
-
-  constructor( owner: Graph, link )
+  constructor( owner: Graph, attributes: any = {} )
   {
-    this.channel = null;
+    this._owner = owner;
+    this._id = attributes.id || "";
+    //this._channel = null;
+    this._from = attributes[ 'from' ];
+    this._to = attributes[ 'to' ];
+    this._protocolID = attributes[ 'protocol' ] || 'any';
 
-    this._id = "";
-
-    this.ownerGraph = owner;
-
-    for( let prop in Link.propertyMap )
-    {
-      this[ Link.propertyMap[ prop ] ] = link[ prop ];
-    }
+    this.metadata = attributes.metadata || { x: 100, y: 100 };
   }
 
   toObject( opts?: any ): Object
   {
     let link = {
       id: this._id,
-      protocol: this._protocolID,
-      from: this.from,
-      to: this.to
+      protocol: ( this._protocolID != 'any' ) ? this._protocolID : undefined,
+      metadata: this.metadata,
+      from: this._from,
+      to: this._to
     };
 
     return link;
@@ -58,68 +52,68 @@ export class Link
   connect( channel: Channel )
   {
     // identify fromPort in fromNode
-    var fromPort: Port = this.fromNode.identifyPort( this.from.portID, this.protocolID );
+    let fromPort: Port = this.fromNode.identifyPort( this._from.portID, this._protocolID );
 
     // identify toPort in toNode
-    var toPort: Port = this.toNode.identifyPort( this.to.portID, this.protocolID );
+    let toPort: Port = this.toNode.identifyPort( this._to.portID, this._protocolID );
 
-    this.channel = channel;
+    this._channel = channel;
 
-    fromPort.connect( channel );
-    toPort.connect( channel );
+    fromPort.attach( channel );
+    toPort.attach( channel );
   }
 
   disconnect()
   {
-    this.channel.getEndPoints().forEach( ( endPoint ) => {
-      endPoint.disconnect();
+    this._channel.endPoints.forEach( ( endPoint ) => {
+      endPoint.detach( this._channel );
     } );
 
-    this.channel = null;
+    this._channel = undefined;
   }
 
   get fromNode(): Node
   {
-    return this.ownerGraph.getNodeByID( this.from.nodeID );
+    return this._owner.getNodeByID( this._from.nodeID );
   }
 
   get fromPort(): Port
   {
-    var node = this.fromNode;
+    let node = this.fromNode;
 
-    return (node) ? node.identifyPort( this.from.portID, this.protocolID ) : undefined;
+    return (node) ? node.identifyPort( this._from.portID, this._protocolID ) : undefined;
   }
 
   set fromPort( port: Port )
   {
-    this.from = {
-      nodeID: port.node.id,
+    this._from = {
+      nodeID: port.owner.id,
       portID: port.id
     };
 
-    this._protocolID = port.protocol;
+    this._protocolID = port.protocolID;
   }
 
   get toNode(): Node
   {
-    return this.ownerGraph.getNodeByID( this.to.nodeID );
+    return this._owner.getNodeByID( this._to.nodeID );
   }
 
   get toPort(): Port
   {
-    var node = this.toNode;
+    let node = this.toNode;
 
-    return (node) ? node.identifyPort( this.to.portID, this.protocolID ) : undefined;
+    return (node) ? node.identifyPort( this._to.portID, this._protocolID ) : undefined;
   }
 
   set toPort( port: Port )
   {
-    this.to = {
-      nodeID: port.node.id,
+    this._to = {
+      nodeID: port.owner.id,
       portID: port.id
     };
 
-    this._protocolID = port.protocol;
+    this._protocolID = port.protocolID;
   }
 
   get protocolID(): string

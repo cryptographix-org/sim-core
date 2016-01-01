@@ -1,4 +1,4 @@
-import { EndPoints } from './end-point';
+import { EndPoints } from '../message-passing/end-point';
 
 export type InjectType = ( string[] | ( () => string[] ) );
 

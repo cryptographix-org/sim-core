@@ -11,7 +11,8 @@ describe('A ByteArray', () => {
     let bs = new ByteArray( [ 0, 1, 2, 3, 4 ] );
 
     expect( bs.toString() ).toBe( "0001020304" );
-    var bytes = [];
+
+    var bytes: number[] = [];
     for( let i = 0; i < 10000; ++i ) bytes[ i ] = i & 0xff;
 
     bs = new ByteArray( bytes );
@@ -23,7 +24,9 @@ describe('A ByteArray', () => {
     let bs2 = new ByteArray( "00 01 02 03 04", ByteArray.HEX );
     let bs3 = bs1.clone().setByteAt( 1, 0x99 );
 
+    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
     expect( bs1.equals( bs1 ) ).toBe(true);
+    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
     expect( bs1.equals( bs2 ) ).toBe(true);
     expect( bs1.equals( bs3 ) ).not.toBe(true);
   } )

@@ -9,11 +9,18 @@ export class ByteArray //extends Uint8Array
   public static UTF8 = 3;
 
   private byteArray: Uint8Array;
-
+  /**
+   * Create a ByteArray
+   * @param bytes - initial contents, optional
+   *   may be:
+   *     an existing ByteArray
+   *     an Array of numbers (0..255)
+   *     a string, to be converted
+   *     an ArrayBuffer
+   *     a Uint8Array
+   */
   constructor( bytes?: ByteArray | Array<number> | String | ArrayBuffer | Uint8Array, format?: number, opt?: any )
   {
-    //super( bytes );
-
     if ( !bytes )
     {
       // zero-length array
@@ -184,7 +191,7 @@ export class ByteArray //extends Uint8Array
 
   clone(): ByteArray
   {
-    return new ByteArray( this.byteArray );
+    return new ByteArray( this.byteArray.slice() );
   }
 
   not( ): ByteArray

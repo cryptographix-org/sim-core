@@ -1,4 +1,4 @@
-import { ComponentRegistry } from '../base/component-registry';
+import { ComponentFactory} from '../runtime/component-factory';
 
 import { Network } from './network';
 import { Node } from './node';
@@ -62,7 +62,7 @@ export class Graph extends Node
     return graph;
   }
 
-  initializeComponent( registry: ComponentRegistry ): Promise<void>
+  initComponent( factory: ComponentFactory ): Promise<void>
   {
     return new Promise<void>( (resolve, reject) => {
       let pendingCount = 0;
@@ -74,7 +74,7 @@ export class Graph extends Node
         {
           pendingCount++;
 
-          node.initializeComponent( registry )
+          node.initComponent( factory )
             .then( () => {
               --pendingCount;
               if ( pendingCount == 0 )
@@ -87,7 +87,7 @@ export class Graph extends Node
       } );
     } );
   }
-  
+
   getNodes(): { [id: string]: Node; }
   {
     return this.nodes;
@@ -176,9 +176,15 @@ export class Graph extends Node
     delete this.nodes[ id ];
   }
 
-  removeNode( id: string )
-  {
-    delete this.nodes[ id ];
+  removeNode( id: string ): boolean {
+
+    if ( this.nodes[ id ] ) {
+      delete this.nodes[ id ];
+
+      return true;
+    }
+
+    return false;
   }
 
   getLinkByID( id: string ): Link
@@ -218,7 +224,7 @@ export class Graph extends Node
 
     port.id = id;
 
-    this.ports[ id ] = port;
+    this._ports[ id ] = port;
 
     return port;
   }
