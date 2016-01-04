@@ -23,6 +23,7 @@
   "jspm": {
     "registry": "npm",
     "main": "sim-core.js",
+    "name": "cryptographix-sim-core",
     "directories": {
       "lib": "dist/cjs"
     },
