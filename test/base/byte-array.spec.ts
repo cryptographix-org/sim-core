@@ -24,9 +24,9 @@ describe('A ByteArray', () => {
     let bs2 = new ByteArray( "00 01 02 03 04", ByteArray.HEX );
     let bs3 = bs1.clone().setByteAt( 1, 0x99 );
 
-    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
+//    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
     expect( bs1.equals( bs1 ) ).toBe(true);
-    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
+//    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
     expect( bs1.equals( bs2 ) ).toBe(true);
     expect( bs1.equals( bs3 ) ).not.toBe(true);
   } )

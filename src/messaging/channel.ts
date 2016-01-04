@@ -1,5 +1,5 @@
 import { TaskScheduler } from '../runtime/task-scheduler';
-import { EndPoint, OnMessageDelegate, Direction } from './end-point';
+import { EndPoint, Direction } from './end-point';
 import { Message } from './message';
 
 /**
@@ -11,11 +11,24 @@ import { Message } from './message';
 */
 export class Channel
 {
+  /**
+  * True if Channel is active
+  */
   private _active: boolean;
 
+  /**
+  * Array of EndPoints attached to this Channel
+  */
   private _endPoints: EndPoint[];
+
+  /**
+  * Private TaskScheduler used to make message-sends asynchronous.
+  */
   private _taskScheduler: TaskScheduler;
 
+  /**
+  * Create a new Channel, initially inactive
+  */
   constructor()
   {
     this._active = false;
@@ -33,9 +46,11 @@ export class Channel
     this._endPoints = [];
 
     if ( this._taskScheduler )
+    {
       this._taskScheduler.shutdown();
 
-    this._taskScheduler = undefined;
+      this._taskScheduler = undefined;
+    }
   }
 
   /**
@@ -120,6 +135,8 @@ export class Channel
       // Send to all listeners, except for originator ...
       if ( origin != endPoint )
       {
+        // Only send to IN or INOUT listeners, UNLESS message is a
+        // reply (in a client-server) configuration
         if ( endPoint.direction != Direction.OUT || isResponse )
         {
           this._taskScheduler.queueTask( () => {

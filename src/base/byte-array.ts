@@ -155,9 +155,29 @@ export class ByteArray //extends Uint8Array
   }
 
   /**
-    * append byte
-    * @fluent
-    */
+  * Extract a section (offset, count) from the ByteArray
+  * @fluent
+  * @returns a new ByteArray containing a section.
+  */
+  bytesAt( offset: number, count?: number ): ByteArray
+  {
+    return new ByteArray( this.byteArray.slice( offset, count ) );
+  }
+
+  /**
+  * Create a view into the ByteArray
+  *
+  * @returns a ByteArray referencing a section of original ByteArray.
+  */
+  viewAt( offset: number, count?: number ): ByteArray
+  {
+    return new ByteArray( this.byteArray.slice( offset, count ) );
+  }
+
+  /**
+  * Append byte
+  * @fluent
+  */
   addByte( value: number ): ByteArray
   {
     this.byteArray[ this.byteArray.length ] = value;
@@ -170,11 +190,6 @@ export class ByteArray //extends Uint8Array
     this.length = len;
 
     return this;
-  }
-
-  slice( offset: number, count?: number ): ByteArray
-  {
-    return new ByteArray( this.byteArray.slice( offset, count ) );
   }
 
   concat( bytes: ByteArray ): ByteArray

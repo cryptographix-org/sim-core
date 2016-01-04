@@ -1,18 +1,24 @@
-declare System: {};
+declare interface System {
+  normalizeSync( id );
+  import( id );
+};
+declare var System: System;
 
 class ModuleRegistryEntry {
+  constructor( address: string ) {
 
+  }
 }
 
 export class ModuleLoader {
 
-  moduleRegistry: Map<string, ModuleRegistryEntry>;
+  private moduleRegistry: Map<string, ModuleRegistryEntry>;
 
   constructor() {
     this.moduleRegistry = new Map<string, ModuleRegistryEntry>();
   }
 
-  getOrCreateModuleRegistryEntry(address: string): ModuleRegistryEntry {
+  private getOrCreateModuleRegistryEntry(address: string): ModuleRegistryEntry {
     return this.moduleRegistry[address] || (this.moduleRegistry[address] = new ModuleRegistryEntry(address));
   }
 

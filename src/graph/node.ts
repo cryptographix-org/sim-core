@@ -32,7 +32,7 @@ export class Node
     this.metadata = attributes.metadata || { };
 
     Object.keys( attributes.ports || {} ).forEach( (id) => {
-      this.addPort( id, attributes.ports[ id ] );
+      this.addPlaceholderPort( id, attributes.ports[ id ] );
     } );
   }
 
@@ -80,11 +80,13 @@ export class Node
   }
 
   /**
-   * Add a new Port
+   * Add a placeholder Port
    */
-  addPort( id: string, attributes: any ): Port
+  protected addPlaceholderPort( id: string, attributes: {} ): Port
   {
-    let port = new Port( this, id, attributes );
+    attributes["id"] = id;
+
+    let port = new Port( this, null, attributes );
 
     this._ports[ id ] = port;
 

@@ -4,21 +4,46 @@ import { Channel } from '../messaging/channel';
 import { Graph } from './graph';
 import { Node } from './node';
 
-export class Port extends EndPoint
+/**
+* A Port is a placeholder for an EndPoint published by the underlying
+* component of a Node.
+*/
+export class Port
 {
   protected _owner: Node;
   protected _protocolID: string;
 
+  protected _endPoint: EndPoint;
+
   public metadata: any;
 
-  constructor( owner: Node, id: string, attributes: any = {} )
+  constructor( owner: Node, endPoint: EndPoint, attributes: any = {} )
   {
-    super( id, attributes.direction || Direction.INOUT );
+    // Was an EndPoint supplied?
+    if ( !endPoint )
+    {
+      let direction = attributes.direction || Direction.INOUT;
+
+      if ( typeof attributes.direction == "string" )
+        direction = Direction[ direction.toUpperCase() ];
+
+      // Create a "dummy" endPoint with correct id + direction
+      endPoint = new EndPoint( attributes.id, direction );
+    }
 
     this._owner = owner;
+    this._endPoint = endPoint;
+
     this._protocolID = attributes[ 'protocol' ] || 'any';
 
     this.metadata = attributes.metadata || { x: 100, y: 100 };
+  }
+
+  public get endPoint() {
+    return this._endPoint;
+  }
+  public set endPoint( endPoint: EndPoint ) {
+    this._endPoint = endPoint;
   }
 
   /**
@@ -27,8 +52,8 @@ export class Port extends EndPoint
   toObject( opts?: any ): Object
   {
     var port = {
-      id: this.id,
-      direction: this.direction,
+      id: this._endPoint.id,
+      direction: this._endPoint.direction,
       protocol: ( this._protocolID != 'any' ) ? this._protocolID : undefined,
       metadata: this.metadata,
     };
@@ -50,38 +75,54 @@ export class Port extends EndPoint
   {
     return this._protocolID;
   }
+
+  /**
+   * Get the Port's EndPoint ID
+   */
+  get id(): string
+  {
+    return this._endPoint.id;
+  }
+
+  /**
+   * Get the Port's EndPoint Direction
+   */
+  get direction(): Direction
+  {
+    return this._endPoint.direction;
+  }
+
 }
 
 export class PublicPort extends Port
 {
-  protected ownerNode: Node;
   proxyEndPoint: EndPoint;
   proxyChannel: Channel;
 
-  constructor( owner: Graph, attributes: any )
+  constructor( owner: Graph, endPoint: EndPoint, attributes: {} )
   {
-    super( owner, attributes );
+    super( owner, endPoint, attributes );
 
     let proxyDirection =
-      ( this.direction == Direction.IN )
+      ( this._endPoint.direction == Direction.IN )
         ? Direction.OUT
-        : ( this.direction == Direction.OUT )
+        : ( this._endPoint.direction == Direction.OUT )
           ? Direction.IN
           : Direction.INOUT;
 
     // Create an EndPoint to proxy between the Public and Private (internal)
     // sides of the Port.
-    this.proxyEndPoint = new EndPoint( this.id, proxyDirection );
+    this.proxyEndPoint = new EndPoint( this._endPoint.id, proxyDirection );
 
     // Wire-up proxy -
 
     // Forward incoming packets (from public interface) to private
-    this.proxyEndPoint.onMessage( ( message, from: EndPoint ) => {
-      this.sendMessage( message );
+    this.proxyEndPoint.onMessage( ( message ) => {
+      this._endPoint.handleMessage( message, this.proxyEndPoint, this.proxyChannel );
     });
 
     // Forward outgoing packets (from private interface) to public
-    this.onMessage( ( message, from: EndPoint ) => {
+    this._endPoint.onMessage( ( message ) => {
       this.proxyEndPoint.sendMessage( message );
     });
 
@@ -105,9 +146,7 @@ export class PublicPort extends Port
 
   toObject( opts?: any ): Object
   {
-    var port = {
-
-    };
+    var port = super.toObject( opts );
 
     return port;
   }

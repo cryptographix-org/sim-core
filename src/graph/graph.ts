@@ -5,14 +5,17 @@ import { Node } from './node';
 import { Link } from './link';
 import { Port, PublicPort } from './port';
 
-/*
- * Graph is
+/**
+ * A Graph is a collection of Nodes interconnected via Links.
+ * A Graph is itself a Node, whose Ports act as published EndPoints, to the Graph.
  */
 export class Graph extends Node
 {
-  // Nodes in this graph. Each node may be:
-  //   1. A Component
-  //   2. A sub-graph
+  /**
+  * Nodes in this graph. Each node may be:
+  *   1. A Component
+  *   2. A sub-graph
+  */
   protected nodes: { [id: string]: Node; };
 
   // Links in this graph. Each node may be:
@@ -156,8 +159,8 @@ export class Graph extends Node
     return this.nodes[ id ];
   }
 
-  addNode( id: string, attributes: {} )
-  {
+  addNode( id: string, attributes: {} ) {
+
     let node = new Node( this, attributes );
 
     node.id = id;
@@ -167,13 +170,18 @@ export class Graph extends Node
     return node;
   }
 
-  renameNode( id: string, newID: string )
-  {
-    let node = this.nodes[ id ];
+  renameNode( id: string, newID: string ) {
 
-    this.nodes[ newID ] = node;
+    if ( id != newID )
+    {
+      let node = this.nodes[ id ];
 
-    delete this.nodes[ id ];
+      this.nodes[ newID ] = node;
+
+      node.id = newID;
+
+      delete this.nodes[ id ];
+    }
   }
 
   removeNode( id: string ): boolean {
@@ -187,8 +195,8 @@ export class Graph extends Node
     return false;
   }
 
-  getLinkByID( id: string ): Link
-  {
+  getLinkByID( id: string ): Link {
+
     return this.links[ id ];
   }
 
@@ -218,11 +226,10 @@ export class Graph extends Node
     delete this.links[ id ];
   }
 
-  addPublicPort( id: string, attributes: any )
+  addPublicPort( id: string, attributes: {} )
   {
-    let port = new PublicPort( this, attributes );
-
-    port.id = id;
+    attributes["id"] = id;
+    let port = new PublicPort( this, null, attributes );
 
     this._ports[ id ] = port;
 

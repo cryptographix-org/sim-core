@@ -87,9 +87,9 @@ describe('A Channel', ()=> {
     ch.activate();
 
     it( 'can bounce messages', (done) => {
-      ep2.onMessage( (m: Message<any>, ep: EndPoint ) => { console.log( 'ep2: got ' + m.payload ); m.header.isResponse = true; ep2.sendMessage( m ); } );
+      ep2.onMessage( (m: Message<any>, ep: EndPoint ) => { m.header.isResponse = true; ep2.sendMessage( m ); } );
       ep1.sendMessage( new IntegerMessage(100) );
-      ep1.onMessage( (m: Message<any>) => { console.log( 'ep1: got ' + m.payload ); done() } );
+      ep1.onMessage( (m: Message<any>) => { done() } );
     } );
 
   });

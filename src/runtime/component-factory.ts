@@ -1,45 +1,9 @@
-import { Component, InjectType } from './component';
+import { Component, ComponentConstructor } from './component';
 import { ComponentContext } from './component-context';
 import { ModuleLoader } from './module-loader';
 
 import { Container } from '../dependency-injection/container';
-import { EndPoints } from '../message-passing/end-point';
-
-export class xComponent implements Component
-{
-  static $inject : InjectType;
-
-  onCreate( initialData: Object )
-  {
-
-  }
-
-  onDestroy()
-  {
-
-  }
-
-  onStart( endPoints: EndPoints )
-  {
-
-  }
-
-  onPause()
-  {
-
-  }
-
-  onResume()
-  {
-
-  }
-
-  onStop()
-  {
-
-  }
-}
-export type ComponentType = typeof xComponent;
+import { EndPointCollection } from '../messaging/end-point';
 
 export class ComponentFactory {
   private loader: ModuleLoader;
@@ -57,47 +21,45 @@ export class ComponentFactory {
     return context;
   }
 
-  loadComponent( id: string ): Promise<ComponentType>
+  loadComponent( id: string ): Promise<Component>
   {
-    let createComponent = function( componentType: ComponentType ): Component
+    let createComponent = function( ctor: ComponentConstructor ): Component
     {
       let newInstance: Component = null;
       let injects: string[] = [];
 
-      if ( componentType.$inject instanceof Array )
+/*      if ( componentType.$inject instanceof Array )
         injects = <string[]>componentType.$inject;
       else if ( typeof componentType.$inject == "function" )
-        injects = ( <()=>string[]> componentType.$inject )();
+        injects = ( <()=>string[]> componentType.$inject )();*/
 
       // if ( injects && injects.length > 0 )
       //   ;
 
-      newInstance = new componentType( );
+      newInstance = new ctor( );
       //if ( newInstance.onCreate )
       //  newInstance.onCreate( initialData );
 
       return newInstance;
     }
 
-    let componentType: ComponentType = this.get( id );
+    let ctor: ComponentConstructor = this.get( id );
 
-    if ( componentType )
+    if ( ctor )
     {
       return new Promise<Component>( (resolve, reject) => {
-        resolve( createComponent( componentType ) );
+        resolve( createComponent( ctor ) );
       });
     }
 
-    return new Promise<ComponentType>( (resolve, reject) => {
-      resolve( this.get( name ) );
-    });
+    return null;
   }
 
-  components: Map<string, ComponentType>;
-  get( id: string ): ComponentType {
+  components: Map<string, ComponentConstructor>;
+  get( id: string ): ComponentConstructor {
     return this.components.get( id );
   }
-  set( id: string, type: ComponentType ) {
+  set( id: string, type: ComponentConstructor ) {
     this.components.set( id, type );
   }
 }

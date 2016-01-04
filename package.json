@@ -9,7 +9,7 @@
     "simulation",
     "graph"
   ],
-  "homepage": "http://cryptographics.net",
+  "homepage": "http://cryptographix.com",
   "bugs": {
     "url": "https://github.com/cryptographics/sim-core/issues"
   },
@@ -21,27 +21,22 @@
     "url": "http://github.com/cryptographics/sim-core"
   },
   "jspm": {
-    "main": "index",
-    "format": "amd",
+    "registry": "npm",
+    "main": "sim-core.js",
     "directories": {
-      "lib": "dist/amd"
+      "lib": "dist/cjs"
     },
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
-      "core-js": "npm:core-js@^1.1.4"
-    }
+    "dependencies": {
+      "aurelia-dependency-injection": "^1.0.0-beta.1"
+    },
+    "devDependencies": {}
+  },
+  "dependencies": {
+    "aurelia-dependency-injection": "^1.0.0-beta1"
   },
   "devDependencies": {
     "cgfx-build-tools": "^0.1.1",
-    "gulp": "^3.9.0",
-    "karma": "^0.13.14",
-    "karma-babel-preprocessor": "^6.0.1",
-    "karma-chrome-launcher": "^0.2.1",
-    "karma-html-reporter": "^0.2.7",
-    "karma-jasmine": "^0.3.6",
-    "karma-jasmine-html-reporter": "^0.1.8",
-    "karma-jspm": "^2.0.2"
+    "gulp": "^3.9.0"
   },
   "scripts": {
     "build": "gulp build"

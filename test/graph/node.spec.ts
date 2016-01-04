@@ -60,11 +60,14 @@ describe("A Node", function() {
       expect( p3 ).toBeUndefined();
     });
 
-    it( 'can have new Ports added', function() {
+/*    it( 'can have new Ports added', function() {
       let p1 = this.node1.addPort( 'n1p1', {} );
 
       expect( p1 instanceof Port ).toBe( true );
       expect( p1.id ).toEqual( 'n1p1' );
+
+      let p1x = this.node1.getPortByID( 'n1p1' );
+      expect( p1x ).toEqual( p1 );
     });
 
     it( 'can have ports removed', function() {
@@ -81,15 +84,7 @@ describe("A Node", function() {
 
       let res2 = this.node2.removePort( 'n2p1' );
       expect( res2 ).toBe( false );
-    });
+    });*/
 
   });
-
-/*    let p1x = node1.getPortByID( "p1x" );
-    expect( p1x instanceof Port ).toBe( true );
-    expect( p1x.id ).toEqual( "p1x" );
-
-    let p2a = graph1.getNodeByID( "n2" ).getPortByID( "p2a" );
-    expect( p2a instanceof Port ).toBe( true );
-    expect( p2a.id ).toEqual( "p2a" );*/
 } );

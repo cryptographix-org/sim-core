@@ -1,5 +1,4 @@
-import { Graph } from 'sim-core';
-import { Node, Port } from 'sim-core';
+import { Graph, Node, Port, Direction } from 'sim-core';
 
 let jsonGraph1 = {
   id: "Graph1",
@@ -49,7 +48,7 @@ let jsonGraph1 = {
 };
 
 describe("A Graph", ()=> {
-  it( "is a graph", ()=> {
+  it( "can be instantiated from a JSON object", ()=> {
     let graph1: Graph = new Graph( null, jsonGraph1 );
 
     expect( graph1 instanceof Node ).toBe( true );
@@ -65,5 +64,9 @@ describe("A Graph", ()=> {
     let p2a = graph1.getNodeByID( "n2" ).getPortByID( "p2a" );
     expect( p2a instanceof Port ).toBe( true );
     expect( p2a.id ).toEqual( "p2a" );
+
+    expect( p1x.direction ).toEqual( Direction.INOUT );
+    expect( p2a.direction ).toEqual( Direction.IN );
+
   } );
 } );

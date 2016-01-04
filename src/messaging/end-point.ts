@@ -7,12 +7,11 @@ export enum Direction {
   INOUT = 3
 };
 
-export type OnMessageDelegate =  ( message: Message<any>, fromEndPoint?: EndPoint ) => void;
-
-export type EndPointCollection = { [id: string]: EndPoint; };
+export type HandleMessageDelegate = ( message: Message<any>, receivingEndPoint?: EndPoint, receivingChannel?: Channel ) => void;
 
 /**
-* An EndPoint (sender/receiver) for message-passing
+* An EndPoint is a sender/receiver for message-passing. It has an identifier
+* and an optional direction, which may be IN, OUT or IN/OUT (default).
 *
 * EndPoints may have multiple channels attached, and will forward messages
 * to all of them.
@@ -29,11 +28,11 @@ export class EndPoint
   /**
   * A list of attached Channels
   */
-  protected _messageListeners: OnMessageDelegate[];
+  protected _messageListeners: HandleMessageDelegate[];
 
   private _direction: Direction;
 
-  constructor( id: string, direction?: Direction )
+  constructor( id: string, direction: Direction = Direction.INOUT )
   {
     this._id = id;
 
@@ -79,16 +78,6 @@ export class EndPoint
   }
 
   /**
-  * Handle an incoming Message.
-  */
-  public handleMessage( message: Message<any>, fromEndPoint: EndPoint, fromChannel: Channel )
-  {
-    this._messageListeners.forEach( messageListener => {
-      messageListener( message, fromEndPoint );
-    } );
-  }
-
-  /**
   * Detach a specific Channel from this EndPoint.
   */
   public detach( channelToDetach: Channel )
@@ -130,6 +119,19 @@ export class EndPoint
     return this._direction;
   }
 
+  /**
+  * Handle an incoming Message, method called by Channel.
+  */
+  public handleMessage( message: Message<any>, fromEndPoint: EndPoint, fromChannel: Channel )
+  {
+    this._messageListeners.forEach( messageListener => {
+      messageListener( message, this, fromChannel );
+    } );
+  }
+
+  /**
+  * Send a Message.
+  */
   public sendMessage( message: Message<any> )
   {
     this._channels.forEach( channel => {
@@ -138,12 +140,18 @@ export class EndPoint
   }
 
   /**
-  * Register a delegate to receive any incoming Messages
+  * Register a delegate to receive incoming Messages
   *
   * @param messageListener - delegate to be called with received Message
   */
-  public onMessage( messageListener: OnMessageDelegate )
+  public onMessage( messageListener: HandleMessageDelegate )
   {
     this._messageListeners.push( messageListener );
   }
 }
+
+/**
+* An indexed collection of EndPoint objects, normally indexed via EndPoint's
+* unique identifier
+*/
+export type EndPointCollection = { [id: string]: EndPoint; };

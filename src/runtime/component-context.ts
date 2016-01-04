@@ -4,7 +4,7 @@ import { Component } from './component';
 import { Container } from '../dependency-injection/container';
 
 /**
-* The runtime context information for a graph Node.
+* The runtime context information for a Component instance
 */
 export class ComponentContext
 {

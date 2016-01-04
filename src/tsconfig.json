@@ -1,43 +1,16 @@
 {
-    "version": "1.6",
-    "compilerOptions": {
-        "target": "es6",
-        "declaration": true,
-        "noImplicitAny": false,
-        "removeComments": true,
-        "noLib": false,
-        "outDir": "../dist/es6"
-    },
-    "filesGlob": [
-        "./**/*.ts",
-        "!./tslib/**/*.ts"
-    ],
-    "files": [
-        "./base/base64-codec.ts",
-        "./base/byte-array.ts",
-        "./base/channel.ts",
-        "./base/component-interface.ts",
-        "./base/component-registry.ts",
-        "./base/end-point.ts",
-        "./base/hex-codec.ts",
-        "./base/kind.ts",
-        "./base/message.ts",
-        "./base/package-info.ts",
-        "./base/task-scheduler.ts",
-        "./crypto/cryptographic-service-provider.ts",
-        "./crypto/key-pair.ts",
-        "./crypto/key.ts",
-        "./crypto/private-key.ts",
-        "./crypto/public-key.ts",
-        "./engine/simulation-engine.ts",
-        "./graph/graph-tester.ts",
-        "./graph/graph.ts",
-        "./graph/link.ts",
-        "./graph/network.ts",
-        "./graph/node.ts",
-        "./graph/port.ts"
-    ],
-    "atom": {
-        "rewriteTsconfig": true
-    }
+  "version": "1.6",
+  "compilerOptions": {
+    "target": "es6",
+    "declaration": true,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "removeComments": true,
+    "noLib": false,
+    "outDir": "../dist/es6"
+  },
+  "atom": {
+    "rewriteTsconfig": false
+  }
 }

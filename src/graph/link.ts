@@ -59,8 +59,8 @@ export class Link
 
     this._channel = channel;
 
-    fromPort.attach( channel );
-    toPort.attach( channel );
+    fromPort.endPoint.attach( channel );
+    toPort.endPoint.attach( channel );
   }
 
   disconnect()

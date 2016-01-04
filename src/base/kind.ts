@@ -29,13 +29,16 @@ export class KindHelper
     return this;
   }
 
-  seal(): KindInfo
+  seal( kind?: Kind ): KindInfo
   {
-    let ki = this.kindInfo;
+    let info = this.kindInfo;
 
     this.kindInfo = new KindInfo();
 
-    return ki;
+//    if ( kind )
+//      (typeof kind[ "kindInfo = info;
+
+    return info;
   }
 }
 

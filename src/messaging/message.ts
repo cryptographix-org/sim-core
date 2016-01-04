@@ -7,14 +7,15 @@ import { EndPoint } from './end-point';
 export interface MessageHeader
 {
   /*
+  * Message Name, indicates a command / method / response to execute
+  */
+  method?: string;
+
+  /*
   * Message Identifier (unique) for each sent message (or CMD-RESP pair)
   */
   id?: number;
 
-  /*
-  * Message Name, indicates a command / method / response to execute
-  */
-  name?: string;
 
   /*
   * Description, useful for tracing and logging
@@ -31,6 +32,12 @@ export interface MessageHeader
   * EndPoint that originated the message
   */
   origin?: EndPoint;
+
+
+  /*
+  * Indicates the Kind of data (when serialized)
+  */
+  kindName?: string;
 }
 
 /*
