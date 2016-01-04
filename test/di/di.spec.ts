@@ -1,4 +1,4 @@
-import { Container, inject } from 'sim-core';
+import { Container, inject } from 'cryptographix-sim-core';
 
 class C1
 {

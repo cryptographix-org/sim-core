@@ -419,6 +419,8 @@ export class CryptographicService {
     }
 }
 
+export { Container, inject };
+
 export class Message {
     constructor(header, payload) {
         this._header = header || {};
@@ -699,8 +701,6 @@ ComponentInfo.$builder = new ComponentBuilder();
 class C {
 }
 ComponentInfo.$builder.install(C);
-
-export { Container, inject };
 
 export class ComponentContext {
     constructor(factory, id) {

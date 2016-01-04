@@ -542,6 +542,10 @@ System.register(['aurelia-dependency-injection'], function (_export) {
 
             _export('CryptographicService', CryptographicService);
 
+            _export('Container', Container);
+
+            _export('inject', inject);
+
             Message = (function () {
                 function Message(header, payload) {
                     _classCallCheck(this, Message);
@@ -964,10 +968,6 @@ System.register(['aurelia-dependency-injection'], function (_export) {
             };
 
             ComponentInfo.$builder.install(C);
-
-            _export('Container', Container);
-
-            _export('inject', inject);
 
             ComponentContext = (function () {
                 function ComponentContext(factory, id) {

@@ -1,4 +1,4 @@
-declare module 'sim-core'
+declare module 'cryptographix-sim-core'
 {
   import { Container, autoinject as inject } from 'aurelia-dependency-injection';
 
@@ -100,6 +100,8 @@ declare module 'sim-core'
       sign(algorithm: string | Algorithm, key: Key, data: ByteArray): Promise<ByteArray>;
       verify(algorithm: string | Algorithm, key: Key, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
   }
+
+  export { Container, inject };
 
 
 
@@ -237,8 +239,6 @@ declare module 'sim-core'
       new (...args: any[]): Component;
       componentInfo?: ComponentInfo;
   }
-
-  export { Container, inject };
 
 
 

@@ -1,4 +1,4 @@
-import { Graph, Node, Port, Direction } from 'sim-core';
+import { Graph, Node, Port, Direction } from 'cryptographix-sim-core';
 
 let jsonGraph1 = {
   id: "Graph1",

@@ -1,5 +1,4 @@
-import { Graph } from 'sim-core';
-import { Node, Port } from 'sim-core';
+import { Graph, Node, Port } from 'cryptographix-sim-core';
 
 describe("A Node", function() {
   beforeEach( function() {

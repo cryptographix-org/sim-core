@@ -1,4 +1,4 @@
-import { ByteArray } from 'sim-core';
+import { ByteArray } from 'cryptographix-sim-core';
 
 describe('A ByteArray', () => {
   it('stores a sequence of bytes', () => {

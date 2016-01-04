@@ -1,4 +1,4 @@
-import { Channel, EndPoint, Message, Direction } from 'sim-core';
+import { Channel, EndPoint, Message, Direction } from 'cryptographix-sim-core';
 
 class IntegerMessage extends Message<number>
 {

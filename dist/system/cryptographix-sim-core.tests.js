@@ -1,26 +1,53 @@
-System.register(["sim-core"], function (_export) {
-    "use strict";
+System.register(['cryptographix-sim-core'], function (_export) {
+    'use strict';
 
-    var Container, inject, ByteArray, Graph, Node, Port, Direction, Channel, EndPoint, Message, __decorate, __metadata, C1, C2, jsonGraph1, IntegerMessage;
+    var ByteArray, Container, inject, Graph, Node, Port, Direction, Channel, EndPoint, Message, __decorate, __metadata, C1, C2, jsonGraph1, IntegerMessage;
 
-    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+    function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     return {
-        setters: [function (_simCore) {
-            Container = _simCore.Container;
-            inject = _simCore.inject;
-            ByteArray = _simCore.ByteArray;
-            Graph = _simCore.Graph;
-            Node = _simCore.Node;
-            Port = _simCore.Port;
-            Direction = _simCore.Direction;
-            Channel = _simCore.Channel;
-            EndPoint = _simCore.EndPoint;
-            Message = _simCore.Message;
+        setters: [function (_cryptographixSimCore) {
+            ByteArray = _cryptographixSimCore.ByteArray;
+            Container = _cryptographixSimCore.Container;
+            inject = _cryptographixSimCore.inject;
+            Graph = _cryptographixSimCore.Graph;
+            Node = _cryptographixSimCore.Node;
+            Port = _cryptographixSimCore.Port;
+            Direction = _cryptographixSimCore.Direction;
+            Channel = _cryptographixSimCore.Channel;
+            EndPoint = _cryptographixSimCore.EndPoint;
+            Message = _cryptographixSimCore.Message;
         }],
         execute: function () {
+
+            describe('A ByteArray', function () {
+                it('stores a sequence of bytes', function () {
+                    var bs = new ByteArray([0, 1, 2, 3, 4]);
+                    expect(bs.toString()).toBe("0001020304");
+                });
+                it('can be instanciated from an array of bytes', function () {
+                    var bs = new ByteArray([0, 1, 2, 3, 4]);
+                    expect(bs.toString()).toBe("0001020304");
+                    var bytes = [];
+                    for (var i = 0; i < 10000; ++i) {
+                        bytes[i] = i & 0xff;
+                    }bs = new ByteArray(bytes);
+                    expect(bs.length).toBe(10000);
+                });
+                it('can be compared (equal)', function () {
+                    var bs1 = new ByteArray([0, 1, 2, 3, 4]);
+                    var bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
+                    var bs3 = bs1.clone().setByteAt(1, 0x99);
+
+                    expect(bs1.equals(bs1)).toBe(true);
+
+                    expect(bs1.equals(bs2)).toBe(true);
+                    expect(bs1.equals(bs3)).not.toBe(true);
+                });
+            });
+
             __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
                 if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
                 switch (arguments.length) {
@@ -58,32 +85,6 @@ System.register(["sim-core"], function (_export) {
                 it("Must inject", function () {
                     var jector = new Container();
                     jector.registerSingleton(C1, C1);
-                });
-            });
-
-            describe('A ByteArray', function () {
-                it('stores a sequence of bytes', function () {
-                    var bs = new ByteArray([0, 1, 2, 3, 4]);
-                    expect(bs.toString()).toBe("0001020304");
-                });
-                it('can be instanciated from an array of bytes', function () {
-                    var bs = new ByteArray([0, 1, 2, 3, 4]);
-                    expect(bs.toString()).toBe("0001020304");
-                    var bytes = [];
-                    for (var i = 0; i < 10000; ++i) {
-                        bytes[i] = i & 0xff;
-                    }bs = new ByteArray(bytes);
-                    expect(bs.length).toBe(10000);
-                });
-                it('can be compared (equal)', function () {
-                    var bs1 = new ByteArray([0, 1, 2, 3, 4]);
-                    var bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
-                    var bs3 = bs1.clone().setByteAt(1, 0x99);
-
-                    expect(bs1.equals(bs1)).toBe(true);
-
-                    expect(bs1.equals(bs2)).toBe(true);
-                    expect(bs1.equals(bs3)).not.toBe(true);
                 });
             });
 
