@@ -4,7 +4,7 @@ System.config({
   paths: {
     "github:*": "jspm_packages/github/*",
     "npm:*": "jspm_packages/npm/*",
-    "sim-core": "dist/system/sim-core.js"
+    "cryptographix-sim-core": "dist/system/cryptographix-sim-core.js"
   },
 
   map: {

@@ -1,26 +1,55 @@
-System.register(['cryptographix-sim-core'], function (_export) {
-    'use strict';
+System.register(["cryptographix-sim-core"], function (_export) {
+    "use strict";
 
-    var ByteArray, Container, inject, Graph, Node, Port, Direction, Channel, EndPoint, Message, __decorate, __metadata, C1, C2, jsonGraph1, IntegerMessage;
+    var Container, inject, ByteArray, Channel, EndPoint, Message, Direction, Graph, Node, Port, __decorate, __metadata, C1, C2, IntegerMessage, jsonGraph1;
 
-    function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
     return {
         setters: [function (_cryptographixSimCore) {
-            ByteArray = _cryptographixSimCore.ByteArray;
             Container = _cryptographixSimCore.Container;
             inject = _cryptographixSimCore.inject;
-            Graph = _cryptographixSimCore.Graph;
-            Node = _cryptographixSimCore.Node;
-            Port = _cryptographixSimCore.Port;
-            Direction = _cryptographixSimCore.Direction;
+            ByteArray = _cryptographixSimCore.ByteArray;
             Channel = _cryptographixSimCore.Channel;
             EndPoint = _cryptographixSimCore.EndPoint;
             Message = _cryptographixSimCore.Message;
+            Direction = _cryptographixSimCore.Direction;
+            Graph = _cryptographixSimCore.Graph;
+            Node = _cryptographixSimCore.Node;
+            Port = _cryptographixSimCore.Port;
         }],
         execute: function () {
+            __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+                var c = arguments.length,
+                    r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+                    d;
+                if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+                return c > 3 && r && Object.defineProperty(target, key, r), r;
+            };
+
+            __metadata = undefined && undefined.__metadata || function (k, v) {
+                if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+            };
+
+            C1 = function C1() {
+                _classCallCheck(this, C1);
+            };
+
+            C2 = function C2(c1) {
+                _classCallCheck(this, C2);
+
+                this.c1 = c1;
+            };
+
+            C2 = __decorate([inject(), __metadata('design:paramtypes', [C1])], C2);
+            describe("DI Container", function () {
+                it("Must inject", function () {
+                    var jector = new Container();
+                    jector.registerSingleton(C1, C1);
+                });
+            });
 
             describe('A ByteArray', function () {
                 it('stores a sequence of bytes', function () {
@@ -48,43 +77,86 @@ System.register(['cryptographix-sim-core'], function (_export) {
                 });
             });
 
-            __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
-                if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-                switch (arguments.length) {
-                    case 2:
-                        return decorators.reduceRight(function (o, d) {
-                            return d && d(o) || o;
-                        }, target);
-                    case 3:
-                        return decorators.reduceRight(function (o, d) {
-                            return d && d(target, key), void 0;
-                        }, void 0);
-                    case 4:
-                        return decorators.reduceRight(function (o, d) {
-                            return d && d(target, key, o) || o;
-                        }, desc);
+            IntegerMessage = (function (_Message) {
+                _inherits(IntegerMessage, _Message);
+
+                function IntegerMessage(value) {
+                    _classCallCheck(this, IntegerMessage);
+
+                    _Message.call(this, undefined, value);
                 }
-            };
 
-            __metadata = undefined && undefined.__metadata || function (k, v) {
-                if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-            };
+                return IntegerMessage;
+            })(Message);
 
-            C1 = function C1() {
-                _classCallCheck(this, C1);
-            };
+            describe('A Channel', function () {
+                describe('can be active or inactive', function () {
+                    var ch = new Channel();
+                    it('is initially inactive', function () {
+                        expect(ch.active).toBe(false);
+                    });
+                    it('can be activated', function () {
+                        expect(ch.active).toBe(false);
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                    });
+                    it('can be deactivated', function () {
+                        expect(ch.active).toBe(true);
+                        ch.deactivate();
+                        expect(ch.active).toBe(false);
+                        ch.deactivate();
+                        expect(ch.active).toBe(false);
+                    });
+                });
+                describe('has a registry of EndPoints', function () {
+                    var ch = new Channel();
+                    var ep1 = new EndPoint('ep1');
+                    var ep2 = new EndPoint('ep2');
+                    it('to which EndPoints can be added', function () {
+                        ch.addEndPoint(ep1);
+                        expect(ch.endPoints.length).toBe(1);
 
-            C2 = function C2(c1) {
-                _classCallCheck(this, C2);
-
-                this.c1 = c1;
-            };
-
-            C2 = __decorate([inject(), __metadata('design:paramtypes', [C1])], C2);
-            describe("DI Container", function () {
-                it("Must inject", function () {
-                    var jector = new Container();
-                    jector.registerSingleton(C1, C1);
+                        ch.addEndPoint(ep2);
+                        expect(ch.endPoints.length).toBe(2);
+                    });
+                    it('... and removed', function () {
+                        ch.removeEndPoint(ep1);
+                        expect(ch.endPoints).toContain(ep2);
+                        ch.removeEndPoint(ep2);
+                        expect(ch.endPoints.length).toBe(0);
+                    });
+                    it('... even when Channel is activated', function () {
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                        ch.addEndPoint(new EndPoint('epx'));
+                        ch.addEndPoint(new EndPoint('epx'));
+                        ch.addEndPoint(ep1);
+                        expect(ch.endPoints).toContain(ep1);
+                        expect(ch.endPoints.length).toBe(3);
+                        ch.removeEndPoint(ep1);
+                        expect(ch.endPoints).not.toContain(ep1);
+                        ch.shutdown();
+                        expect(ch.endPoints.length).toBe(0);
+                    });
+                });
+                describe('communicates between endpoints', function () {
+                    var ch = new Channel();
+                    var ep1 = new EndPoint('ep1', Direction.OUT);
+                    var ep2 = new EndPoint('ep2', Direction.IN);
+                    ep1.attach(ch);
+                    ep2.attach(ch);
+                    ch.activate();
+                    it('can bounce messages', function (done) {
+                        ep2.onMessage(function (m, ep) {
+                            m.header.isResponse = true;ep2.sendMessage(m);
+                        });
+                        ep1.sendMessage(new IntegerMessage(100));
+                        ep1.onMessage(function (m) {
+                            done();
+                        });
+                    });
                 });
             });
 
@@ -196,89 +268,6 @@ System.register(['cryptographix-sim-core'], function (_export) {
                         expect(p1.id).toEqual('n2p1');
                         expect(p2.id).toEqual('n2p2');
                         expect(p3).toBeUndefined();
-                    });
-                });
-            });
-
-            IntegerMessage = (function (_Message) {
-                _inherits(IntegerMessage, _Message);
-
-                function IntegerMessage(value) {
-                    _classCallCheck(this, IntegerMessage);
-
-                    _Message.call(this, undefined, value);
-                }
-
-                return IntegerMessage;
-            })(Message);
-
-            describe('A Channel', function () {
-                describe('can be active or inactive', function () {
-                    var ch = new Channel();
-                    it('is initially inactive', function () {
-                        expect(ch.active).toBe(false);
-                    });
-                    it('can be activated', function () {
-                        expect(ch.active).toBe(false);
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                    });
-                    it('can be deactivated', function () {
-                        expect(ch.active).toBe(true);
-                        ch.deactivate();
-                        expect(ch.active).toBe(false);
-                        ch.deactivate();
-                        expect(ch.active).toBe(false);
-                    });
-                });
-                describe('has a registry of EndPoints', function () {
-                    var ch = new Channel();
-                    var ep1 = new EndPoint('ep1');
-                    var ep2 = new EndPoint('ep2');
-                    it('to which EndPoints can be added', function () {
-                        ch.addEndPoint(ep1);
-                        expect(ch.endPoints.length).toBe(1);
-
-                        ch.addEndPoint(ep2);
-                        expect(ch.endPoints.length).toBe(2);
-                    });
-                    it('... and removed', function () {
-                        ch.removeEndPoint(ep1);
-                        expect(ch.endPoints).toContain(ep2);
-                        ch.removeEndPoint(ep2);
-                        expect(ch.endPoints.length).toBe(0);
-                    });
-                    it('... even when Channel is activated', function () {
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                        ch.addEndPoint(new EndPoint('epx'));
-                        ch.addEndPoint(new EndPoint('epx'));
-                        ch.addEndPoint(ep1);
-                        expect(ch.endPoints).toContain(ep1);
-                        expect(ch.endPoints.length).toBe(3);
-                        ch.removeEndPoint(ep1);
-                        expect(ch.endPoints).not.toContain(ep1);
-                        ch.shutdown();
-                        expect(ch.endPoints.length).toBe(0);
-                    });
-                });
-                describe('communicates between endpoints', function () {
-                    var ch = new Channel();
-                    var ep1 = new EndPoint('ep1', Direction.OUT);
-                    var ep2 = new EndPoint('ep2', Direction.IN);
-                    ep1.attach(ch);
-                    ep2.attach(ch);
-                    ch.activate();
-                    it('can bounce messages', function (done) {
-                        ep2.onMessage(function (m, ep) {
-                            m.header.isResponse = true;ep2.sendMessage(m);
-                        });
-                        ep1.sendMessage(new IntegerMessage(100));
-                        ep1.onMessage(function (m) {
-                            done();
-                        });
                     });
                 });
             });

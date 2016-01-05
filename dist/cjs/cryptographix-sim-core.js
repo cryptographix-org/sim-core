@@ -1,57 +1,14 @@
-"use strict";
+'use strict';
 
 exports.__esModule = true;
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _aureliaDependencyInjection = require('aurelia-dependency-injection');
-
-var HexCodec = (function () {
-    function HexCodec() {
-        _classCallCheck(this, HexCodec);
-    }
-
-    HexCodec.decode = function decode(a) {
-        if (HexCodec.hexDecodeMap == undefined) {
-            var hex = "0123456789ABCDEF";
-            var allow = " \f\n\r\t \u2028\u2029";
-            var dec = [];
-            for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
-            hex = hex.toLowerCase();
-            for (var i = 10; i < 16; ++i) dec[hex.charAt(i)] = i;
-            for (var i = 0; i < allow.length; ++i) dec[allow.charAt(i)] = -1;
-            HexCodec.hexDecodeMap = dec;
-        }
-        var out = [];
-        var bits = 0,
-            char_count = 0;
-        for (var i = 0; i < a.length; ++i) {
-            var c = a.charAt(i);
-            if (c == '=') break;
-            var b = HexCodec.hexDecodeMap[c];
-            if (b == -1) continue;
-            if (b == undefined) throw 'Illegal character at offset ' + i;
-            bits |= b;
-            if (++char_count >= 2) {
-                out.push(bits);
-                bits = 0;
-                char_count = 0;
-            } else {
-                bits <<= 4;
-            }
-        }
-        if (char_count) throw "Hex encoding incomplete: 4 bits missing";
-        return Uint8Array.from(out);
-    };
-
-    return HexCodec;
-})();
-
-exports.HexCodec = HexCodec;
 
 var BASE64SPECIALS;
 (function (BASE64SPECIALS) {
@@ -151,6 +108,49 @@ var Base64Codec = (function () {
 })();
 
 exports.Base64Codec = Base64Codec;
+
+var HexCodec = (function () {
+    function HexCodec() {
+        _classCallCheck(this, HexCodec);
+    }
+
+    HexCodec.decode = function decode(a) {
+        if (HexCodec.hexDecodeMap == undefined) {
+            var hex = "0123456789ABCDEF";
+            var allow = ' \f\n\r\t \u2028\u2029';
+            var dec = [];
+            for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
+            hex = hex.toLowerCase();
+            for (var i = 10; i < 16; ++i) dec[hex.charAt(i)] = i;
+            for (var i = 0; i < allow.length; ++i) dec[allow.charAt(i)] = -1;
+            HexCodec.hexDecodeMap = dec;
+        }
+        var out = [];
+        var bits = 0,
+            char_count = 0;
+        for (var i = 0; i < a.length; ++i) {
+            var c = a.charAt(i);
+            if (c == '=') break;
+            var b = HexCodec.hexDecodeMap[c];
+            if (b == -1) continue;
+            if (b == undefined) throw 'Illegal character at offset ' + i;
+            bits |= b;
+            if (++char_count >= 2) {
+                out.push(bits);
+                bits = 0;
+                char_count = 0;
+            } else {
+                bits <<= 4;
+            }
+        }
+        if (char_count) throw "Hex encoding incomplete: 4 bits missing";
+        return Uint8Array.from(out);
+    };
+
+    return HexCodec;
+})();
+
+exports.HexCodec = HexCodec;
 
 var ByteArray = (function () {
     function ByteArray(bytes, format, opt) {
@@ -284,7 +284,7 @@ var ByteArray = (function () {
     };
 
     _createClass(ByteArray, [{
-        key: "length",
+        key: 'length',
         get: function get() {
             return this.byteArray.length;
         },
@@ -298,7 +298,7 @@ var ByteArray = (function () {
             }
         }
     }, {
-        key: "backingArray",
+        key: 'backingArray',
         get: function get() {
             return this.byteArray;
         }
@@ -313,6 +313,48 @@ ByteArray.BYTES = 0;
 ByteArray.HEX = 1;
 ByteArray.BASE64 = 2;
 ByteArray.UTF8 = 3;
+
+var KindHelper = (function () {
+    function KindHelper() {
+        _classCallCheck(this, KindHelper);
+    }
+
+    KindHelper.prototype.init = function init(kindName, description) {
+        this.kindInfo = {
+            title: kindName,
+            description: description,
+            type: "object",
+            properties: {}
+        };
+        return this;
+    };
+
+    KindHelper.prototype.field = function field(name, description, dataType, opts) {
+        this.kindInfo.properties[name] = {
+            description: description,
+            type: dataType
+        };
+        return this;
+    };
+
+    KindHelper.prototype.seal = function seal(kind) {
+        var info = this.kindInfo;
+        this.kindInfo = new KindInfo();
+        return info;
+    };
+
+    return KindHelper;
+})();
+
+exports.KindHelper = KindHelper;
+
+var KindInfo = function KindInfo() {
+    _classCallCheck(this, KindInfo);
+};
+
+exports.KindInfo = KindInfo;
+
+KindInfo.$kindHelper = new KindHelper();
 
 var Key = (function () {
     function Key(id, key) {
@@ -330,27 +372,27 @@ var Key = (function () {
     }
 
     _createClass(Key, [{
-        key: "type",
+        key: 'type',
         get: function get() {
             return this.cryptoKey.type;
         }
     }, {
-        key: "algorithm",
+        key: 'algorithm',
         get: function get() {
             return this.cryptoKey.algorithm;
         }
     }, {
-        key: "extractable",
+        key: 'extractable',
         get: function get() {
             return this.cryptoKey.extractable;
         }
     }, {
-        key: "usages",
+        key: 'usages',
         get: function get() {
             return this.cryptoKey.usages;
         }
     }, {
-        key: "innerKey",
+        key: 'innerKey',
         get: function get() {
             return this.cryptoKey;
         }
@@ -409,7 +451,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -421,7 +463,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this2.crypto.digest(algorithm, data.backingArray).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -433,7 +475,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this3.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -445,7 +487,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this4.crypto.exportKey(format, key.innerKey).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -461,7 +503,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this5.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
                 resolve(res);
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -473,7 +515,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this6.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -485,7 +527,7 @@ var CryptographicService = (function () {
         return new Promise(function (resolve, reject) {
             _this7.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
                 resolve(new ByteArray(res));
-            })["catch"](function (err) {
+            })['catch'](function (err) {
                 reject(err);
             });
         });
@@ -495,90 +537,8 @@ var CryptographicService = (function () {
 })();
 
 exports.CryptographicService = CryptographicService;
-
-var KindHelper = (function () {
-    function KindHelper() {
-        _classCallCheck(this, KindHelper);
-    }
-
-    KindHelper.prototype.init = function init(kindName, description) {
-        this.kindInfo = {
-            title: kindName,
-            description: description,
-            type: "object",
-            properties: {}
-        };
-        return this;
-    };
-
-    KindHelper.prototype.field = function field(name, description, dataType, opts) {
-        this.kindInfo.properties[name] = {
-            description: description,
-            type: dataType
-        };
-        return this;
-    };
-
-    KindHelper.prototype.seal = function seal(kind) {
-        var info = this.kindInfo;
-        this.kindInfo = new KindInfo();
-        return info;
-    };
-
-    return KindHelper;
-})();
-
-exports.KindHelper = KindHelper;
-
-var KindInfo = function KindInfo() {
-    _classCallCheck(this, KindInfo);
-};
-
-exports.KindInfo = KindInfo;
-
-KindInfo.$kindHelper = new KindHelper();
-
 exports.Container = _aureliaDependencyInjection.Container;
 exports.inject = _aureliaDependencyInjection.autoinject;
-
-var Message = (function () {
-    function Message(header, payload) {
-        _classCallCheck(this, Message);
-
-        this._header = header || {};
-        this._payload = payload;
-    }
-
-    _createClass(Message, [{
-        key: "header",
-        get: function get() {
-            return this._header;
-        }
-    }, {
-        key: "payload",
-        get: function get() {
-            return this._payload;
-        }
-    }]);
-
-    return Message;
-})();
-
-exports.Message = Message;
-
-var KindMessage = (function (_Message) {
-    _inherits(KindMessage, _Message);
-
-    function KindMessage() {
-        _classCallCheck(this, KindMessage);
-
-        _Message.apply(this, arguments);
-    }
-
-    return KindMessage;
-})(Message);
-
-exports.KindMessage = KindMessage;
 
 var window = window || {};
 
@@ -678,76 +638,44 @@ TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["We
 TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
 TaskScheduler.taskQueueCapacity = 1024;
 
-var Channel = (function () {
-    function Channel() {
-        _classCallCheck(this, Channel);
+var Message = (function () {
+    function Message(header, payload) {
+        _classCallCheck(this, Message);
 
-        this._active = false;
-        this._endPoints = [];
+        this._header = header || {};
+        this._payload = payload;
     }
 
-    Channel.prototype.shutdown = function shutdown() {
-        this._active = false;
-        this._endPoints = [];
-        if (this._taskScheduler) {
-            this._taskScheduler.shutdown();
-            this._taskScheduler = undefined;
-        }
-    };
-
-    Channel.prototype.activate = function activate() {
-        this._taskScheduler = new TaskScheduler();
-        this._active = true;
-    };
-
-    Channel.prototype.deactivate = function deactivate() {
-        this._taskScheduler = undefined;
-        this._active = false;
-    };
-
-    Channel.prototype.addEndPoint = function addEndPoint(endPoint) {
-        this._endPoints.push(endPoint);
-    };
-
-    Channel.prototype.removeEndPoint = function removeEndPoint(endPoint) {
-        var idx = this._endPoints.indexOf(endPoint);
-        if (idx >= 0) {
-            this._endPoints.splice(idx, 1);
-        }
-    };
-
-    Channel.prototype.sendMessage = function sendMessage(origin, message) {
-        var _this8 = this;
-
-        var isResponse = message.header && message.header.isResponse;
-        if (!this._active) return;
-        this._endPoints.forEach(function (endPoint) {
-            if (origin != endPoint) {
-                if (endPoint.direction != Direction.OUT || isResponse) {
-                    _this8._taskScheduler.queueTask(function () {
-                        endPoint.handleMessage(message, origin, _this8);
-                    });
-                }
-            }
-        });
-    };
-
-    _createClass(Channel, [{
-        key: "active",
+    _createClass(Message, [{
+        key: 'header',
         get: function get() {
-            return this._active;
+            return this._header;
         }
     }, {
-        key: "endPoints",
+        key: 'payload',
         get: function get() {
-            return this._endPoints;
+            return this._payload;
         }
     }]);
 
-    return Channel;
+    return Message;
 })();
 
-exports.Channel = Channel;
+exports.Message = Message;
+
+var KindMessage = (function (_Message) {
+    _inherits(KindMessage, _Message);
+
+    function KindMessage() {
+        _classCallCheck(this, KindMessage);
+
+        _Message.apply(this, arguments);
+    }
+
+    return KindMessage;
+})(Message);
+
+exports.KindMessage = KindMessage;
 var Direction;
 exports.Direction = Direction;
 (function (Direction) {
@@ -788,27 +716,27 @@ var EndPoint = (function () {
     };
 
     EndPoint.prototype.detachAll = function detachAll() {
-        var _this9 = this;
+        var _this8 = this;
 
         this._channels.forEach(function (channel) {
-            channel.removeEndPoint(_this9);
+            channel.removeEndPoint(_this8);
         });
         this._channels = [];
     };
 
     EndPoint.prototype.handleMessage = function handleMessage(message, fromEndPoint, fromChannel) {
-        var _this10 = this;
+        var _this9 = this;
 
         this._messageListeners.forEach(function (messageListener) {
-            messageListener(message, _this10, fromChannel);
+            messageListener(message, _this9, fromChannel);
         });
     };
 
     EndPoint.prototype.sendMessage = function sendMessage(message) {
-        var _this11 = this;
+        var _this10 = this;
 
         this._channels.forEach(function (channel) {
-            channel.sendMessage(_this11, message);
+            channel.sendMessage(_this10, message);
         });
     };
 
@@ -817,17 +745,17 @@ var EndPoint = (function () {
     };
 
     _createClass(EndPoint, [{
-        key: "id",
+        key: 'id',
         get: function get() {
             return this._id;
         }
     }, {
-        key: "attached",
+        key: 'attached',
         get: function get() {
             return this._channels.length > 0;
         }
     }, {
-        key: "direction",
+        key: 'direction',
         get: function get() {
             return this._direction;
         }
@@ -837,6 +765,77 @@ var EndPoint = (function () {
 })();
 
 exports.EndPoint = EndPoint;
+
+var Channel = (function () {
+    function Channel() {
+        _classCallCheck(this, Channel);
+
+        this._active = false;
+        this._endPoints = [];
+    }
+
+    Channel.prototype.shutdown = function shutdown() {
+        this._active = false;
+        this._endPoints = [];
+        if (this._taskScheduler) {
+            this._taskScheduler.shutdown();
+            this._taskScheduler = undefined;
+        }
+    };
+
+    Channel.prototype.activate = function activate() {
+        this._taskScheduler = new TaskScheduler();
+        this._active = true;
+    };
+
+    Channel.prototype.deactivate = function deactivate() {
+        this._taskScheduler = undefined;
+        this._active = false;
+    };
+
+    Channel.prototype.addEndPoint = function addEndPoint(endPoint) {
+        this._endPoints.push(endPoint);
+    };
+
+    Channel.prototype.removeEndPoint = function removeEndPoint(endPoint) {
+        var idx = this._endPoints.indexOf(endPoint);
+        if (idx >= 0) {
+            this._endPoints.splice(idx, 1);
+        }
+    };
+
+    Channel.prototype.sendMessage = function sendMessage(origin, message) {
+        var _this11 = this;
+
+        var isResponse = message.header && message.header.isResponse;
+        if (!this._active) return;
+        this._endPoints.forEach(function (endPoint) {
+            if (origin != endPoint) {
+                if (endPoint.direction != Direction.OUT || isResponse) {
+                    _this11._taskScheduler.queueTask(function () {
+                        endPoint.handleMessage(message, origin, _this11);
+                    });
+                }
+            }
+        });
+    };
+
+    _createClass(Channel, [{
+        key: 'active',
+        get: function get() {
+            return this._active;
+        }
+    }, {
+        key: 'endPoints',
+        get: function get() {
+            return this._endPoints;
+        }
+    }]);
+
+    return Channel;
+})();
+
+exports.Channel = Channel;
 var ProtocolTypeBits;
 exports.ProtocolTypeBits = ProtocolTypeBits;
 (function (ProtocolTypeBits) {
@@ -986,7 +985,7 @@ var ComponentContext = (function () {
                 _this12.factory.loadComponent(_this12.id).then(function (instance) {
                     me.instance = instance;
                     resolve();
-                })["catch"](function (err) {
+                })['catch'](function (err) {
                     reject(err);
                 });
             }
@@ -994,7 +993,7 @@ var ComponentContext = (function () {
     };
 
     _createClass(ComponentContext, [{
-        key: "component",
+        key: 'component',
         get: function get() {
             return this.instance;
         }
@@ -1030,7 +1029,7 @@ var ModuleLoader = (function () {
         if (existing) {
             return Promise.resolve(existing);
         }
-        return System["import"](newId).then(function (m) {
+        return System['import'](newId).then(function (m) {
             _this13.moduleRegistry[newId] = m;
             return m;
         });
@@ -1111,7 +1110,7 @@ var Port = (function () {
     };
 
     _createClass(Port, [{
-        key: "endPoint",
+        key: 'endPoint',
         get: function get() {
             return this._endPoint;
         },
@@ -1119,22 +1118,22 @@ var Port = (function () {
             this._endPoint = endPoint;
         }
     }, {
-        key: "owner",
+        key: 'owner',
         get: function get() {
             return this._owner;
         }
     }, {
-        key: "protocolID",
+        key: 'protocolID',
         get: function get() {
             return this._protocolID;
         }
     }, {
-        key: "id",
+        key: 'id',
         get: function get() {
             return this._endPoint.id;
         }
     }, {
-        key: "direction",
+        key: 'direction',
         get: function get() {
             return this._endPoint.direction;
         }
@@ -1266,12 +1265,12 @@ var Node = (function () {
     };
 
     _createClass(Node, [{
-        key: "owner",
+        key: 'owner',
         get: function get() {
             return this._owner;
         }
     }, {
-        key: "id",
+        key: 'id',
         get: function get() {
             return this._id;
         },
@@ -1328,17 +1327,17 @@ var Link = (function () {
     };
 
     _createClass(Link, [{
-        key: "id",
+        key: 'id',
         set: function set(id) {
             this._id = id;
         }
     }, {
-        key: "fromNode",
+        key: 'fromNode',
         get: function get() {
             return this._owner.getNodeByID(this._from.nodeID);
         }
     }, {
-        key: "fromPort",
+        key: 'fromPort',
         get: function get() {
             var node = this.fromNode;
             return node ? node.identifyPort(this._from.portID, this._protocolID) : undefined;
@@ -1351,12 +1350,12 @@ var Link = (function () {
             this._protocolID = port.protocolID;
         }
     }, {
-        key: "toNode",
+        key: 'toNode',
         get: function get() {
             return this._owner.getNodeByID(this._to.nodeID);
         }
     }, {
-        key: "toPort",
+        key: 'toPort',
         get: function get() {
             var node = this.toNode;
             return node ? node.identifyPort(this._to.portID, this._protocolID) : undefined;
@@ -1369,7 +1368,7 @@ var Link = (function () {
             this._protocolID = port.protocolID;
         }
     }, {
-        key: "protocolID",
+        key: 'protocolID',
         get: function get() {
             return this._protocolID;
         }
@@ -1465,7 +1464,7 @@ var Graph = (function (_Node) {
                     node.initComponent(factory).then(function () {
                         --pendingCount;
                         if (pendingCount == 0) resolve();
-                    })["catch"](function (reason) {
+                    })['catch'](function (reason) {
                         reject(reason);
                     });
                 }

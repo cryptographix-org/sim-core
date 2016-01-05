@@ -1,13 +1,13 @@
-System.register(['aurelia-dependency-injection'], function (_export) {
-    'use strict';
+System.register(["aurelia-dependency-injection"], function (_export) {
+    "use strict";
 
-    var Container, inject, BASE64SPECIALS, Base64Codec, HexCodec, ByteArray, KindHelper, KindInfo, Key, PrivateKey, PublicKey, KeyPair, CryptographicService, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, ComponentBuilder, PortInfo, ComponentInfo, C, ComponentContext, ModuleRegistryEntry, ModuleLoader, ComponentFactory, Port, PublicPort, Node, Link, Network, Graph, SimulationEngine;
+    var Container, inject, HexCodec, BASE64SPECIALS, Base64Codec, ByteArray, Key, PrivateKey, PublicKey, KeyPair, CryptographicService, KindHelper, KindInfo, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, ComponentBuilder, PortInfo, ComponentInfo, C, ComponentContext, ModuleRegistryEntry, ModuleLoader, ComponentFactory, Port, PublicPort, Node, Link, Network, Graph, SimulationEngine;
 
-    var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+    var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-    function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
     return {
         setters: [function (_aureliaDependencyInjection) {
@@ -15,6 +15,49 @@ System.register(['aurelia-dependency-injection'], function (_export) {
             inject = _aureliaDependencyInjection.autoinject;
         }],
         execute: function () {
+            HexCodec = (function () {
+                function HexCodec() {
+                    _classCallCheck(this, HexCodec);
+                }
+
+                HexCodec.decode = function decode(a) {
+                    if (HexCodec.hexDecodeMap == undefined) {
+                        var hex = "0123456789ABCDEF";
+                        var allow = " \f\n\r\t \u2028\u2029";
+                        var dec = [];
+                        for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
+                        hex = hex.toLowerCase();
+                        for (var i = 10; i < 16; ++i) dec[hex.charAt(i)] = i;
+                        for (var i = 0; i < allow.length; ++i) dec[allow.charAt(i)] = -1;
+                        HexCodec.hexDecodeMap = dec;
+                    }
+                    var out = [];
+                    var bits = 0,
+                        char_count = 0;
+                    for (var i = 0; i < a.length; ++i) {
+                        var c = a.charAt(i);
+                        if (c == '=') break;
+                        var b = HexCodec.hexDecodeMap[c];
+                        if (b == -1) continue;
+                        if (b == undefined) throw 'Illegal character at offset ' + i;
+                        bits |= b;
+                        if (++char_count >= 2) {
+                            out.push(bits);
+                            bits = 0;
+                            char_count = 0;
+                        } else {
+                            bits <<= 4;
+                        }
+                    }
+                    if (char_count) throw "Hex encoding incomplete: 4 bits missing";
+                    return Uint8Array.from(out);
+                };
+
+                return HexCodec;
+            })();
+
+            _export("HexCodec", HexCodec);
+
             (function (BASE64SPECIALS) {
                 BASE64SPECIALS[BASE64SPECIALS["PLUS"] = '+'.charCodeAt(0)] = "PLUS";
                 BASE64SPECIALS[BASE64SPECIALS["SLASH"] = '/'.charCodeAt(0)] = "SLASH";
@@ -111,50 +154,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Base64Codec;
             })();
 
-            _export('Base64Codec', Base64Codec);
-
-            HexCodec = (function () {
-                function HexCodec() {
-                    _classCallCheck(this, HexCodec);
-                }
-
-                HexCodec.decode = function decode(a) {
-                    if (HexCodec.hexDecodeMap == undefined) {
-                        var hex = "0123456789ABCDEF";
-                        var allow = ' \f\n\r\t \u2028\u2029';
-                        var dec = [];
-                        for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
-                        hex = hex.toLowerCase();
-                        for (var i = 10; i < 16; ++i) dec[hex.charAt(i)] = i;
-                        for (var i = 0; i < allow.length; ++i) dec[allow.charAt(i)] = -1;
-                        HexCodec.hexDecodeMap = dec;
-                    }
-                    var out = [];
-                    var bits = 0,
-                        char_count = 0;
-                    for (var i = 0; i < a.length; ++i) {
-                        var c = a.charAt(i);
-                        if (c == '=') break;
-                        var b = HexCodec.hexDecodeMap[c];
-                        if (b == -1) continue;
-                        if (b == undefined) throw 'Illegal character at offset ' + i;
-                        bits |= b;
-                        if (++char_count >= 2) {
-                            out.push(bits);
-                            bits = 0;
-                            char_count = 0;
-                        } else {
-                            bits <<= 4;
-                        }
-                    }
-                    if (char_count) throw "Hex encoding incomplete: 4 bits missing";
-                    return Uint8Array.from(out);
-                };
-
-                return HexCodec;
-            })();
-
-            _export('HexCodec', HexCodec);
+            _export("Base64Codec", Base64Codec);
 
             ByteArray = (function () {
                 function ByteArray(bytes, format, opt) {
@@ -288,7 +288,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(ByteArray, [{
-                    key: 'length',
+                    key: "length",
                     get: function get() {
                         return this.byteArray.length;
                     },
@@ -302,7 +302,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                         }
                     }
                 }, {
-                    key: 'backingArray',
+                    key: "backingArray",
                     get: function get() {
                         return this.byteArray;
                     }
@@ -311,12 +311,198 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return ByteArray;
             })();
 
-            _export('ByteArray', ByteArray);
+            _export("ByteArray", ByteArray);
 
             ByteArray.BYTES = 0;
             ByteArray.HEX = 1;
             ByteArray.BASE64 = 2;
             ByteArray.UTF8 = 3;
+
+            Key = (function () {
+                function Key(id, key) {
+                    _classCallCheck(this, Key);
+
+                    this.id = id;
+                    if (key) this.cryptoKey = key;else {
+                        this.cryptoKey = {
+                            type: "",
+                            algorithm: "",
+                            extractable: true,
+                            usages: []
+                        };
+                    }
+                }
+
+                _createClass(Key, [{
+                    key: "type",
+                    get: function get() {
+                        return this.cryptoKey.type;
+                    }
+                }, {
+                    key: "algorithm",
+                    get: function get() {
+                        return this.cryptoKey.algorithm;
+                    }
+                }, {
+                    key: "extractable",
+                    get: function get() {
+                        return this.cryptoKey.extractable;
+                    }
+                }, {
+                    key: "usages",
+                    get: function get() {
+                        return this.cryptoKey.usages;
+                    }
+                }, {
+                    key: "innerKey",
+                    get: function get() {
+                        return this.cryptoKey;
+                    }
+                }]);
+
+                return Key;
+            })();
+
+            _export("Key", Key);
+
+            PrivateKey = (function (_Key) {
+                _inherits(PrivateKey, _Key);
+
+                function PrivateKey() {
+                    _classCallCheck(this, PrivateKey);
+
+                    _Key.apply(this, arguments);
+                }
+
+                return PrivateKey;
+            })(Key);
+
+            _export("PrivateKey", PrivateKey);
+
+            PublicKey = (function (_Key2) {
+                _inherits(PublicKey, _Key2);
+
+                function PublicKey() {
+                    _classCallCheck(this, PublicKey);
+
+                    _Key2.apply(this, arguments);
+                }
+
+                return PublicKey;
+            })(Key);
+
+            _export("PublicKey", PublicKey);
+
+            KeyPair = function KeyPair() {
+                _classCallCheck(this, KeyPair);
+            };
+
+            _export("KeyPair", KeyPair);
+
+            CryptographicService = (function () {
+                function CryptographicService() {
+                    _classCallCheck(this, CryptographicService);
+
+                    this.crypto = window.crypto.subtle;
+                    if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
+                }
+
+                CryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
+                    var _this = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.digest = function digest(algorithm, data) {
+                    var _this2 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this2.crypto.digest(algorithm, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
+                    var _this3 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this3.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.exportKey = function exportKey(format, key) {
+                    var _this4 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this4.crypto.exportKey(format, key.innerKey).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
+                    return new Promise(function (resolve, reject) {});
+                };
+
+                CryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+                    var _this5 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this5.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
+                            resolve(res);
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.sign = function sign(algorithm, key, data) {
+                    var _this6 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this6.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                CryptographicService.prototype.verify = function verify(algorithm, key, signature, data) {
+                    var _this7 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        _this7.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })["catch"](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                return CryptographicService;
+            })();
+
+            _export("CryptographicService", CryptographicService);
+
+            _export("Container", Container);
+
+            _export("inject", inject);
 
             KindHelper = (function () {
                 function KindHelper() {
@@ -350,201 +536,15 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return KindHelper;
             })();
 
-            _export('KindHelper', KindHelper);
+            _export("KindHelper", KindHelper);
 
             KindInfo = function KindInfo() {
                 _classCallCheck(this, KindInfo);
             };
 
-            _export('KindInfo', KindInfo);
+            _export("KindInfo", KindInfo);
 
             KindInfo.$kindHelper = new KindHelper();
-
-            Key = (function () {
-                function Key(id, key) {
-                    _classCallCheck(this, Key);
-
-                    this.id = id;
-                    if (key) this.cryptoKey = key;else {
-                        this.cryptoKey = {
-                            type: "",
-                            algorithm: "",
-                            extractable: true,
-                            usages: []
-                        };
-                    }
-                }
-
-                _createClass(Key, [{
-                    key: 'type',
-                    get: function get() {
-                        return this.cryptoKey.type;
-                    }
-                }, {
-                    key: 'algorithm',
-                    get: function get() {
-                        return this.cryptoKey.algorithm;
-                    }
-                }, {
-                    key: 'extractable',
-                    get: function get() {
-                        return this.cryptoKey.extractable;
-                    }
-                }, {
-                    key: 'usages',
-                    get: function get() {
-                        return this.cryptoKey.usages;
-                    }
-                }, {
-                    key: 'innerKey',
-                    get: function get() {
-                        return this.cryptoKey;
-                    }
-                }]);
-
-                return Key;
-            })();
-
-            _export('Key', Key);
-
-            PrivateKey = (function (_Key) {
-                _inherits(PrivateKey, _Key);
-
-                function PrivateKey() {
-                    _classCallCheck(this, PrivateKey);
-
-                    _Key.apply(this, arguments);
-                }
-
-                return PrivateKey;
-            })(Key);
-
-            _export('PrivateKey', PrivateKey);
-
-            PublicKey = (function (_Key2) {
-                _inherits(PublicKey, _Key2);
-
-                function PublicKey() {
-                    _classCallCheck(this, PublicKey);
-
-                    _Key2.apply(this, arguments);
-                }
-
-                return PublicKey;
-            })(Key);
-
-            _export('PublicKey', PublicKey);
-
-            KeyPair = function KeyPair() {
-                _classCallCheck(this, KeyPair);
-            };
-
-            _export('KeyPair', KeyPair);
-
-            CryptographicService = (function () {
-                function CryptographicService() {
-                    _classCallCheck(this, CryptographicService);
-
-                    this.crypto = window.crypto.subtle;
-                    if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
-                }
-
-                CryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
-                    var _this = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.digest = function digest(algorithm, data) {
-                    var _this2 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this2.crypto.digest(algorithm, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
-                    var _this3 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this3.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.exportKey = function exportKey(format, key) {
-                    var _this4 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this4.crypto.exportKey(format, key.innerKey).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
-                    return new Promise(function (resolve, reject) {});
-                };
-
-                CryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
-                    var _this5 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this5.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
-                            resolve(res);
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.sign = function sign(algorithm, key, data) {
-                    var _this6 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this6.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.verify = function verify(algorithm, key, signature, data) {
-                    var _this7 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this7.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                return CryptographicService;
-            })();
-
-            _export('CryptographicService', CryptographicService);
-
-            _export('Container', Container);
-
-            _export('inject', inject);
 
             Message = (function () {
                 function Message(header, payload) {
@@ -555,12 +555,12 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 }
 
                 _createClass(Message, [{
-                    key: 'header',
+                    key: "header",
                     get: function get() {
                         return this._header;
                     }
                 }, {
-                    key: 'payload',
+                    key: "payload",
                     get: function get() {
                         return this._payload;
                     }
@@ -569,7 +569,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Message;
             })();
 
-            _export('Message', Message);
+            _export("Message", Message);
 
             KindMessage = (function (_Message) {
                 _inherits(KindMessage, _Message);
@@ -583,7 +583,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return KindMessage;
             })(Message);
 
-            _export('KindMessage', KindMessage);
+            _export("KindMessage", KindMessage);
 
             window = window || {};
 
@@ -677,7 +677,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return TaskScheduler;
             })();
 
-            _export('TaskScheduler', TaskScheduler);
+            _export("TaskScheduler", TaskScheduler);
 
             TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["WebKitMutationObserver"];
             TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
@@ -738,12 +738,12 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(Channel, [{
-                    key: 'active',
+                    key: "active",
                     get: function get() {
                         return this._active;
                     }
                 }, {
-                    key: 'endPoints',
+                    key: "endPoints",
                     get: function get() {
                         return this._endPoints;
                     }
@@ -752,15 +752,15 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Channel;
             })();
 
-            _export('Channel', Channel);
+            _export("Channel", Channel);
 
-            _export('Direction', Direction);
+            _export("Direction", Direction);
 
             (function (Direction) {
                 Direction[Direction["IN"] = 1] = "IN";
                 Direction[Direction["OUT"] = 2] = "OUT";
                 Direction[Direction["INOUT"] = 3] = "INOUT";
-            })(Direction || _export('Direction', Direction = {}));
+            })(Direction || _export("Direction", Direction = {}));
             ;
 
             EndPoint = (function () {
@@ -823,17 +823,17 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(EndPoint, [{
-                    key: 'id',
+                    key: "id",
                     get: function get() {
                         return this._id;
                     }
                 }, {
-                    key: 'attached',
+                    key: "attached",
                     get: function get() {
                         return this._channels.length > 0;
                     }
                 }, {
-                    key: 'direction',
+                    key: "direction",
                     get: function get() {
                         return this._direction;
                     }
@@ -842,9 +842,9 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return EndPoint;
             })();
 
-            _export('EndPoint', EndPoint);
+            _export("EndPoint", EndPoint);
 
-            _export('ProtocolTypeBits', ProtocolTypeBits);
+            _export("ProtocolTypeBits", ProtocolTypeBits);
 
             (function (ProtocolTypeBits) {
                 ProtocolTypeBits[ProtocolTypeBits["PACKET"] = 0] = "PACKET";
@@ -854,13 +854,13 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 ProtocolTypeBits[ProtocolTypeBits["PEER2PEER"] = 6] = "PEER2PEER";
                 ProtocolTypeBits[ProtocolTypeBits["UNTYPED"] = 0] = "UNTYPED";
                 ProtocolTypeBits[ProtocolTypeBits["TYPED"] = 8] = "TYPED";
-            })(ProtocolTypeBits || _export('ProtocolTypeBits', ProtocolTypeBits = {}));
+            })(ProtocolTypeBits || _export("ProtocolTypeBits", ProtocolTypeBits = {}));
 
             Protocol = function Protocol() {
                 _classCallCheck(this, Protocol);
             };
 
-            _export('Protocol', Protocol);
+            _export("Protocol", Protocol);
 
             Protocol.protocolType = 0;
 
@@ -941,7 +941,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return ComponentBuilder;
             })();
 
-            _export('ComponentBuilder', ComponentBuilder);
+            _export("ComponentBuilder", ComponentBuilder);
 
             PortInfo = function PortInfo() {
                 _classCallCheck(this, PortInfo);
@@ -950,7 +950,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 this.required = false;
             };
 
-            _export('PortInfo', PortInfo);
+            _export("PortInfo", PortInfo);
 
             ComponentInfo = function ComponentInfo() {
                 _classCallCheck(this, ComponentInfo);
@@ -959,7 +959,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 this.ports = {};
             };
 
-            _export('ComponentInfo', ComponentInfo);
+            _export("ComponentInfo", ComponentInfo);
 
             ComponentInfo.$builder = new ComponentBuilder();
 
@@ -993,7 +993,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                             _this12.factory.loadComponent(_this12.id).then(function (instance) {
                                 me.instance = instance;
                                 resolve();
-                            })['catch'](function (err) {
+                            })["catch"](function (err) {
                                 reject(err);
                             });
                         }
@@ -1001,7 +1001,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(ComponentContext, [{
-                    key: 'component',
+                    key: "component",
                     get: function get() {
                         return this.instance;
                     }
@@ -1010,7 +1010,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return ComponentContext;
             })();
 
-            _export('ComponentContext', ComponentContext);
+            _export("ComponentContext", ComponentContext);
 
             ;
 
@@ -1037,7 +1037,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                     if (existing) {
                         return Promise.resolve(existing);
                     }
-                    return System['import'](newId).then(function (m) {
+                    return System["import"](newId).then(function (m) {
                         _this13.moduleRegistry[newId] = m;
                         return m;
                     });
@@ -1046,7 +1046,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return ModuleLoader;
             })();
 
-            _export('ModuleLoader', ModuleLoader);
+            _export("ModuleLoader", ModuleLoader);
 
             ComponentFactory = (function () {
                 function ComponentFactory(loader, container) {
@@ -1088,7 +1088,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return ComponentFactory;
             })();
 
-            _export('ComponentFactory', ComponentFactory);
+            _export("ComponentFactory", ComponentFactory);
 
             Port = (function () {
                 function Port(owner, endPoint) {
@@ -1118,7 +1118,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(Port, [{
-                    key: 'endPoint',
+                    key: "endPoint",
                     get: function get() {
                         return this._endPoint;
                     },
@@ -1126,22 +1126,22 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                         this._endPoint = endPoint;
                     }
                 }, {
-                    key: 'owner',
+                    key: "owner",
                     get: function get() {
                         return this._owner;
                     }
                 }, {
-                    key: 'protocolID',
+                    key: "protocolID",
                     get: function get() {
                         return this._protocolID;
                     }
                 }, {
-                    key: 'id',
+                    key: "id",
                     get: function get() {
                         return this._endPoint.id;
                     }
                 }, {
-                    key: 'direction',
+                    key: "direction",
                     get: function get() {
                         return this._endPoint.direction;
                     }
@@ -1150,7 +1150,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Port;
             })();
 
-            _export('Port', Port);
+            _export("Port", Port);
 
             PublicPort = (function (_Port) {
                 _inherits(PublicPort, _Port);
@@ -1189,7 +1189,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return PublicPort;
             })(Port);
 
-            _export('PublicPort', PublicPort);
+            _export("PublicPort", PublicPort);
 
             Node = (function () {
                 function Node(owner) {
@@ -1273,12 +1273,12 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(Node, [{
-                    key: 'owner',
+                    key: "owner",
                     get: function get() {
                         return this._owner;
                     }
                 }, {
-                    key: 'id',
+                    key: "id",
                     get: function get() {
                         return this._id;
                     },
@@ -1290,7 +1290,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Node;
             })();
 
-            _export('Node', Node);
+            _export("Node", Node);
 
             Link = (function () {
                 function Link(owner) {
@@ -1335,17 +1335,17 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 };
 
                 _createClass(Link, [{
-                    key: 'id',
+                    key: "id",
                     set: function set(id) {
                         this._id = id;
                     }
                 }, {
-                    key: 'fromNode',
+                    key: "fromNode",
                     get: function get() {
                         return this._owner.getNodeByID(this._from.nodeID);
                     }
                 }, {
-                    key: 'fromPort',
+                    key: "fromPort",
                     get: function get() {
                         var node = this.fromNode;
                         return node ? node.identifyPort(this._from.portID, this._protocolID) : undefined;
@@ -1358,12 +1358,12 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                         this._protocolID = port.protocolID;
                     }
                 }, {
-                    key: 'toNode',
+                    key: "toNode",
                     get: function get() {
                         return this._owner.getNodeByID(this._to.nodeID);
                     }
                 }, {
-                    key: 'toPort',
+                    key: "toPort",
                     get: function get() {
                         var node = this.toNode;
                         return node ? node.identifyPort(this._to.portID, this._protocolID) : undefined;
@@ -1376,7 +1376,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                         this._protocolID = port.protocolID;
                     }
                 }, {
-                    key: 'protocolID',
+                    key: "protocolID",
                     get: function get() {
                         return this._protocolID;
                     }
@@ -1385,7 +1385,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Link;
             })();
 
-            _export('Link', Link);
+            _export("Link", Link);
 
             Network = (function () {
                 function Network(graph, factory) {
@@ -1421,7 +1421,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Network;
             })();
 
-            _export('Network', Network);
+            _export("Network", Network);
 
             Graph = (function (_Node) {
                 _inherits(Graph, _Node);
@@ -1472,7 +1472,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                                 node.initComponent(factory).then(function () {
                                     --pendingCount;
                                     if (pendingCount == 0) resolve();
-                                })['catch'](function (reason) {
+                                })["catch"](function (reason) {
                                     reject(reason);
                                 });
                             }
@@ -1586,7 +1586,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return Graph;
             })(Node);
 
-            _export('Graph', Graph);
+            _export("Graph", Graph);
 
             SimulationEngine = (function () {
                 function SimulationEngine(loader, container) {
@@ -1603,7 +1603,7 @@ System.register(['aurelia-dependency-injection'], function (_export) {
                 return SimulationEngine;
             })();
 
-            _export('SimulationEngine', SimulationEngine);
+            _export("SimulationEngine", SimulationEngine);
         }
     };
 });

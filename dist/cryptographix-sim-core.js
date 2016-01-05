@@ -313,7 +313,6 @@ export class KindInfo {
 }
 KindInfo.$kindHelper = new KindHelper();
 
-//enum KeyType { "public", "private", "secret" };
 export class Key {
     constructor(id, key) {
         this.id = id;
