@@ -89,7 +89,7 @@ describe('A Channel', ()=> {
     it( 'can bounce messages', (done) => {
       ep2.onMessage( (m: Message<any>, ep: EndPoint ) => { m.header.isResponse = true; ep2.sendMessage( m ); } );
       ep1.sendMessage( new IntegerMessage(100) );
-      ep1.onMessage( (m: Message<any>) => { done() } );
+      ep1.onMessage( (m: Message<any>) => { expect( m ).toBeDefined(); done() } );
     } );
 
   });

@@ -16,25 +16,31 @@ export class Graph extends Node
   *   1. A Component
   *   2. A sub-graph
   */
-  protected nodes: { [id: string]: Node; };
+  protected _nodes: Map<string, Node>;
 
   // Links in this graph. Each node may be:
-  protected links: { [id: string]: Link; };
+  protected _links: Map<string, Link>;
 
   // Public Ports in this graph. Inherited from Node
   // private Ports;
-  constructor( owner: Graph, attributes: any )
+  constructor( owner: Graph, attributes: any = {} )
   {
     super( owner, attributes );
 
-    this.id = attributes.id || "<graph>";
+    this.initFromObject( attributes );
+  }
 
-    this.nodes = {};
-    this.links = {};
+  initFromString( jsonString: string )
+  {
+    this.initFromObject( JSON.parse( jsonString ) );
+  }
 
-    // Add ourselves as a Node, so that Links can reference PublicPorts
-    // on containing Graph
-    this.nodes[ this.id ] = this;
+  initFromObject( attributes: any ) {
+
+    this.id = attributes.id || "$graph";
+
+    this._nodes = new Map<string, Node>();
+    this._links = new Map<string, Link>();
 
     Object.keys( attributes.nodes || {} ).forEach( (id) => {
       this.addNode( id, attributes.nodes[ id ] );
@@ -50,59 +56,61 @@ export class Graph extends Node
     var graph = super.toObject();
 
     let nodes = graph[ "nodes" ] = {};
-    Object.keys( this.nodes ).forEach( (id) => {
-      let node = this.nodes[ id ];
-
-      if ( node != this )
+    this._nodes.forEach( ( node, id ) => {
+//      if ( node != this )
         nodes[ id ] = node.toObject();
     });
 
     let links = graph[ "links" ] = {};
-    Object.keys( this.links ).forEach( (id) => {
-      links[ id ] = this.links[ id ].toObject();
+    this._links.forEach( ( link, id ) => {
+      links[ id ] = link.toObject();
     });
 
     return graph;
   }
 
-  initComponent( factory: ComponentFactory ): Promise<void>
+  loadComponent( factory: ComponentFactory ): Promise<void>
   {
     return new Promise<void>( (resolve, reject) => {
       let pendingCount = 0;
 
-      Object.keys( this.nodes ).forEach( (id) => {
-        let node = this.nodes[ id ];
+      let nodes = new Map<string, Node>( this._nodes );
+      nodes.set( '$graph', this );
 
-        if ( node != this )
-        {
-          pendingCount++;
+      nodes.forEach( ( node, id ) => {
+        let done: Promise<void>;
 
-          node.initComponent( factory )
-            .then( () => {
-              --pendingCount;
-              if ( pendingCount == 0 )
-                resolve();
-            })
-            .catch( ( reason ) => {
-              reject( reason );
-            } );
+        pendingCount++;
+
+        if ( node == this ) {
+          done = super.loadComponent( factory );
         }
+        else {
+          done = node.loadComponent( factory );
+        }
+
+        done.then( () => {
+          --pendingCount;
+          if ( pendingCount == 0 )
+            resolve();
+        })
+        .catch( ( reason ) => {
+          reject( reason );
+        } );
       } );
     } );
   }
 
-  getNodes(): { [id: string]: Node; }
+  public get nodes(): Map<string, Node>
   {
-    return this.nodes;
+    return this._nodes;
   }
 
-  getAllNodes(): Node[]
+/*  public getAllNodes(): Node[]
   {
     let nodes: Node[] = [];
 
-    Object.keys( this.nodes ).forEach( (id) => {
-      let node = this.nodes[ id ];
-
+    this._nodes.forEach( ( node, id ) => {
       // Don't recurse on graph's pseudo-node
       if ( ( node != this ) && ( node instanceof Graph ) )
         nodes = nodes.concat( node.getAllNodes() );
@@ -111,127 +119,120 @@ export class Graph extends Node
     } );
 
     return nodes;
-  }
+  }*/
 
-  getLinks(): { [id: string]: Link; }
+  public get links(): Map<string, Link>
   {
-    return this.links;
+    return this._links;
   }
 
-  getAllLinks(): Link[]
+/*  public getAllLinks(): Link[]
   {
     let links: Link[] = [];
 
-    Object.keys( this.nodes ).forEach( (id) => {
-      let node = this.nodes[ id ];
-
+    this._nodes.forEach( ( node, id ) => {
       if ( ( node != this ) && ( node instanceof Graph ) )
         links = links.concat( node.getAllLinks() );
     } )
 
-    Object.keys( this.links ).forEach( (id) => {
-      let link = this.links[ id ];
-
+    this._links.forEach( ( link, id ) => {
       links.push( link );
     } );
 
     return links;
-  }
+  }*/
 
-  getAllPorts(): Port[]
+/*  public getAllPorts(): Port[]
   {
-    let ports: Port[] = super.getPorts();
+    let ports: Port[] = super.getPortArray();
 
-    Object.keys( this.nodes ).forEach( (id) => {
-      let node = this.nodes[ id ];
-
+    this._nodes.forEach( ( node, id ) => {
       if ( ( node != this ) && ( node instanceof Graph ) )
         ports = ports.concat( node.getAllPorts() );
       else
-        ports = ports.concat( node.getPorts() );
+        ports = ports.concat( node.getPortArray() );
     } );
 
     return ports;
-  }
+  }*/
 
-  getNodeByID( id: string ): Node
+  public getNodeByID( id: string ): Node
   {
-    return this.nodes[ id ];
+    if ( id == '$graph' )
+      return this;
+
+    return this._nodes.get( id );
   }
 
-  addNode( id: string, attributes: {} ) {
+  public addNode( id: string, attributes: {} ) {
 
     let node = new Node( this, attributes );
 
     node.id = id;
 
-    this.nodes[ id ] = node;
+    this._nodes.set( id, node );
 
     return node;
   }
 
-  renameNode( id: string, newID: string ) {
+  public renameNode( id: string, newID: string ) {
 
     if ( id != newID )
     {
-      let node = this.nodes[ id ];
+      let node = this._nodes.get( id );
 
-      this.nodes[ newID ] = node;
+      this._nodes.delete( id );
 
       node.id = newID;
 
-      delete this.nodes[ id ];
+      this._nodes.set( newID, node );
     }
   }
 
-  removeNode( id: string ): boolean {
+  public removeNode( id: string ): boolean {
 
-    if ( this.nodes[ id ] ) {
-      delete this.nodes[ id ];
-
-      return true;
-    }
-
-    return false;
+    return this._nodes.delete( id );
   }
 
-  getLinkByID( id: string ): Link {
+  public getLinkByID( id: string ): Link {
 
-    return this.links[ id ];
+    return this._links[ id ];
   }
 
-  addLink( id: string, attributes: {} )
-  {
+  public addLink( id: string, attributes: {} ) {
+
     let link = new Link( this, attributes );
 
     link.id = id;
 
-    this.links[ id ] = link;
+    this._links.set( id, link );
 
     return link;
   }
 
-  renameLink( id: string, newID: string )
-  {
-    let link = this.links[ id ];
+  public renameLink( id: string, newID: string ) {
+
+    let link = this._links.get( id );
+
+    this._links.delete( id );
 
     link.id = newID;
-    this.links[ newID ] = link;
 
-    delete this.links[ id ];
+    this._links.set( newID, link );
   }
 
-  removeLink( id: string )
-  {
-    delete this.links[ id ];
+  public removeLink( id: string ): boolean {
+
+    return this._links.delete( id );
   }
 
-  addPublicPort( id: string, attributes: {} )
+  public addPublicPort( id: string, attributes: {} )
   {
     attributes["id"] = id;
+
     let port = new PublicPort( this, null, attributes );
 
-    this._ports[ id ] = port;
+    this._ports.set( id, port );
 
     return port;
   }

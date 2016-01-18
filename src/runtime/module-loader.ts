@@ -1,3 +1,9 @@
+export interface ModuleLoader {
+  hasModule?( id: string ): boolean;
+
+  loadModule( id: string ): Promise<any>;
+}
+
 declare interface System {
   normalizeSync( id );
   import( id );
@@ -10,7 +16,7 @@ class ModuleRegistryEntry {
   }
 }
 
-export class ModuleLoader {
+export class SystemModuleLoader implements ModuleLoader {
 
   private moduleRegistry: Map<string, ModuleRegistryEntry>;
 

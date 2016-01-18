@@ -1,4 +1,5 @@
 import { ComponentFactory } from '../runtime/component-factory';
+import { RuntimeContext, RunState } from '../runtime/runtime-context';
 import { EndPoint } from '../messaging/end-point';
 import { Channel } from '../messaging/channel';
 
@@ -9,65 +10,167 @@ import { Port, PublicPort } from './port';
 
 export class Network
 {
-  private graph: Graph;
-  private nodes: Node[];
-  private links: Link[];
-  private ports: Port[];
+  private _graph: Graph;
 
-  private factory: ComponentFactory;
+  private _factory: ComponentFactory;
 
-  constructor( graph: Graph, factory: ComponentFactory )
+  constructor( factory: ComponentFactory, graph?: Graph )
   {
-    this.graph = graph;
-    this.factory = factory;
+    this._factory = factory;
+    this._graph = graph || new Graph( null, {} );
   }
 
-  initialize( ): Promise<void>
-  {
-    this.nodes = this.graph.getAllNodes();
-    this.links = this.graph.getAllLinks();
-    this.ports = this.graph.getAllPorts();
-
-    return this.initializeGraph( );
+  get graph(): Graph {
+    return this._graph;
   }
 
-  protected initializeGraph( ): Promise<void>
+  /**
+  * Load all components
+  */
+  loadComponents(): Promise<void>
   {
-/*    return new Promise<void>( (resolve, reject) => {
+    let me = this;
 
-      .then( return this.wireupGraph() => { resolve() } );
-      .then( () => { resolve() } );
-
-    })
-*/
-    return this.graph.initComponent( this.factory );
+    return this._graph.loadComponent( this._factory );
   }
 
-  wireupGraph( router: any )
-  {
-    var me = this;
+  setup() {
+    Network.setupOrTeardown( this._graph, RunState.READY );
+  }
 
-    this.nodes.forEach( function( node )
+  teardown() {
+    Network.setupOrTeardown( this._graph, RunState.LOADED );
+  }
+
+  /**
+  * Wireup a graph, creating Channel between linked Nodes
+  * Acts recursively, wiring up any sub-graphs
+  */
+
+  /**
+  * Setup or Teardown a node, setting state to READY or LOADED
+  */
+  private static setupOrTeardown( node: Node, runState: RunState )
+  {
+    let ctx = node.context;
+
+    // 1. Preprocess
+    if ( node instanceof Graph )
     {
-      //node.router = router;
-      //node.mapPorts();
-    } );
+      let nodes: Map<string, Node> = node.nodes;
 
-    // Build linkList from config link elements
-    // Each element links ports on two nodes
-    this.links.forEach( ( link ) =>
-    {
-      // find linked nodes
-      var fromNode = link.fromNode;
-      var toNode = link.toNode;
+      if ( runState == RunState.LOADED ) {
+        // tearing down .. unlink graph first
+        let links: Map<string, Link> = node.links;
 
-      //debugMessage( "Link("+link.id+"): " + link.from + " -> " + link.to + " proto="+link.protocol );
+        // unwire (deactivate and destroy ) the Channel between linked nodes
+        links.forEach( ( link ) =>
+        {
+          Network.unwireLink( link );
+        } );
+      }
 
-      let channel = new Channel();
+      // treat graph recursively
+      nodes.forEach( function( subNode )
+      {
+        Network.setupOrTeardown( subNode, runState );
+      } );
+    }
 
-      link.connect( channel );
+    // Instantiate or Destroy component
+    ctx.setRunState( RunState.READY );
 
-      channel.activate();
-    } );
+    if ( runState == RunState.READY ) {
+
+      if ( node instanceof Graph )
+      {
+        // setting up .. linkup graph first
+        let links: Map<string, Link> = node.links;
+        // treat graph recursively
+
+        // 2. wireup (create and activate) a Channel between linked nodes
+        links.forEach( ( link ) =>
+        {
+          Network.wireLink( link );
+        } );
+      }
+    }
   }
+
+  /**
+  * Unwire a link, removing the Channel between the linked Nodes
+  */
+  private static unwireLink( link: Link )
+  {
+    // get linked nodes (Link finds Nodes in parent Graph)
+    let fromNode = link.fromNode;
+    let toNode = link.toNode;
+
+    let chan: Channel = link.disconnect();
+
+    if ( chan )
+      chan.deactivate();
+  }
+
+  /**
+  * Wireup a link, creating Channel between the linked Nodes
+  */
+  private static wireLink( link: Link )
+  {
+    // get linked nodes (Link finds Nodes in parent Graph)
+    let fromNode = link.fromNode;
+    let toNode = link.toNode;
+
+    //debugMessage( "Link("+link.id+"): " + link.from + " -> " + link.to + " proto="+link.protocol );
+
+    let channel = new Channel();
+
+    link.connect( channel );
+
+    channel.activate();
+  }
+
+
+  start( initiallyPaused: boolean ) {
+    Network.setRunState( this._graph, initiallyPaused ? RunState.PAUSED : RunState.RUNNING );
+  }
+
+  step() {
+    // TODO: Single-step
+  }
+
+  stop() {
+    Network.setRunState( this._graph, RunState.READY );
+  }
+
+  pause() {
+    Network.setRunState( this._graph, RunState.PAUSED );
+  }
+
+  resume() {
+    Network.setRunState( this._graph, RunState.RUNNING );
+  }
+
+  /**
+  * Alter run-state of a Node - READY, RUNNING, PAUSED by triggering
+  * Acts recursively, altering state of any sub-graphs
+  */
+  private static setRunState( node: Node, runState: RunState ) {
+    //if ( newState in [ NetworkState.RUNNING, NetworkState.READY ] )
+    {
+      // Propagate RUN, PAUSE and STOP state changes to sub-nets first
+      if ( node instanceof Graph )
+      {
+        let nodes: Map<string, Node> = node.nodes;
+
+        node.nodes.forEach( function( subNode )
+        {
+          Network.setRunState( subNode, runState );
+        } );
+      }
+    }
+
+    node.context.setRunState( runState );
+  }
+
 }

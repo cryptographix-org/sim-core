@@ -2,14 +2,11 @@
 Simulation framework for Smart and Secure Process Networks, in TypeScript
 
 ## Dependencies
-
-This library has **NO** external dependencies.
-In fact, you need typescript definition files for forge and jsbn
-
+aurelia-dependency-injection
 
 ## Used By
 
-* [Cryptographics Editor](https://github.com/cryptographics/cgfx-editor)
+* [Cryptographics Editor](https://github.com/cryptographix/cgfx-editor)
 
 ## Platform Support
 

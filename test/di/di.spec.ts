@@ -19,5 +19,7 @@ describe("DI Container", ()=> {
 
     jector.registerSingleton( C1, C1 );
 
+    pending();
+
   });
 });

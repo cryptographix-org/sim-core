@@ -1,7 +1,7 @@
 System.register(["cryptographix-sim-core"], function (_export) {
     "use strict";
 
-    var Container, inject, ByteArray, Channel, EndPoint, Message, Direction, Graph, Node, Port, __decorate, __metadata, C1, C2, IntegerMessage, jsonGraph1;
+    var Container, inject, ByteArray, Graph, Node, Port, Direction, Channel, EndPoint, Message, __decorate, __metadata, C1, C2, jsonGraph1, IntegerMessage;
 
     function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
@@ -12,13 +12,13 @@ System.register(["cryptographix-sim-core"], function (_export) {
             Container = _cryptographixSimCore.Container;
             inject = _cryptographixSimCore.inject;
             ByteArray = _cryptographixSimCore.ByteArray;
-            Channel = _cryptographixSimCore.Channel;
-            EndPoint = _cryptographixSimCore.EndPoint;
-            Message = _cryptographixSimCore.Message;
-            Direction = _cryptographixSimCore.Direction;
             Graph = _cryptographixSimCore.Graph;
             Node = _cryptographixSimCore.Node;
             Port = _cryptographixSimCore.Port;
+            Direction = _cryptographixSimCore.Direction;
+            Channel = _cryptographixSimCore.Channel;
+            EndPoint = _cryptographixSimCore.EndPoint;
+            Message = _cryptographixSimCore.Message;
         }],
         execute: function () {
             __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
@@ -74,89 +74,6 @@ System.register(["cryptographix-sim-core"], function (_export) {
 
                     expect(bs1.equals(bs2)).toBe(true);
                     expect(bs1.equals(bs3)).not.toBe(true);
-                });
-            });
-
-            IntegerMessage = (function (_Message) {
-                _inherits(IntegerMessage, _Message);
-
-                function IntegerMessage(value) {
-                    _classCallCheck(this, IntegerMessage);
-
-                    _Message.call(this, undefined, value);
-                }
-
-                return IntegerMessage;
-            })(Message);
-
-            describe('A Channel', function () {
-                describe('can be active or inactive', function () {
-                    var ch = new Channel();
-                    it('is initially inactive', function () {
-                        expect(ch.active).toBe(false);
-                    });
-                    it('can be activated', function () {
-                        expect(ch.active).toBe(false);
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                    });
-                    it('can be deactivated', function () {
-                        expect(ch.active).toBe(true);
-                        ch.deactivate();
-                        expect(ch.active).toBe(false);
-                        ch.deactivate();
-                        expect(ch.active).toBe(false);
-                    });
-                });
-                describe('has a registry of EndPoints', function () {
-                    var ch = new Channel();
-                    var ep1 = new EndPoint('ep1');
-                    var ep2 = new EndPoint('ep2');
-                    it('to which EndPoints can be added', function () {
-                        ch.addEndPoint(ep1);
-                        expect(ch.endPoints.length).toBe(1);
-
-                        ch.addEndPoint(ep2);
-                        expect(ch.endPoints.length).toBe(2);
-                    });
-                    it('... and removed', function () {
-                        ch.removeEndPoint(ep1);
-                        expect(ch.endPoints).toContain(ep2);
-                        ch.removeEndPoint(ep2);
-                        expect(ch.endPoints.length).toBe(0);
-                    });
-                    it('... even when Channel is activated', function () {
-                        ch.activate();
-                        expect(ch.active).toBe(true);
-                        ch.addEndPoint(new EndPoint('epx'));
-                        ch.addEndPoint(new EndPoint('epx'));
-                        ch.addEndPoint(ep1);
-                        expect(ch.endPoints).toContain(ep1);
-                        expect(ch.endPoints.length).toBe(3);
-                        ch.removeEndPoint(ep1);
-                        expect(ch.endPoints).not.toContain(ep1);
-                        ch.shutdown();
-                        expect(ch.endPoints.length).toBe(0);
-                    });
-                });
-                describe('communicates between endpoints', function () {
-                    var ch = new Channel();
-                    var ep1 = new EndPoint('ep1', Direction.OUT);
-                    var ep2 = new EndPoint('ep2', Direction.IN);
-                    ep1.attach(ch);
-                    ep2.attach(ch);
-                    ch.activate();
-                    it('can bounce messages', function (done) {
-                        ep2.onMessage(function (m, ep) {
-                            m.header.isResponse = true;ep2.sendMessage(m);
-                        });
-                        ep1.sendMessage(new IntegerMessage(100));
-                        ep1.onMessage(function (m) {
-                            done();
-                        });
-                    });
                 });
             });
 
@@ -268,6 +185,89 @@ System.register(["cryptographix-sim-core"], function (_export) {
                         expect(p1.id).toEqual('n2p1');
                         expect(p2.id).toEqual('n2p2');
                         expect(p3).toBeUndefined();
+                    });
+                });
+            });
+
+            IntegerMessage = (function (_Message) {
+                _inherits(IntegerMessage, _Message);
+
+                function IntegerMessage(value) {
+                    _classCallCheck(this, IntegerMessage);
+
+                    _Message.call(this, undefined, value);
+                }
+
+                return IntegerMessage;
+            })(Message);
+
+            describe('A Channel', function () {
+                describe('can be active or inactive', function () {
+                    var ch = new Channel();
+                    it('is initially inactive', function () {
+                        expect(ch.active).toBe(false);
+                    });
+                    it('can be activated', function () {
+                        expect(ch.active).toBe(false);
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                    });
+                    it('can be deactivated', function () {
+                        expect(ch.active).toBe(true);
+                        ch.deactivate();
+                        expect(ch.active).toBe(false);
+                        ch.deactivate();
+                        expect(ch.active).toBe(false);
+                    });
+                });
+                describe('has a registry of EndPoints', function () {
+                    var ch = new Channel();
+                    var ep1 = new EndPoint('ep1');
+                    var ep2 = new EndPoint('ep2');
+                    it('to which EndPoints can be added', function () {
+                        ch.addEndPoint(ep1);
+                        expect(ch.endPoints.length).toBe(1);
+
+                        ch.addEndPoint(ep2);
+                        expect(ch.endPoints.length).toBe(2);
+                    });
+                    it('... and removed', function () {
+                        ch.removeEndPoint(ep1);
+                        expect(ch.endPoints).toContain(ep2);
+                        ch.removeEndPoint(ep2);
+                        expect(ch.endPoints.length).toBe(0);
+                    });
+                    it('... even when Channel is activated', function () {
+                        ch.activate();
+                        expect(ch.active).toBe(true);
+                        ch.addEndPoint(new EndPoint('epx'));
+                        ch.addEndPoint(new EndPoint('epx'));
+                        ch.addEndPoint(ep1);
+                        expect(ch.endPoints).toContain(ep1);
+                        expect(ch.endPoints.length).toBe(3);
+                        ch.removeEndPoint(ep1);
+                        expect(ch.endPoints).not.toContain(ep1);
+                        ch.shutdown();
+                        expect(ch.endPoints.length).toBe(0);
+                    });
+                });
+                describe('communicates between endpoints', function () {
+                    var ch = new Channel();
+                    var ep1 = new EndPoint('ep1', Direction.OUT);
+                    var ep2 = new EndPoint('ep2', Direction.IN);
+                    ep1.attach(ch);
+                    ep2.attach(ch);
+                    ch.activate();
+                    it('can bounce messages', function (done) {
+                        ep2.onMessage(function (m, ep) {
+                            m.header.isResponse = true;ep2.sendMessage(m);
+                        });
+                        ep1.sendMessage(new IntegerMessage(100));
+                        ep1.onMessage(function (m) {
+                            done();
+                        });
                     });
                 });
             });

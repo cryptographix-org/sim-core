@@ -1,65 +1,80 @@
 import { Component, ComponentConstructor } from './component';
-import { ComponentContext } from './component-context';
+import { RuntimeContext } from './runtime-context';
 import { ModuleLoader } from './module-loader';
 
-import { Container } from '../dependency-injection/container';
+import { Container, Injectable } from '../dependency-injection/container';
 import { EndPointCollection } from '../messaging/end-point';
 
 export class ComponentFactory {
-  private loader: ModuleLoader;
-  container: Container;
+  private _loader: ModuleLoader;
+  private _container: Container;
+  private _components: Map<string, ComponentConstructor>;
 
-  constructor( loader: ModuleLoader, container: Container ) {
-    this.loader = loader;
-    this.container = container;
+  constructor( container?: Container, loader?: ModuleLoader ) {
+    this._loader = loader;
+    this._container = container || new Container();
+    this._components = new Map<string, ComponentConstructor>();
+
+    this._components.set( undefined, Object );
+    this._components.set( "", Object );
   }
 
-  createContext( id: string ): ComponentContext
+  createContext( id: string, initialData: {}, deps: Injectable[] = [] ): RuntimeContext
   {
-    let context = new ComponentContext( this, id );
+    let childContainer: Container = this._container.createChild();
 
-    return context;
+    return new RuntimeContext( this, childContainer, id, initialData, deps );
   }
 
-  loadComponent( id: string ): Promise<Component>
+  getChildContainer(): Container {
+    return ;
+  }
+
+  loadComponent( ctx: RuntimeContext, id: string ): Promise<Component>
   {
     let createComponent = function( ctor: ComponentConstructor ): Component
     {
-      let newInstance: Component = null;
-      let injects: string[] = [];
-
-/*      if ( componentType.$inject instanceof Array )
-        injects = <string[]>componentType.$inject;
-      else if ( typeof componentType.$inject == "function" )
-        injects = ( <()=>string[]> componentType.$inject )();*/
-
-      // if ( injects && injects.length > 0 )
-      //   ;
-
-      newInstance = new ctor( );
-      //if ( newInstance.onCreate )
-      //  newInstance.onCreate( initialData );
+      let newInstance: Component = ctx.container.invoke( ctor );
 
       return newInstance;
     }
 
-    let ctor: ComponentConstructor = this.get( id );
+    let me = this;
 
-    if ( ctor )
-    {
-      return new Promise<Component>( (resolve, reject) => {
+    return new Promise<Component>( (resolve, reject) => {
+      // Check cache
+      let ctor: ComponentConstructor = this.get( id );
+
+      if ( ctor ) {
+        // use cached constructor
         resolve( createComponent( ctor ) );
-      });
-    }
+      }
+      else if ( this._loader ) {
+        // got a loaded, so try to load the module ...
+        this._loader.loadModule( id )
+          .then( ( ctor: ComponentConstructor ) => {
 
-    return null;
+            // register loaded component
+            me._components.set( id, ctor );
+
+            // instantiate and resolve
+            resolve( createComponent( ctor ) );
+          })
+          .catch( ( e ) => {
+            reject( 'ComponentFactory: Unable to load component "' + id + '" - ' + e );
+          } );
+      }
+      else {
+        // oops. no loader .. no component
+        reject( 'ComponentFactory: Component "' + id + '" not registered, and Loader not available' );
+      }
+    });
   }
 
-  components: Map<string, ComponentConstructor>;
   get( id: string ): ComponentConstructor {
-    return this.components.get( id );
+    return this._components.get( id );
   }
-  set( id: string, type: ComponentConstructor ) {
-    this.components.set( id, type );
+  register( id: string, ctor: ComponentConstructor ) {
+    this._components.set( id, ctor );
   }
 }

@@ -24,7 +24,7 @@ export class SimulationEngine
   * Return a ComponentFactory facade
   */
   getComponentFactory(): ComponentFactory {
-    return new ComponentFactory( this.loader, this.container );
+    return new ComponentFactory( this.container, this.loader );
   }
 
 }

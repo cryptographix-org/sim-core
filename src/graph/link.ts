@@ -63,13 +63,20 @@ export class Link
     toPort.endPoint.attach( channel );
   }
 
-  disconnect()
+  disconnect(): Channel
   {
-    this._channel.endPoints.forEach( ( endPoint ) => {
-      endPoint.detach( this._channel );
-    } );
+    let chan = this._channel;
 
-    this._channel = undefined;
+    if ( chan )
+    {
+      this._channel.endPoints.forEach( ( endPoint ) => {
+        endPoint.detach( this._channel );
+      } );
+
+      this._channel = undefined;
+    }
+
+    return chan;
   }
 
   get fromNode(): Node

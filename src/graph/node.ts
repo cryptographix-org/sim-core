@@ -1,4 +1,4 @@
-import { ComponentContext } from '../runtime/component-context';
+import { RuntimeContext } from '../runtime/runtime-context';
 import { ComponentFactory} from '../runtime/component-factory';
 
 import { Graph } from './graph';
@@ -8,29 +8,33 @@ export class Node
 {
   protected _owner: Graph;
   protected _id: string;
-  protected _componentID: string;
+
+  protected _component: string;
   protected _initialData: Object;
 
-  protected _ports: { [id: string]: Port; };
+  protected _ports: Map<string, Port>;
 
   public metadata: any;
 
   /**
    * The runtime component instance that this node represents
    */
-  context: ComponentContext;
+  protected _context: RuntimeContext;
 
   constructor( owner: Graph, attributes: any = {} )
   {
     this._owner = owner;
     this._id = attributes.id || '';
-    this._componentID = attributes.componentID;
+    this._component = attributes.component;
     this._initialData = attributes.initialData || {};
 
-    this._ports = {};
+    this._ports = new Map<string, Port>();
 
     this.metadata = attributes.metadata || { };
 
+    // Initially create 'placeholder' ports. Once component has been
+    // loaded and instantiated, they will be connected connected to
+    // the component's communication end-points
     Object.keys( attributes.ports || {} ).forEach( (id) => {
       this.addPlaceholderPort( id, attributes.ports[ id ] );
     } );
@@ -43,15 +47,15 @@ export class Node
   {
     var node = {
       id: this.id,
-      componentID: this._componentID,
+      component: this._component,
       initialData: this._initialData,
       ports: {},
       metadata: this.metadata
     };
 
-    Object.keys( this._ports ).forEach( (id) => {
-      node.ports[ id ] = this._ports[ id ].toObject();
-    });
+    this._ports.forEach( ( port, id ) => {
+      node.ports[ id ] = port.toObject();
+    } );
 
     return node;
   }
@@ -59,7 +63,7 @@ export class Node
   /**
    * Get the Node's owner
    */
-  get owner(): Graph {
+  public get owner(): Graph {
     return this._owner
   }
 
@@ -88,7 +92,7 @@ export class Node
 
     let port = new Port( this, null, attributes );
 
-    this._ports[ id ] = port;
+    this._ports.set( id, port );
 
     return port;
   }
@@ -98,15 +102,19 @@ export class Node
    *
    * @return Port[]
    */
-  getPorts(): Port[]
+  get ports(): Map<string, Port>
   {
-    let ports = [];
+    return this._ports;
+  }
 
-    Object.keys( this._ports ).forEach( (id) => {
-      ports.push( this._ports[ id ] );
-    });
+  getPortArray(): Port[] {
+    let xports: Port[] = [];
 
-    return ports;
+    this._ports.forEach( ( port, id ) => {
+      xports.push( port );
+    } );
+
+    return xports;
   }
 
   /**
@@ -117,7 +125,7 @@ export class Node
    */
   getPortByID( id: string ): Port
   {
-    return this._ports[ id ];
+    return this._ports.get( id );
   }
 
   identifyPort( id: string, protocolID?: string ): Port
@@ -125,12 +133,10 @@ export class Node
     var port: Port;
 
     if ( id )
-      port = this._ports[ id ];
+      port = this._ports.get( id );
     else if ( protocolID )
     {
-      Object.keys( this._ports ).forEach( (id) => {
-        let p = this._ports[ id ];
-
+      this._ports.forEach( ( p, id ) => {
         if ( p.protocolID == protocolID )
           port = p;
       }, this );
@@ -147,18 +153,36 @@ export class Node
    */
   removePort( id: string ): boolean
   {
-    if ( this._ports[ id ] )
+    return this._ports.delete( id );
+  }
+
+  loadComponent( factory: ComponentFactory ): Promise<void> {
+    this.unloadComponent();
+
+    // Get a ComponentContext responsable for Component's life-cycle control
+    let ctx = this._context = factory.createContext( this._component, this._initialData );
+
+    // Make Node visible to instance
+    ctx.container.registerInstance( Node, this );
+
+    let me = this;
+
+    // Load component
+    return ctx.load();
+  }
+
+  public get context(): RuntimeContext {
+    return this._context;
+  }
+
+  unloadComponent()
+  {
+    if ( this._context )
     {
-      delete this._ports[ id ];
+      this._context.release();
 
-      return true;
+      this._context = null;
     }
-
-    // not found
-    return false;
   }
 
-  initComponent( factory: ComponentFactory ): Promise<void> {
-    return Promise.resolve<void>( null );
-  }
 }

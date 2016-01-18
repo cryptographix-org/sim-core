@@ -10,25 +10,29 @@ export class ComponentBuilder
 {
   private componentInfo: ComponentInfo;
 
-  public init( name: string, description: string ): ComponentBuilder
+  public init( name: string, description: string, category?: string ): ComponentBuilder
   {
     this.componentInfo = {
       name: name,
       description: description,
-      ports: {}
+      detailLink: '',
+      category: category,
+      author: '',
+      ports: {},
+      stores: {}
     };
 
     return this;
   }
 
-  public port( id: string, direction: Direction, opts?: { protocol?: Protocol<any>; maxIndex?: number; required?: boolean } ): ComponentBuilder
+  public port( id: string, direction: Direction, opts?: { protocol?: Protocol<any>; index?: number; required?: boolean } ): ComponentBuilder
   {
     opts = opts || {};
 
     this.componentInfo.ports[ id ] = {
       direction: direction,
       protocol: opts.protocol,
-      maxIndex: opts.maxIndex,
+      index: opts.index,
       required: opts.required
     };
 
@@ -63,7 +67,7 @@ export class PortInfo
 
   protocol: Protocol<any>;
 
-  maxIndex: number = 0;
+  index: number = 0;
 
   required: boolean = false;
 }
@@ -83,19 +87,36 @@ export class ComponentInfo
   name: string;
 
   /**
-  * Description for the component, to appear in 'hint'
+  * Brief description for the component, to appear in 'hint'
   */
   description: string;
+
+  /**
+  * Link to detailed information for the component
+  */
+  detailLink: string = '';
+
+  /**
+  * Category name for the component, groups same categories together
+  */
+  category: string = '';
+
+  /**
+  * Author's name
+  */
+  author: string = '';
 
   /**
   * Array of Port descriptors. When active, the component will communicate
   * through corresponding EndPoints
   */
-  ports: { [id: string]: PortInfo; } = {};
+  ports: { [id: string]: PortInfo } = {};
+  stores: { [id: string]: PortInfo } = {};
 
   constructor()
   {
-    this.ports = {};
+//    this.ports = {};
+//    this.stores = {};
   }
 }
 
@@ -103,11 +124,14 @@ export interface Component
 {
   componentInfo?: ComponentInfo;
 
-  onCreate?( initialData: Kind );
-  onDestroy?();
+  setup?( initialData: Kind ): EndPointCollection;
+  teardown?();
 
-  onStart?( endPoints: EndPointCollection );
-  onStop?();
+  start?();
+  stop?();
+
+  pause?();
+  resume?();
 }
 
 export interface ComponentConstructor

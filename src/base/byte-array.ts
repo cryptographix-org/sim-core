@@ -154,6 +154,11 @@ export class ByteArray //extends Uint8Array
     return this;
   }
 
+  clone(): ByteArray
+  {
+    return new ByteArray( this.byteArray.slice() );
+  }
+
   /**
   * Extract a section (offset, count) from the ByteArray
   * @fluent
@@ -161,7 +166,10 @@ export class ByteArray //extends Uint8Array
   */
   bytesAt( offset: number, count?: number ): ByteArray
   {
-    return new ByteArray( this.byteArray.slice( offset, count ) );
+    if ( !Number.isInteger( count ) )
+      count = ( this.length - offset );
+
+    return new ByteArray( this.byteArray.slice( offset, offset + count ) );
   }
 
   /**
@@ -171,7 +179,10 @@ export class ByteArray //extends Uint8Array
   */
   viewAt( offset: number, count?: number ): ByteArray
   {
-    return new ByteArray( this.byteArray.slice( offset, count ) );
+    if ( !Number.isInteger( count ) )
+      count = ( this.length - offset );
+
+    return new ByteArray( this.byteArray.subarray( offset, offset + count ) );
   }
 
   /**
@@ -202,11 +213,6 @@ export class ByteArray //extends Uint8Array
     this.byteArray.set( bytes.byteArray, ba.length );
 
     return this;
-  }
-
-  clone(): ByteArray
-  {
-    return new ByteArray( this.byteArray.slice() );
   }
 
   not( ): ByteArray

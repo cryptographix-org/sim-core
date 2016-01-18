@@ -62,10 +62,33 @@ export class KindHelper
     return kindConstructor;
   }
 */
-///
-/// @class KindInfo
-///
-/// Metadata about a 'Kind'
+
+/*class Integer {};
+
+var Types: { [string]:Object };
+
+var x = new Integer( );
+console.log( x );
+
+//export class Integer {};*/
+
+export class Enum {};
+
+export interface FieldInfo {
+
+  description: string;
+  dataType: typeof Number | String | Enum | FieldInfo[] | KindInfo;
+  kindInfo?: KindInfo;
+  enumInfo?: Map<number, string>;
+  minLength?: number;
+  maxLength?: number;
+}
+
+/**
+* Metadata about a Kind. Contains name, description and a map of
+* property-descriptors that describe the serializable fields of
+* an object of that Kind.
+*/
 export class KindInfo
 {
   static $kindHelper: KindHelper = new KindHelper();
@@ -74,17 +97,16 @@ export class KindInfo
 
   description: string;
 
-  "type": string;
+  type: string;
 
   properties: {};
 }
 
-///
-/// @interface Kind
-///
-/// Kind represents a serializable and inspectable data-type
-/// implemented as a hash-map containing key-value pairs,
-/// meta-data description of each key using a json-scheme
+/**
+* Represents a serializable and inspectable data-type
+* implemented as a hash-map containing key-value pairs,
+* along with metadata that describes each field using a json-scheme like
+*/
 export interface Kind
 {
   kindInfo: KindInfo;

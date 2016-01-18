@@ -1,6 +1,6 @@
 {
   "name": "cryptographix-sim-core",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "An extensible framework for simulation of application-security building blocks",
   "keywords": [
     "cryptographic",
@@ -21,19 +21,21 @@
     "url": "http://github.com/cryptographics/sim-core"
   },
   "jspm": {
+    "registry": "npm",
     "main": "sim-core.js",
-    "registry": "npm", 
     "format": "amd",
     "directories": {
       "lib": "dist/amd"
     },
     "dependencies": {
-      "aurelia-dependency-injection": "aurelia-dependency-injection@^1.0.0-beta.1"
+      "aurelia-dependency-injection": "^1.0.0-beta.1",
+      "jasmine-core": "^2.4.1",
+      "jasmine2-reporter": "^0.1.1"
     },
     "devDependencies": {}
   },
   "dependencies": {
-    "aurelia-dependency-injection": "^1.0.0-beta1"
+    "aurelia-dependency-injection": "^1.0.0-beta.1"
   },
   "devDependencies": {
     "cgfx-build-tools": "^0.1.1",

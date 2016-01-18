@@ -9,7 +9,7 @@ describe("A Node", function() {
 
     this.node2 = new Node( this.graph1, {
       id: 'node2',
-      componentID: 'component2',
+      component: 'component2',
       ports: {
         "n2p1": {},
         "n2p2": {},
@@ -27,20 +27,20 @@ describe("A Node", function() {
     });
 
     it( "creates the Node's ports collection", function() {
-      expect( this.node1.getPorts().length ).toBe( 0 );
-      expect( this.node2.getPorts().length ).toBe( 2 );
+      expect( this.node1.getPortArray().length ).toBe( 0 );
+      expect( this.node2.getPortArray().length ).toBe( 2 );
     });
 
-    it( "sets the Node's componentID", function() {
-      expect( this.node1.toObject().componentID ).toBeUndefined();
-      expect( this.node2.toObject().componentID ).toEqual( 'component2' );
+    it( "sets the Node's component", function() {
+      expect( this.node1.toObject().component ).toBeUndefined();
+      expect( this.node2.toObject().component ).toEqual( 'component2' );
     });
   } );
 
   describe( 'has a Ports collection', function() {
     it( 'that can be retrieved as an array', function() {
-      let p1 = this.node2.getPorts()[0];
-      let p2 = this.node2.getPorts()[1];
+      let p1 = this.node2.getPortArray()[0];
+      let p2 = this.node2.getPortArray()[1];
 
       expect( p1 instanceof Port ).toBe( true );
       expect( p1.id ).toEqual( 'n2p1' );
