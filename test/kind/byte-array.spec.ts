@@ -1,13 +1,13 @@
 import { ByteArray } from 'cryptographix-sim-core';
 
 describe('A ByteArray', () => {
-  it('stores a sequence of bytes', () => {
+  it('stores a sequence of bytes', function() {
     let bs = new ByteArray( [ 0, 1, 2, 3, 4 ] );
 
     expect( bs.toString() ).toBe( "0001020304" );
   } );
 
-  it('can be instanciated from an array of bytes', () => {
+  it('can be instanciated from an array of bytes', function() {
     let bs = new ByteArray( [ 0, 1, 2, 3, 4 ] );
 
     expect( bs.toString() ).toBe( "0001020304" );
@@ -19,7 +19,7 @@ describe('A ByteArray', () => {
     expect( bs.length ).toBe( 10000 );
   } );
 
-  it('can be compared (equal)', () => {
+  it('can be compared (equal)', function() {
     let bs1 = new ByteArray( [ 0, 1, 2, 3, 4 ] );
     let bs2 = new ByteArray( "00 01 02 03 04", ByteArray.HEX );
     let bs3 = bs1.clone().setByteAt( 1, 0x99 );
@@ -30,5 +30,4 @@ describe('A ByteArray', () => {
     expect( bs1.equals( bs2 ) ).toBe(true);
     expect( bs1.equals( bs3 ) ).not.toBe(true);
   } )
-
 } );

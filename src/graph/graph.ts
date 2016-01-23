@@ -1,4 +1,5 @@
 import { ComponentFactory} from '../runtime/component-factory';
+import { EventHub } from '../event-hub/event-hub';
 
 import { Network } from './network';
 import { Node } from './node';
@@ -11,6 +12,14 @@ import { Port, PublicPort } from './port';
  */
 export class Graph extends Node
 {
+  static EVENT_ADD_NODE = 'graph:add-node';
+  static EVENT_UPD_NODE = 'graph:upd-node';
+  static EVENT_DEL_NODE = 'graph:del-node';
+
+  static EVENT_ADD_LINK = 'graph:add-link';
+  static EVENT_UPD_LINK = 'graph:upd-link';
+  static EVENT_DEL_LINK = 'graph:del-link';
+
   /**
   * Nodes in this graph. Each node may be:
   *   1. A Component
@@ -164,7 +173,7 @@ export class Graph extends Node
     return this._nodes.get( id );
   }
 
-  public addNode( id: string, attributes: {} ) {
+  public addNode( id: string, attributes?: {} ): Node {
 
     let node = new Node( this, attributes );
 
@@ -172,24 +181,34 @@ export class Graph extends Node
 
     this._nodes.set( id, node );
 
+    this.publish( Graph.EVENT_ADD_NODE, { node: node } );
+
     return node;
   }
 
   public renameNode( id: string, newID: string ) {
 
+    let node = this._nodes.get( id );
+
     if ( id != newID )
     {
-      let node = this._nodes.get( id );
+      let eventData = { node: node, attrs: { id: node.id } };
 
       this._nodes.delete( id );
 
       node.id = newID;
 
       this._nodes.set( newID, node );
+
+      this.publish( Graph.EVENT_UPD_NODE, eventData );
     }
   }
 
   public removeNode( id: string ): boolean {
+
+    let node = this._nodes.get( id );
+    if ( node )
+      this.publish( Graph.EVENT_DEL_NODE, { node: node } );
 
     return this._nodes.delete( id );
   }
@@ -199,13 +218,15 @@ export class Graph extends Node
     return this._links[ id ];
   }
 
-  public addLink( id: string, attributes: {} ) {
+  public addLink( id: string, attributes?: {} ): Link {
 
     let link = new Link( this, attributes );
 
     link.id = id;
 
     this._links.set( id, link );
+
+    this.publish( Graph.EVENT_ADD_LINK, { link: link } );
 
     return link;
   }
@@ -216,17 +237,25 @@ export class Graph extends Node
 
     this._links.delete( id );
 
+    let eventData = { link: link, attrs: { id: link.id } };
+
     link.id = newID;
+
+    this.publish( Graph.EVENT_UPD_NODE, eventData );
 
     this._links.set( newID, link );
   }
 
   public removeLink( id: string ): boolean {
 
+    let link = this._links.get( id );
+    if ( link )
+      this.publish( Graph.EVENT_DEL_LINK, { link: link } );
+
     return this._links.delete( id );
   }
 
-  public addPublicPort( id: string, attributes: {} )
+  public addPublicPort( id: string, attributes: {} ): PublicPort
   {
     attributes["id"] = id;
 

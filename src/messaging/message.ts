@@ -1,4 +1,4 @@
-import { Kind } from '../base/kind';
+import { Kind } from '../kind/kind';
 import { EndPoint } from './end-point';
 
 /*

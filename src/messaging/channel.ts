@@ -131,6 +131,9 @@ export class Channel
     if ( !this._active )
       return;
 
+    if ( origin.direction == Direction.IN && !isResponse )
+      throw new Error( 'Unable to send on IN port');
+
     this._endPoints.forEach( endPoint => {
       // Send to all listeners, except for originator ...
       if ( origin != endPoint )

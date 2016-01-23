@@ -1,4 +1,4 @@
-import { Component, ComponentConstructor } from './component';
+import { Component, ComponentConstructor } from '../component/component';
 import { RuntimeContext } from './runtime-context';
 import { ModuleLoader } from './module-loader';
 
@@ -19,11 +19,11 @@ export class ComponentFactory {
     this._components.set( "", Object );
   }
 
-  createContext( id: string, initialData: {}, deps: Injectable[] = [] ): RuntimeContext
+  createContext( id: string, config: {}, deps: Injectable[] = [] ): RuntimeContext
   {
     let childContainer: Container = this._container.createChild();
 
-    return new RuntimeContext( this, childContainer, id, initialData, deps );
+    return new RuntimeContext( this, childContainer, id, config, deps );
   }
 
   getChildContainer(): Container {

@@ -18,7 +18,7 @@ class C {
     console.log( 'C1 got node: ' + node.id );
   }
 
-  setup( initialData: Kind ): EndPointCollection {
+  initialize( initialData: Kind ): EndPointCollection {
     console.log( 'C1 created with init data' + JSON.stringify( initialData ) );
 
     return {};
@@ -40,48 +40,45 @@ class C {
     }*/
 
 describe("A ComponentFactory", function() {
-  it("can be used without a loader", function( done ) {
-    let factory = new ComponentFactory();
-    let graph = new Graph( null, gr1 );
-    let net = new Network( factory, graph );
+  describe("without a loader", function() {
+    beforeEach( function() {
+      // Factory with def. container and no loader
+      this.factory = new ComponentFactory();
 
-    // register a test Component
-    factory.register( 'c1', C );
+      // register a test Component
+      this.factory.register( 'c1', C );
+    } );
 
-    // load the components
-    net.loadComponents()
-      .then( ()=> {
-        expect( graph.nodes.get('n1').context.instance ).toBeDefined();
-        net.setup();
-      })
-      .then( () => {
-        done();
-      });
-  } );
+    it( 'can be used to *load* components', function(done) {
+      let graph = new Graph( null, gr1 );
+      let net = new Network( this.factory, graph );
 
-  beforeEach( function() {
-    // Factory with def. container and no loader
-    this.factory = new ComponentFactory();
-    this.factory.register( 'c1', C );
-  } );
+      // 'load' the components and initialize them
+      net.loadComponents()
+        .then( ()=> {
+          expect( graph.nodes.get('n1').context.instance ).toBeDefined();
 
-  it( "loads and registers Components", function(done) {
+          net.initialize();
+        })
+        .then( () => {
+          done();
+        });
+    } );
+
+  /*it( "loads and registers Components", function(done) {
     let graph = new Graph( null, gr1 );
     let net = new Network( this.factory, graph );
 
     net.loadComponents()
       .then( ()=> {
         expect( net.graph.nodes.get('n1').context ).toBeDefined();
-        net.setup();
+
+        net.initialize();
       })
       .then( () => {
         done();
       })
-    //expect( graph1 instanceof Node ).toBe( true );
-    //expect( graph1 instanceof Graph ).toBe( true );
 
-    //expect( p1x.direction ).toEqual( Direction.INOUT );
-    //expect( p2a.direction ).toEqual( Direction.IN );
-
+  } );*/
   } );
 } );

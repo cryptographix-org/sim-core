@@ -13,13 +13,12 @@ class C2
   }
 }
 
-describe("DI Container", ()=> {
-  it( "Must inject", () => {
+describe("A DI Container", function() {
+  it( "injects into the class constructor", () => {
     let jector = new Container();
 
-    jector.registerSingleton( C1, C1 );
-
-    pending();
+    let c2 = jector.invoke( C2 );
+    expect( c2.c1 instanceof C1 ).toBe( true );
 
   });
 });

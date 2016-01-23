@@ -1,12 +1,13 @@
+import { Kind } from '../kind/kind';
 import { EndPointCollection } from '../messaging/end-point';
 import { Node } from '../graph/node';
 import { ComponentFactory} from './component-factory';
-import { Component } from './component';
+import { Component } from '../component/component';
 
 import { Container, Injectable } from '../dependency-injection/container';
 
 export enum RunState {
-  NOT_LOADED,   // No component loaded
+  NEWBORN,      // Not yet loaded
   LOADING,      // Waiting for async load to complete
   LOADED,       // Component loaded, not yet executable
   READY,        // Ready for Execution
@@ -32,7 +33,7 @@ export class RuntimeContext
   /**
   * Initial Data for the component instance
   */
-  private _initialData: {};
+  private _config: {};
 
   /**
   * The runtime component instance that this node represents
@@ -48,13 +49,13 @@ export class RuntimeContext
   *
   *
   */
-  constructor( factory: ComponentFactory, container: Container, id: string, initialData: {}, deps: Injectable[] = [] ) {
+  constructor( factory: ComponentFactory, container: Container, id: string, config: {}, deps: Injectable[] = [] ) {
 
     this._factory = factory;
 
     this._id = id;
 
-    this._initialData = initialData;
+    this._config = config;
 
     this._container = container;
 
@@ -87,77 +88,108 @@ export class RuntimeContext
         .then( (instance) => {
           // Component (and any dependencies) have been loaded
           me._instance = instance;
-          me._runState = RunState.LOADED;
+          me.setRunState( RunState.LOADED );
 
           resolve();
         })
         .catch( (err) => {
           // Unable to load
-          me._runState = RunState.NOT_LOADED;
+          me._runState = RunState.NEWBORN;
 
           reject( err );
         });
     } );
   }
 
-  _runState: RunState = RunState.NOT_LOADED;
+  _runState: RunState = RunState.NEWBORN;
   get runState() {
     return this._runState;
   }
 
   private inState( states: RunState[] ): boolean {
-      return new Set<RunState>( states ).has( this._runState );
+    return new Set<RunState>( states ).has( this._runState );
   }
 
+  /**
+  * Transition component to new state
+  * Standard transitions, and respective actions, are:
+  *   LOADED -> READY      instantiate and initialize component
+  *   READY -> LOADED      teardown and destroy component
+  *
+  *   READY -> RUNNING     start component execution
+  *   RUNNING -> READY     stop component execution
+  *
+  *   RUNNING -> PAUSED    pause component execution
+  *   PAUSED -> RUNNING    resume component execution
+  *
+  */
   setRunState( runState: RunState ) {
-    function callOptional<T>( fn: Function, ...args ): T
-    {
-      if ( fn )
-        return fn( ...args );
+    let inst = this.instance;
 
-      return null;
-    }
-
-    switch( runState )
+    switch( runState ) // target state ..
     {
-      case RunState.LOADED: // teardown node
+      case RunState.LOADED: // just loaded, or teardown
         if ( this.inState( [ RunState.READY, RunState.RUNNING, RunState.PAUSED ] ) ) {
-          callOptional( this.instance.teardown );
+          // teardown and destroy component
+          if ( inst.teardown )
+          {
+            inst.teardown();
+
+            // and destroy instance
+            this._instance = null;
+          }
         }
         break;
 
-      case RunState.READY:  // setup or stop node
+      case RunState.READY:  // initialize or stop node
         if ( this.inState( [ RunState.LOADED ] ) ) {
-          let endPoints = callOptional<EndPointCollection>( this.instance.setup, this._initialData );
+          // initialize component
+          let endPoints: EndPointCollection = {};
+
+          // TODO:
+          if ( inst.initialize )
+            endPoints = this.instance.initialize( <Kind>this._config );
 
           this.reconcilePorts( endPoints );
         }
         else if ( this.inState( [ RunState.RUNNING, RunState.PAUSED ] ) ) {
-          callOptional( this.instance.stop );
+          // stop component
+          if ( inst.stop )
+            this.instance.stop();
         }
+        else
+          throw new Error( 'Component cannot be initialized, not loaded' );
         break;
 
       case RunState.RUNNING:  // start/resume node
-        if ( this.inState( [ RunState.LOADED, RunState.RUNNING ] ) ) {
-          callOptional( this.instance.start );
+        if ( this.inState( [ RunState.READY, RunState.RUNNING ] ) ) {
+          // start component execution
+          if ( inst.start )
+            this.instance.start();
         }
         else if ( this.inState( [ RunState.PAUSED ] ) ) {
-          callOptional( this.instance.resume );
+          // resume component execution after pause
+          if ( inst.resume )
+            this.instance.resume();
         }
-        else {
-          throw new Error( 'Network cannot be started, not ready' );
-        }
+        else
+          throw new Error( 'Component cannot be started, not ready' );
         break;
 
       case RunState.PAUSED:  // pause node
         if ( this.inState( [ RunState.RUNNING] ) ) {
-          callOptional( this.instance.pause );
+          if ( inst.pause )
+            this.instance.pause();
         }
         else if ( this.inState( [ RunState.PAUSED ] ) ) {
-          // node.context.resume();
+          // already paused
         }
+        else
+          throw new Error( 'Component cannot be paused' );
         break;
     }
+
+    this._runState = runState;
   }
 
   protected reconcilePorts( endPoints: EndPointCollection ) {

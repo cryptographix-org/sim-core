@@ -9,6 +9,7 @@ System.config({
 
   map: {
     "aurelia-dependency-injection": "npm:aurelia-dependency-injection@1.0.0-beta.1",
+    "aurelia-event-aggregator": "npm:aurelia-event-aggregator@1.0.0-beta.1",
     "jasmine-core": "npm:jasmine-core@2.4.1",
     "jasmine2-reporter": "npm:jasmine2-reporter@0.1.1",
     "github:jspm/nodelibs-assert@0.1.0": {
@@ -31,6 +32,9 @@ System.config({
       "aurelia-metadata": "npm:aurelia-metadata@1.0.0-beta.1",
       "aurelia-pal": "npm:aurelia-pal@1.0.0-beta.1.0.1",
       "core-js": "npm:core-js@1.2.6"
+    },
+    "npm:aurelia-event-aggregator@1.0.0-beta.1": {
+      "aurelia-logging": "npm:aurelia-logging@1.0.0-beta.1"
     },
     "npm:aurelia-metadata@1.0.0-beta.1": {
       "aurelia-pal": "npm:aurelia-pal@1.0.0-beta.1.0.1",

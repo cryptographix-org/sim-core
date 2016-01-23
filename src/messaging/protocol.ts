@@ -1,5 +1,5 @@
 import { Message } from './message';
-import { Kind, KindInfo } from '../base/kind';
+import { Kind, KindInfo } from '../kind/kind';
 
 export enum ProtocolTypeBits
 {

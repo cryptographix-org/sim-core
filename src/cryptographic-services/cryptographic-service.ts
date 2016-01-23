@@ -1,4 +1,4 @@
-import { ByteArray } from '../base/byte-array';
+import { ByteArray } from '../kind/byte-array';
 import { Key } from './key';
 import { PrivateKey } from './private-key';
 import { PublicKey } from './public-key';

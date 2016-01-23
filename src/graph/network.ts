@@ -1,3 +1,4 @@
+import { EventHub } from '../event-hub/event-hub';
 import { ComponentFactory } from '../runtime/component-factory';
 import { RuntimeContext, RunState } from '../runtime/runtime-context';
 import { EndPoint } from '../messaging/end-point';
@@ -8,16 +9,42 @@ import { Node } from './node';
 import { Link } from './link';
 import { Port, PublicPort } from './port';
 
-export class Network
+export class Network extends EventHub
 {
+  static EVENT_STATE_CHANGE = 'network:state-change';
+  static EVENT_GRAPH_CHANGE = 'network:graph-change';
+
   private _graph: Graph;
 
   private _factory: ComponentFactory;
 
   constructor( factory: ComponentFactory, graph?: Graph )
   {
+    super();
+
     this._factory = factory;
     this._graph = graph || new Graph( null, {} );
+
+    let me = this;
+    this._graph.subscribe( Graph.EVENT_ADD_NODE, ( data: { node: Node } )=> {
+      let runState: RunState = me._graph.context.runState;
+
+      if ( runState != RunState.NEWBORN )
+      {
+        let { node } = data;
+
+        node.loadComponent( me._factory )
+          .then( ()=> {
+            if ( Network.inState( [ RunState.RUNNING, RunState.PAUSED, RunState.READY ], runState ) )
+              Network.setRunState( node, RunState.READY );
+
+            if ( Network.inState( [ RunState.RUNNING, RunState.PAUSED ], runState ) )
+              Network.setRunState( node, runState );
+
+            this.publish( Network.EVENT_GRAPH_CHANGE, { node: node } );
+          })
+      }
+    } );
   }
 
   get graph(): Graph {
@@ -31,59 +58,67 @@ export class Network
   {
     let me = this;
 
-    return this._graph.loadComponent( this._factory );
+    this.publish( Network.EVENT_STATE_CHANGE, { state: RunState.LOADING } );
+
+    return this._graph.loadComponent( this._factory ).then( ()=> {
+      this.publish( Network.EVENT_STATE_CHANGE, { state: RunState.LOADED } );
+    });
   }
 
-  setup() {
-    Network.setupOrTeardown( this._graph, RunState.READY );
+  initialize() {
+    this.setRunState( RunState.READY );
   }
 
   teardown() {
-    Network.setupOrTeardown( this._graph, RunState.LOADED );
+    this.setRunState( RunState.LOADED );
+  }
+
+  static inState( states: RunState[], runState: RunState ): boolean {
+    return new Set<RunState>( states ).has( runState );
   }
 
   /**
+  * Alter run-state of a Node - LOADED, READY, RUNNING or PAUSED.
+  * Triggers Setup or Teardown if transitioning between READY and LOADED
   * Wireup a graph, creating Channel between linked Nodes
   * Acts recursively, wiring up any sub-graphs
   */
-
-  /**
-  * Setup or Teardown a node, setting state to READY or LOADED
-  */
-  private static setupOrTeardown( node: Node, runState: RunState )
+  private static setRunState( node: Node, runState: RunState )
   {
     let ctx = node.context;
+    let currentState = ctx.runState;
 
-    // 1. Preprocess
     if ( node instanceof Graph )
     {
+      // 1. Preprocess
+      //    a. Handle teardown
+      //    b. Propagate state change to subnets
       let nodes: Map<string, Node> = node.nodes;
 
-      if ( runState == RunState.LOADED ) {
+      if ( ( runState == RunState.LOADED ) && ( currentState >= RunState.READY ) ) {
         // tearing down .. unlink graph first
         let links: Map<string, Link> = node.links;
 
-        // unwire (deactivate and destroy ) the Channel between linked nodes
+        // unwire (deactivate and destroy ) Channels between linked nodes
         links.forEach( ( link ) =>
         {
           Network.unwireLink( link );
         } );
       }
 
-      // treat graph recursively
+      // Propagate state change to sub-nets first
       nodes.forEach( function( subNode )
       {
-        Network.setupOrTeardown( subNode, runState );
+        Network.setRunState( subNode, runState );
       } );
-    }
 
-    // Instantiate or Destroy component
-    ctx.setRunState( RunState.READY );
+      // 2. Change state ...
+      ctx.setRunState( runState );
 
-    if ( runState == RunState.READY ) {
+      // 3. Postprocess
+      //    a. Handle setup
+      if ( ( runState == RunState.READY ) && ( currentState >= RunState.LOADED ) ) {
 
-      if ( node instanceof Graph )
-      {
         // setting up .. linkup graph first
         let links: Map<string, Link> = node.links;
         // treat graph recursively
@@ -94,6 +129,9 @@ export class Network
           Network.wireLink( link );
         } );
       }
+    } else {
+      // Change state ...
+      ctx.setRunState( runState );
     }
   }
 
@@ -130,9 +168,15 @@ export class Network
     channel.activate();
   }
 
+  protected setRunState( runState: RunState )
+  {
+    Network.setRunState( this._graph, runState );
 
-  start( initiallyPaused: boolean ) {
-    Network.setRunState( this._graph, initiallyPaused ? RunState.PAUSED : RunState.RUNNING );
+    this.publish( Network.EVENT_STATE_CHANGE, { state: runState } );
+  }
+
+  start( initiallyPaused: boolean = false ) {
+    this.setRunState( initiallyPaused ? RunState.PAUSED : RunState.RUNNING );
   }
 
   step() {
@@ -140,37 +184,14 @@ export class Network
   }
 
   stop() {
-    Network.setRunState( this._graph, RunState.READY );
+    this.setRunState( RunState.READY );
   }
 
   pause() {
-    Network.setRunState( this._graph, RunState.PAUSED );
+    this.setRunState( RunState.PAUSED );
   }
 
   resume() {
-    Network.setRunState( this._graph, RunState.RUNNING );
+    this.setRunState( RunState.RUNNING );
   }
-
-  /**
-  * Alter run-state of a Node - READY, RUNNING, PAUSED by triggering
-  * Acts recursively, altering state of any sub-graphs
-  */
-  private static setRunState( node: Node, runState: RunState ) {
-    //if ( newState in [ NetworkState.RUNNING, NetworkState.READY ] )
-    {
-      // Propagate RUN, PAUSE and STOP state changes to sub-nets first
-      if ( node instanceof Graph )
-      {
-        let nodes: Map<string, Node> = node.nodes;
-
-        node.nodes.forEach( function( subNode )
-        {
-          Network.setRunState( subNode, runState );
-        } );
-      }
-    }
-
-    node.context.setRunState( runState );
-  }
-
 }

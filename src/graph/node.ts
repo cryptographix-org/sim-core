@@ -1,10 +1,11 @@
 import { RuntimeContext } from '../runtime/runtime-context';
 import { ComponentFactory} from '../runtime/component-factory';
+import { EventHub } from '../event-hub/event-hub';
 
 import { Graph } from './graph';
 import { Port } from './port';
 
-export class Node
+export class Node extends EventHub
 {
   protected _owner: Graph;
   protected _id: string;
@@ -17,12 +18,14 @@ export class Node
   public metadata: any;
 
   /**
-   * The runtime component instance that this node represents
+   * Runtime and component instance that this node represents
    */
   protected _context: RuntimeContext;
 
   constructor( owner: Graph, attributes: any = {} )
   {
+    super();
+
     this._owner = owner;
     this._id = attributes.id || '';
     this._component = attributes.component;
