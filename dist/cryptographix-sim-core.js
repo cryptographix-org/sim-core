@@ -1,4 +1,47 @@
   import { Container, autoinject as inject } from 'aurelia-dependency-injection';
+  import { EventAggregator } from 'aurelia-event-aggregator';
+
+export class HexCodec {
+    static decode(a) {
+        if (HexCodec.hexDecodeMap == undefined) {
+            var hex = "0123456789ABCDEF";
+            var allow = " \f\n\r\t\u00A0\u2028\u2029";
+            var dec = [];
+            for (var i = 0; i < 16; ++i)
+                dec[hex.charAt(i)] = i;
+            hex = hex.toLowerCase();
+            for (var i = 10; i < 16; ++i)
+                dec[hex.charAt(i)] = i;
+            for (var i = 0; i < allow.length; ++i)
+                dec[allow.charAt(i)] = -1;
+            HexCodec.hexDecodeMap = dec;
+        }
+        var out = [];
+        var bits = 0, char_count = 0;
+        for (var i = 0; i < a.length; ++i) {
+            var c = a.charAt(i);
+            if (c == '=')
+                break;
+            var b = HexCodec.hexDecodeMap[c];
+            if (b == -1)
+                continue;
+            if (b == undefined)
+                throw 'Illegal character at offset ' + i;
+            bits |= b;
+            if (++char_count >= 2) {
+                out.push(bits);
+                bits = 0;
+                char_count = 0;
+            }
+            else {
+                bits <<= 4;
+            }
+        }
+        if (char_count)
+            throw "Hex encoding incomplete: 4 bits missing";
+        return Uint8Array.from(out);
+    }
+}
 
 var BASE64SPECIALS;
 (function (BASE64SPECIALS) {
@@ -94,48 +137,6 @@ export class Base64Codec {
     }
 }
 
-export class HexCodec {
-    static decode(a) {
-        if (HexCodec.hexDecodeMap == undefined) {
-            var hex = "0123456789ABCDEF";
-            var allow = " \f\n\r\t\u00A0\u2028\u2029";
-            var dec = [];
-            for (var i = 0; i < 16; ++i)
-                dec[hex.charAt(i)] = i;
-            hex = hex.toLowerCase();
-            for (var i = 10; i < 16; ++i)
-                dec[hex.charAt(i)] = i;
-            for (var i = 0; i < allow.length; ++i)
-                dec[allow.charAt(i)] = -1;
-            HexCodec.hexDecodeMap = dec;
-        }
-        var out = [];
-        var bits = 0, char_count = 0;
-        for (var i = 0; i < a.length; ++i) {
-            var c = a.charAt(i);
-            if (c == '=')
-                break;
-            var b = HexCodec.hexDecodeMap[c];
-            if (b == -1)
-                continue;
-            if (b == undefined)
-                throw 'Illegal character at offset ' + i;
-            bits |= b;
-            if (++char_count >= 2) {
-                out.push(bits);
-                bits = 0;
-                char_count = 0;
-            }
-            else {
-                bits <<= 4;
-            }
-        }
-        if (char_count)
-            throw "Hex encoding incomplete: 4 bits missing";
-        return Uint8Array.from(out);
-    }
-}
-
 
 
 export class ByteArray {
@@ -223,11 +224,18 @@ export class ByteArray {
         this.byteArray.set(value.byteArray, offset);
         return this;
     }
+    clone() {
+        return new ByteArray(this.byteArray.slice());
+    }
     bytesAt(offset, count) {
-        return new ByteArray(this.byteArray.slice(offset, count));
+        if (!Number.isInteger(count))
+            count = (this.length - offset);
+        return new ByteArray(this.byteArray.slice(offset, offset + count));
     }
     viewAt(offset, count) {
-        return new ByteArray(this.byteArray.slice(offset, count));
+        if (!Number.isInteger(count))
+            count = (this.length - offset);
+        return new ByteArray(this.byteArray.subarray(offset, offset + count));
     }
     addByte(value) {
         this.byteArray[this.byteArray.length] = value;
@@ -243,9 +251,6 @@ export class ByteArray {
         this.byteArray.set(ba);
         this.byteArray.set(bytes.byteArray, ba.length);
         return this;
-    }
-    clone() {
-        return new ByteArray(this.byteArray.slice());
     }
     not() {
         let ba = this.byteArray;
@@ -286,139 +291,48 @@ ByteArray.HEX = 1;
 ByteArray.BASE64 = 2;
 ByteArray.UTF8 = 3;
 
-export class KindHelper {
-    init(kindName, description) {
-        this.kindInfo = {
-            title: kindName,
+export class Enum {
+}
+;
+export class KindInfo {
+    constructor() {
+        this.fields = {};
+    }
+}
+export class KindBuilder {
+    constructor(ctor, description) {
+        this.ctor = ctor;
+        ctor.kindInfo = {
+            name: ctor.name,
             description: description,
-            type: "object",
-            properties: {}
+            fields: {}
         };
-        return this;
+    }
+    static init(ctor, description) {
+        let builder = new KindBuilder(ctor, description);
+        return builder;
     }
     field(name, description, dataType, opts) {
-        this.kindInfo.properties[name] = {
+        this.ctor.kindInfo.fields[name] = {
             description: description,
-            type: dataType
+            dataType: dataType
         };
         return this;
     }
-    seal(kind) {
-        let info = this.kindInfo;
-        this.kindInfo = new KindInfo();
-        return info;
-    }
 }
-export class KindInfo {
+var Oranges;
+(function (Oranges) {
+    Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
+    Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
+    Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
+    Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
+})(Oranges || (Oranges = {}));
+class FruityKind {
 }
-KindInfo.$kindHelper = new KindHelper();
-
-export class Key {
-    constructor(id, key) {
-        this.id = id;
-        if (key)
-            this.cryptoKey = key;
-        else {
-            this.cryptoKey =
-                {
-                    type: "",
-                    algorithm: "",
-                    extractable: true,
-                    usages: []
-                };
-        }
-    }
-    get type() {
-        return this.cryptoKey.type;
-    }
-    get algorithm() {
-        return this.cryptoKey.algorithm;
-    }
-    get extractable() {
-        return this.cryptoKey.extractable;
-    }
-    get usages() {
-        return this.cryptoKey.usages;
-    }
-    get innerKey() {
-        return this.cryptoKey;
-    }
-}
-
-
-export class PrivateKey extends Key {
-}
-
-
-export class PublicKey extends Key {
-}
-
-export class KeyPair {
-}
-
-
-export class CryptographicService {
-    constructor() {
-        this.crypto = window.crypto.subtle;
-        if (!this.crypto && msrcrypto)
-            this.crypto = msrcrypto;
-    }
-    decrypt(algorithm, key, data) {
-        return new Promise((resolve, reject) => {
-            this.crypto.decrypt(algorithm, key.innerKey, data.backingArray)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    digest(algorithm, data) {
-        return new Promise((resolve, reject) => {
-            this.crypto.digest(algorithm, data.backingArray)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    encrypt(algorithm, key, data) {
-        return new Promise((resolve, reject) => {
-            this.crypto.encrypt(algorithm, key.innerKey, data.backingArray)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    exportKey(format, key) {
-        return new Promise((resolve, reject) => {
-            this.crypto.exportKey(format, key.innerKey)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    generateKey(algorithm, extractable, keyUsages) {
-        return new Promise((resolve, reject) => {
-        });
-    }
-    importKey(format, keyData, algorithm, extractable, keyUsages) {
-        return new Promise((resolve, reject) => {
-            this.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages)
-                .then((res) => { resolve(res); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    sign(algorithm, key, data) {
-        return new Promise((resolve, reject) => {
-            this.crypto.sign(algorithm, key.innerKey, data.backingArray)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-    verify(algorithm, key, signature, data) {
-        return new Promise((resolve, reject) => {
-            this.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray)
-                .then((res) => { resolve(new ByteArray(res)); })
-                .catch((err) => { reject(err); });
-        });
-    }
-}
-
-export { Container, inject };
+KindBuilder.init(FruityKind, 'a Collection of fruit')
+    .field('banana', 'a banana', String)
+    .field('apple', 'an apple or pear', Number)
+    .field('orange', 'some sort of orange', Enum);
 
 export class Message {
     constructor(header, payload) {
@@ -563,6 +477,8 @@ export class Channel {
         let isResponse = (message.header && message.header.isResponse);
         if (!this._active)
             return;
+        if (origin.direction == Direction.IN && !isResponse)
+            throw new Error('Unable to send on IN port');
         this._endPoints.forEach(endPoint => {
             if (origin != endPoint) {
                 if (endPoint.direction != Direction.OUT || isResponse) {
@@ -658,137 +574,183 @@ class APDUMessage extends Message {
 class APDUProtocol extends ClientServerProtocol {
 }
 
+export class PortInfo {
+    constructor() {
+        this.index = 0;
+        this.required = false;
+    }
+}
+
+export class ComponentInfo {
+    constructor() {
+        this.detailLink = '';
+        this.category = '';
+        this.author = '';
+        this.ports = {};
+        this.stores = {};
+    }
+}
+
+export class StoreInfo {
+}
+
+
 export class ComponentBuilder {
-    init(name, description) {
-        this.componentInfo = {
-            name: name,
+    constructor(ctor, description, category) {
+        this.ctor = ctor;
+        ctor.componentInfo = {
+            name: ctor.name,
             description: description,
-            ports: {}
+            detailLink: '',
+            category: category,
+            author: '',
+            ports: {},
+            stores: {}
         };
-        return this;
+    }
+    static init(ctor, description, category) {
+        let builder = new ComponentBuilder(ctor, description, category);
+        return builder;
     }
     port(id, direction, opts) {
         opts = opts || {};
-        this.componentInfo.ports[id] = {
+        this.ctor.componentInfo.ports[id] = {
             direction: direction,
             protocol: opts.protocol,
-            maxIndex: opts.maxIndex,
+            index: opts.index,
             required: opts.required
         };
         return this;
     }
-    install(ctor) {
-        let info = this.componentInfo;
-        this.componentInfo = new ComponentInfo();
-        ctor.componentInfo = info;
-        return info;
+    name(name) {
+        this.ctor.componentInfo.name = name;
+        return this;
     }
 }
-export class PortInfo {
-    constructor() {
-        this.maxIndex = 0;
-        this.required = false;
-    }
-}
-export class ComponentInfo {
-    constructor() {
-        this.ports = {};
-        this.ports = {};
-    }
-}
-ComponentInfo.$builder = new ComponentBuilder();
 class C {
 }
-ComponentInfo.$builder.install(C);
+ComponentBuilder.init(C, 'Test Component')
+    .port('p1', Direction.IN);
 
-export class ComponentContext {
-    constructor(factory, id) {
+export class Key {
+    constructor(id, key) {
         this.id = id;
-        this.factory = factory;
-        this.container = factory.container.createChild();
+        if (key)
+            this.cryptoKey = key;
+        else {
+            this.cryptoKey =
+                {
+                    type: "",
+                    algorithm: "",
+                    extractable: true,
+                    usages: []
+                };
+        }
     }
-    componentLoaded(instance) {
-        this.instance = instance;
-        instance;
+    get type() {
+        return this.cryptoKey.type;
     }
-    get component() {
-        return this.instance;
+    get algorithm() {
+        return this.cryptoKey.algorithm;
     }
-    load() {
-        let me = this;
-        this.instance = null;
-        return new Promise((resolve, reject) => {
-            if (!this.id || this.id == "")
-                resolve();
-            else {
-                this.factory.loadComponent(this.id)
-                    .then((instance) => {
-                    me.instance = instance;
-                    resolve();
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            }
-        });
+    get extractable() {
+        return this.cryptoKey.extractable;
+    }
+    get usages() {
+        return this.cryptoKey.usages;
+    }
+    get innerKey() {
+        return this.cryptoKey;
     }
 }
 
-;
-class ModuleRegistryEntry {
-    constructor(address) {
-    }
+
+export class PrivateKey extends Key {
 }
-export class ModuleLoader {
+
+
+export class PublicKey extends Key {
+}
+
+export class KeyPair {
+}
+
+
+export class CryptographicService {
     constructor() {
-        this.moduleRegistry = new Map();
+        this.crypto = window.crypto.subtle;
+        if (!this.crypto && msrcrypto)
+            this.crypto = msrcrypto;
     }
-    getOrCreateModuleRegistryEntry(address) {
-        return this.moduleRegistry[address] || (this.moduleRegistry[address] = new ModuleRegistryEntry(address));
+    decrypt(algorithm, key, data) {
+        return new Promise((resolve, reject) => {
+            this.crypto.decrypt(algorithm, key.innerKey, data.backingArray)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
+        });
     }
-    loadModule(id) {
-        let newId = System.normalizeSync(id);
-        let existing = this.moduleRegistry[newId];
-        if (existing) {
-            return Promise.resolve(existing);
-        }
-        return System.import(newId).then(m => {
-            this.moduleRegistry[newId] = m;
-            return m;
+    digest(algorithm, data) {
+        return new Promise((resolve, reject) => {
+            this.crypto.digest(algorithm, data.backingArray)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
+        });
+    }
+    encrypt(algorithm, key, data) {
+        return new Promise((resolve, reject) => {
+            this.crypto.encrypt(algorithm, key.innerKey, data.backingArray)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
+        });
+    }
+    exportKey(format, key) {
+        return new Promise((resolve, reject) => {
+            this.crypto.exportKey(format, key.innerKey)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
+        });
+    }
+    generateKey(algorithm, extractable, keyUsages) {
+        return new Promise((resolve, reject) => {
+        });
+    }
+    importKey(format, keyData, algorithm, extractable, keyUsages) {
+        return new Promise((resolve, reject) => {
+            this.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages)
+                .then((res) => { resolve(res); })
+                .catch((err) => { reject(err); });
+        });
+    }
+    sign(algorithm, key, data) {
+        return new Promise((resolve, reject) => {
+            this.crypto.sign(algorithm, key.innerKey, data.backingArray)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
+        });
+    }
+    verify(algorithm, key, signature, data) {
+        return new Promise((resolve, reject) => {
+            this.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray)
+                .then((res) => { resolve(new ByteArray(res)); })
+                .catch((err) => { reject(err); });
         });
     }
 }
 
+export { Container, inject };
 
-export class ComponentFactory {
-    constructor(loader, container) {
-        this.loader = loader;
-        this.container = container;
+export class EventHub {
+    constructor() {
+        this._eventAggregator = new EventAggregator();
     }
-    createContext(id) {
-        let context = new ComponentContext(this, id);
-        return context;
+    publish(event, data) {
+        this._eventAggregator.publish(event, data);
     }
-    loadComponent(id) {
-        let createComponent = function (ctor) {
-            let newInstance = null;
-            let injects = [];
-            newInstance = new ctor();
-            return newInstance;
-        };
-        let ctor = this.get(id);
-        if (ctor) {
-            return new Promise((resolve, reject) => {
-                resolve(createComponent(ctor));
-            });
-        }
-        return null;
+    subscribe(event, handler) {
+        return this._eventAggregator.subscribe(event, handler);
     }
-    get(id) {
-        return this.components.get(id);
-    }
-    set(id, type) {
-        this.components.set(id, type);
+    subscribeOnce(event, handler) {
+        return this._eventAggregator.subscribeOnce(event, handler);
     }
 }
 
@@ -865,13 +827,15 @@ export class PublicPort extends Port {
 }
 
 
-export class Node {
+
+export class Node extends EventHub {
     constructor(owner, attributes = {}) {
+        super();
         this._owner = owner;
         this._id = attributes.id || '';
-        this._componentID = attributes.componentID;
+        this._component = attributes.component;
         this._initialData = attributes.initialData || {};
-        this._ports = {};
+        this._ports = new Map();
         this.metadata = attributes.metadata || {};
         Object.keys(attributes.ports || {}).forEach((id) => {
             this.addPlaceholderPort(id, attributes.ports[id]);
@@ -880,13 +844,13 @@ export class Node {
     toObject(opts) {
         var node = {
             id: this.id,
-            componentID: this._componentID,
+            component: this._component,
             initialData: this._initialData,
             ports: {},
             metadata: this.metadata
         };
-        Object.keys(this._ports).forEach((id) => {
-            node.ports[id] = this._ports[id].toObject();
+        this._ports.forEach((port, id) => {
+            node.ports[id] = port.toObject();
         });
         return node;
     }
@@ -902,26 +866,28 @@ export class Node {
     addPlaceholderPort(id, attributes) {
         attributes["id"] = id;
         let port = new Port(this, null, attributes);
-        this._ports[id] = port;
+        this._ports.set(id, port);
         return port;
     }
-    getPorts() {
-        let ports = [];
-        Object.keys(this._ports).forEach((id) => {
-            ports.push(this._ports[id]);
+    get ports() {
+        return this._ports;
+    }
+    getPortArray() {
+        let xports = [];
+        this._ports.forEach((port, id) => {
+            xports.push(port);
         });
-        return ports;
+        return xports;
     }
     getPortByID(id) {
-        return this._ports[id];
+        return this._ports.get(id);
     }
     identifyPort(id, protocolID) {
         var port;
         if (id)
-            port = this._ports[id];
+            port = this._ports.get(id);
         else if (protocolID) {
-            Object.keys(this._ports).forEach((id) => {
-                let p = this._ports[id];
+            this._ports.forEach((p, id) => {
                 if (p.protocolID == protocolID)
                     port = p;
             }, this);
@@ -929,14 +895,207 @@ export class Node {
         return port;
     }
     removePort(id) {
-        if (this._ports[id]) {
-            delete this._ports[id];
-            return true;
-        }
-        return false;
+        return this._ports.delete(id);
     }
-    initComponent(factory) {
-        return Promise.resolve(null);
+    loadComponent(factory) {
+        this.unloadComponent();
+        let ctx = this._context = factory.createContext(this._component, this._initialData);
+        ctx.container.registerInstance(Node, this);
+        let me = this;
+        return ctx.load();
+    }
+    get context() {
+        return this._context;
+    }
+    unloadComponent() {
+        if (this._context) {
+            this._context.release();
+            this._context = null;
+        }
+    }
+}
+
+export var RunState;
+(function (RunState) {
+    RunState[RunState["NEWBORN"] = 0] = "NEWBORN";
+    RunState[RunState["LOADING"] = 1] = "LOADING";
+    RunState[RunState["LOADED"] = 2] = "LOADED";
+    RunState[RunState["READY"] = 3] = "READY";
+    RunState[RunState["RUNNING"] = 4] = "RUNNING";
+    RunState[RunState["PAUSED"] = 5] = "PAUSED";
+})(RunState || (RunState = {}));
+export class RuntimeContext {
+    constructor(factory, container, id, config, deps = []) {
+        this._runState = RunState.NEWBORN;
+        this._factory = factory;
+        this._id = id;
+        this._config = config;
+        this._container = container;
+        for (let i in deps) {
+            if (!this._container.hasResolver(deps[i]))
+                this._container.registerSingleton(deps[i], deps[i]);
+        }
+    }
+    get instance() {
+        return this._instance;
+    }
+    get container() {
+        return this._container;
+    }
+    load() {
+        let me = this;
+        this._instance = null;
+        return new Promise((resolve, reject) => {
+            me._runState = RunState.LOADING;
+            this._factory.loadComponent(this, this._id)
+                .then((instance) => {
+                me._instance = instance;
+                me.setRunState(RunState.LOADED);
+                resolve();
+            })
+                .catch((err) => {
+                me._runState = RunState.NEWBORN;
+                reject(err);
+            });
+        });
+    }
+    get runState() {
+        return this._runState;
+    }
+    inState(states) {
+        return new Set(states).has(this._runState);
+    }
+    setRunState(runState) {
+        let inst = this.instance;
+        switch (runState) {
+            case RunState.LOADED:
+                if (this.inState([RunState.READY, RunState.RUNNING, RunState.PAUSED])) {
+                    if (inst.teardown) {
+                        inst.teardown();
+                        this._instance = null;
+                    }
+                }
+                break;
+            case RunState.READY:
+                if (this.inState([RunState.LOADED])) {
+                    let endPoints = {};
+                    if (inst.initialize)
+                        endPoints = this.instance.initialize(this._config);
+                    this.reconcilePorts(endPoints);
+                }
+                else if (this.inState([RunState.RUNNING, RunState.PAUSED])) {
+                    if (inst.stop)
+                        this.instance.stop();
+                }
+                else
+                    throw new Error('Component cannot be initialized, not loaded');
+                break;
+            case RunState.RUNNING:
+                if (this.inState([RunState.READY, RunState.RUNNING])) {
+                    if (inst.start)
+                        this.instance.start();
+                }
+                else if (this.inState([RunState.PAUSED])) {
+                    if (inst.resume)
+                        this.instance.resume();
+                }
+                else
+                    throw new Error('Component cannot be started, not ready');
+                break;
+            case RunState.PAUSED:
+                if (this.inState([RunState.RUNNING])) {
+                    if (inst.pause)
+                        this.instance.pause();
+                }
+                else if (this.inState([RunState.PAUSED])) {
+                }
+                else
+                    throw new Error('Component cannot be paused');
+                break;
+        }
+        this._runState = runState;
+    }
+    reconcilePorts(endPoints) {
+    }
+    release() {
+        this._instance = null;
+        this._factory = null;
+    }
+}
+
+;
+class ModuleRegistryEntry {
+    constructor(address) {
+    }
+}
+export class SystemModuleLoader {
+    constructor() {
+        this.moduleRegistry = new Map();
+    }
+    getOrCreateModuleRegistryEntry(address) {
+        return this.moduleRegistry[address] || (this.moduleRegistry[address] = new ModuleRegistryEntry(address));
+    }
+    loadModule(id) {
+        let newId = System.normalizeSync(id);
+        let existing = this.moduleRegistry[newId];
+        if (existing) {
+            return Promise.resolve(existing);
+        }
+        return System.import(newId).then(m => {
+            this.moduleRegistry[newId] = m;
+            return m;
+        });
+    }
+}
+
+
+
+export class ComponentFactory {
+    constructor(container, loader) {
+        this._loader = loader;
+        this._container = container || new Container();
+        this._components = new Map();
+        this._components.set(undefined, Object);
+        this._components.set("", Object);
+    }
+    createContext(id, config, deps = []) {
+        let childContainer = this._container.createChild();
+        return new RuntimeContext(this, childContainer, id, config, deps);
+    }
+    getChildContainer() {
+        return;
+    }
+    loadComponent(ctx, id) {
+        let createComponent = function (ctor) {
+            let newInstance = ctx.container.invoke(ctor);
+            return newInstance;
+        };
+        let me = this;
+        return new Promise((resolve, reject) => {
+            let ctor = this.get(id);
+            if (ctor) {
+                resolve(createComponent(ctor));
+            }
+            else if (this._loader) {
+                this._loader.loadModule(id)
+                    .then((ctor) => {
+                    me._components.set(id, ctor);
+                    resolve(createComponent(ctor));
+                })
+                    .catch((e) => {
+                    reject('ComponentFactory: Unable to load component "' + id + '" - ' + e);
+                });
+            }
+            else {
+                reject('ComponentFactory: Component "' + id + '" not registered, and Loader not available');
+            }
+        });
+    }
+    get(id) {
+        return this._components.get(id);
+    }
+    register(id, ctor) {
+        this._components.set(id, ctor);
     }
 }
 
@@ -970,10 +1129,14 @@ export class Link {
         toPort.endPoint.attach(channel);
     }
     disconnect() {
-        this._channel.endPoints.forEach((endPoint) => {
-            endPoint.detach(this._channel);
-        });
-        this._channel = undefined;
+        let chan = this._channel;
+        if (chan) {
+            this._channel.endPoints.forEach((endPoint) => {
+                endPoint.detach(this._channel);
+            });
+            this._channel = undefined;
+        }
+        return chan;
     }
     get fromNode() {
         return this._owner.getNodeByID(this._from.nodeID);
@@ -1009,44 +1172,126 @@ export class Link {
 }
 
 
-export class Network {
-    constructor(graph, factory) {
-        this.graph = graph;
-        this.factory = factory;
+
+
+
+export class Network extends EventHub {
+    constructor(factory, graph) {
+        super();
+        this._factory = factory;
+        this._graph = graph || new Graph(null, {});
+        let me = this;
+        this._graph.subscribe(Graph.EVENT_ADD_NODE, (data) => {
+            let runState = me._graph.context.runState;
+            if (runState != RunState.NEWBORN) {
+                let { node } = data;
+                node.loadComponent(me._factory)
+                    .then(() => {
+                    if (Network.inState([RunState.RUNNING, RunState.PAUSED, RunState.READY], runState))
+                        Network.setRunState(node, RunState.READY);
+                    if (Network.inState([RunState.RUNNING, RunState.PAUSED], runState))
+                        Network.setRunState(node, runState);
+                    this.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
+                });
+            }
+        });
+    }
+    get graph() {
+        return this._graph;
+    }
+    loadComponents() {
+        let me = this;
+        this.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADING });
+        return this._graph.loadComponent(this._factory).then(() => {
+            this.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
+        });
     }
     initialize() {
-        this.nodes = this.graph.getAllNodes();
-        this.links = this.graph.getAllLinks();
-        this.ports = this.graph.getAllPorts();
-        return this.initializeGraph();
+        this.setRunState(RunState.READY);
     }
-    initializeGraph() {
-        return this.graph.initComponent(this.factory);
+    teardown() {
+        this.setRunState(RunState.LOADED);
     }
-    wireupGraph(router) {
-        var me = this;
-        this.nodes.forEach(function (node) {
-        });
-        this.links.forEach((link) => {
-            var fromNode = link.fromNode;
-            var toNode = link.toNode;
-            let channel = new Channel();
-            link.connect(channel);
-            channel.activate();
-        });
+    static inState(states, runState) {
+        return new Set(states).has(runState);
+    }
+    static setRunState(node, runState) {
+        let ctx = node.context;
+        let currentState = ctx.runState;
+        if (node instanceof Graph) {
+            let nodes = node.nodes;
+            if ((runState == RunState.LOADED) && (currentState >= RunState.READY)) {
+                let links = node.links;
+                links.forEach((link) => {
+                    Network.unwireLink(link);
+                });
+            }
+            nodes.forEach(function (subNode) {
+                Network.setRunState(subNode, runState);
+            });
+            ctx.setRunState(runState);
+            if ((runState == RunState.READY) && (currentState >= RunState.LOADED)) {
+                let links = node.links;
+                links.forEach((link) => {
+                    Network.wireLink(link);
+                });
+            }
+        }
+        else {
+            ctx.setRunState(runState);
+        }
+    }
+    static unwireLink(link) {
+        let fromNode = link.fromNode;
+        let toNode = link.toNode;
+        let chan = link.disconnect();
+        if (chan)
+            chan.deactivate();
+    }
+    static wireLink(link) {
+        let fromNode = link.fromNode;
+        let toNode = link.toNode;
+        let channel = new Channel();
+        link.connect(channel);
+        channel.activate();
+    }
+    setRunState(runState) {
+        Network.setRunState(this._graph, runState);
+        this.publish(Network.EVENT_STATE_CHANGE, { state: runState });
+    }
+    start(initiallyPaused = false) {
+        this.setRunState(initiallyPaused ? RunState.PAUSED : RunState.RUNNING);
+    }
+    step() {
+    }
+    stop() {
+        this.setRunState(RunState.READY);
+    }
+    pause() {
+        this.setRunState(RunState.PAUSED);
+    }
+    resume() {
+        this.setRunState(RunState.RUNNING);
     }
 }
+Network.EVENT_STATE_CHANGE = 'network:state-change';
+Network.EVENT_GRAPH_CHANGE = 'network:graph-change';
 
 
 
 
 export class Graph extends Node {
-    constructor(owner, attributes) {
+    constructor(owner, attributes = {}) {
         super(owner, attributes);
-        this.id = attributes.id || "<graph>";
-        this.nodes = {};
-        this.links = {};
-        this.nodes[this.id] = this;
+        this.initFromObject(attributes);
+    }
+    initFromString(jsonString) {
+        this.initFromObject(JSON.parse(jsonString));
+    }
+    initFromObject(attributes) {
+        this.id = attributes.id || "$graph";
+        this._nodes = new Map();
+        this._links = new Map();
         Object.keys(attributes.nodes || {}).forEach((id) => {
             this.addNode(id, attributes.nodes[id]);
         });
@@ -1057,126 +1302,111 @@ export class Graph extends Node {
     toObject(opts) {
         var graph = super.toObject();
         let nodes = graph["nodes"] = {};
-        Object.keys(this.nodes).forEach((id) => {
-            let node = this.nodes[id];
-            if (node != this)
-                nodes[id] = node.toObject();
+        this._nodes.forEach((node, id) => {
+            nodes[id] = node.toObject();
         });
         let links = graph["links"] = {};
-        Object.keys(this.links).forEach((id) => {
-            links[id] = this.links[id].toObject();
+        this._links.forEach((link, id) => {
+            links[id] = link.toObject();
         });
         return graph;
     }
-    initComponent(factory) {
+    loadComponent(factory) {
         return new Promise((resolve, reject) => {
             let pendingCount = 0;
-            Object.keys(this.nodes).forEach((id) => {
-                let node = this.nodes[id];
-                if (node != this) {
-                    pendingCount++;
-                    node.initComponent(factory)
-                        .then(() => {
-                        --pendingCount;
-                        if (pendingCount == 0)
-                            resolve();
-                    })
-                        .catch((reason) => {
-                        reject(reason);
-                    });
+            let nodes = new Map(this._nodes);
+            nodes.set('$graph', this);
+            nodes.forEach((node, id) => {
+                let done;
+                pendingCount++;
+                if (node == this) {
+                    done = super.loadComponent(factory);
                 }
+                else {
+                    done = node.loadComponent(factory);
+                }
+                done.then(() => {
+                    --pendingCount;
+                    if (pendingCount == 0)
+                        resolve();
+                })
+                    .catch((reason) => {
+                    reject(reason);
+                });
             });
         });
     }
-    getNodes() {
-        return this.nodes;
+    get nodes() {
+        return this._nodes;
     }
-    getAllNodes() {
-        let nodes = [];
-        Object.keys(this.nodes).forEach((id) => {
-            let node = this.nodes[id];
-            if ((node != this) && (node instanceof Graph))
-                nodes = nodes.concat(node.getAllNodes());
-            nodes.push(node);
-        });
-        return nodes;
-    }
-    getLinks() {
-        return this.links;
-    }
-    getAllLinks() {
-        let links = [];
-        Object.keys(this.nodes).forEach((id) => {
-            let node = this.nodes[id];
-            if ((node != this) && (node instanceof Graph))
-                links = links.concat(node.getAllLinks());
-        });
-        Object.keys(this.links).forEach((id) => {
-            let link = this.links[id];
-            links.push(link);
-        });
-        return links;
-    }
-    getAllPorts() {
-        let ports = super.getPorts();
-        Object.keys(this.nodes).forEach((id) => {
-            let node = this.nodes[id];
-            if ((node != this) && (node instanceof Graph))
-                ports = ports.concat(node.getAllPorts());
-            else
-                ports = ports.concat(node.getPorts());
-        });
-        return ports;
+    get links() {
+        return this._links;
     }
     getNodeByID(id) {
-        return this.nodes[id];
+        if (id == '$graph')
+            return this;
+        return this._nodes.get(id);
     }
     addNode(id, attributes) {
         let node = new Node(this, attributes);
         node.id = id;
-        this.nodes[id] = node;
+        this._nodes.set(id, node);
+        this.publish(Graph.EVENT_ADD_NODE, { node: node });
         return node;
     }
     renameNode(id, newID) {
+        let node = this._nodes.get(id);
         if (id != newID) {
-            let node = this.nodes[id];
-            this.nodes[newID] = node;
+            let eventData = { node: node, attrs: { id: node.id } };
+            this._nodes.delete(id);
             node.id = newID;
-            delete this.nodes[id];
+            this._nodes.set(newID, node);
+            this.publish(Graph.EVENT_UPD_NODE, eventData);
         }
     }
     removeNode(id) {
-        if (this.nodes[id]) {
-            delete this.nodes[id];
-            return true;
-        }
-        return false;
+        let node = this._nodes.get(id);
+        if (node)
+            this.publish(Graph.EVENT_DEL_NODE, { node: node });
+        return this._nodes.delete(id);
     }
     getLinkByID(id) {
-        return this.links[id];
+        return this._links[id];
     }
     addLink(id, attributes) {
         let link = new Link(this, attributes);
         link.id = id;
-        this.links[id] = link;
+        this._links.set(id, link);
+        this.publish(Graph.EVENT_ADD_LINK, { link: link });
         return link;
     }
     renameLink(id, newID) {
-        let link = this.links[id];
+        let link = this._links.get(id);
+        this._links.delete(id);
+        let eventData = { link: link, attrs: { id: link.id } };
         link.id = newID;
-        this.links[newID] = link;
-        delete this.links[id];
+        this.publish(Graph.EVENT_UPD_NODE, eventData);
+        this._links.set(newID, link);
     }
     removeLink(id) {
-        delete this.links[id];
+        let link = this._links.get(id);
+        if (link)
+            this.publish(Graph.EVENT_DEL_LINK, { link: link });
+        return this._links.delete(id);
     }
     addPublicPort(id, attributes) {
         attributes["id"] = id;
         let port = new PublicPort(this, null, attributes);
-        this._ports[id] = port;
+        this._ports.set(id, port);
         return port;
     }
 }
+Graph.EVENT_ADD_NODE = 'graph:add-node';
+Graph.EVENT_UPD_NODE = 'graph:upd-node';
+Graph.EVENT_DEL_NODE = 'graph:del-node';
+Graph.EVENT_ADD_LINK = 'graph:add-link';
+Graph.EVENT_UPD_LINK = 'graph:upd-link';
+Graph.EVENT_DEL_LINK = 'graph:del-link';
 
 
 export class SimulationEngine {
@@ -1185,6 +1415,6 @@ export class SimulationEngine {
         this.container = container;
     }
     getComponentFactory() {
-        return new ComponentFactory(this.loader, this.container);
+        return new ComponentFactory(this.container, this.loader);
     }
 }

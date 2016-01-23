@@ -1,13 +1,13 @@
-define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaDependencyInjection) {
-    "use strict";
+define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], function (exports, _aureliaDependencyInjection, _aureliaEventAggregator) {
+    'use strict';
 
     exports.__esModule = true;
 
-    var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+    var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-    function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+    function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     var HexCodec = (function () {
         function HexCodec() {
@@ -17,7 +17,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         HexCodec.decode = function decode(a) {
             if (HexCodec.hexDecodeMap == undefined) {
                 var hex = "0123456789ABCDEF";
-                var allow = " \f\n\r\t \u2028\u2029";
+                var allow = ' \f\n\r\t \u2028\u2029';
                 var dec = [];
                 for (var i = 0; i < 16; ++i) dec[hex.charAt(i)] = i;
                 hex = hex.toLowerCase();
@@ -215,12 +215,18 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
             return this;
         };
 
+        ByteArray.prototype.clone = function clone() {
+            return new ByteArray(this.byteArray.slice());
+        };
+
         ByteArray.prototype.bytesAt = function bytesAt(offset, count) {
-            return new ByteArray(this.byteArray.slice(offset, count));
+            if (!Number.isInteger(count)) count = this.length - offset;
+            return new ByteArray(this.byteArray.slice(offset, offset + count));
         };
 
         ByteArray.prototype.viewAt = function viewAt(offset, count) {
-            return new ByteArray(this.byteArray.slice(offset, count));
+            if (!Number.isInteger(count)) count = this.length - offset;
+            return new ByteArray(this.byteArray.subarray(offset, offset + count));
         };
 
         ByteArray.prototype.addByte = function addByte(value) {
@@ -239,10 +245,6 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
             this.byteArray.set(ba);
             this.byteArray.set(bytes.byteArray, ba.length);
             return this;
-        };
-
-        ByteArray.prototype.clone = function clone() {
-            return new ByteArray(this.byteArray.slice());
         };
 
         ByteArray.prototype.not = function not() {
@@ -283,7 +285,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         _createClass(ByteArray, [{
-            key: "length",
+            key: 'length',
             get: function get() {
                 return this.byteArray.length;
             },
@@ -297,7 +299,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
                 }
             }
         }, {
-            key: "backingArray",
+            key: 'backingArray',
             get: function get() {
                 return this.byteArray;
             }
@@ -313,229 +315,65 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
     ByteArray.BASE64 = 2;
     ByteArray.UTF8 = 3;
 
-    var Key = (function () {
-        function Key(id, key) {
-            _classCallCheck(this, Key);
-
-            this.id = id;
-            if (key) this.cryptoKey = key;else {
-                this.cryptoKey = {
-                    type: "",
-                    algorithm: "",
-                    extractable: true,
-                    usages: []
-                };
-            }
-        }
-
-        _createClass(Key, [{
-            key: "type",
-            get: function get() {
-                return this.cryptoKey.type;
-            }
-        }, {
-            key: "algorithm",
-            get: function get() {
-                return this.cryptoKey.algorithm;
-            }
-        }, {
-            key: "extractable",
-            get: function get() {
-                return this.cryptoKey.extractable;
-            }
-        }, {
-            key: "usages",
-            get: function get() {
-                return this.cryptoKey.usages;
-            }
-        }, {
-            key: "innerKey",
-            get: function get() {
-                return this.cryptoKey;
-            }
-        }]);
-
-        return Key;
-    })();
-
-    exports.Key = Key;
-
-    var PrivateKey = (function (_Key) {
-        _inherits(PrivateKey, _Key);
-
-        function PrivateKey() {
-            _classCallCheck(this, PrivateKey);
-
-            _Key.apply(this, arguments);
-        }
-
-        return PrivateKey;
-    })(Key);
-
-    exports.PrivateKey = PrivateKey;
-
-    var PublicKey = (function (_Key2) {
-        _inherits(PublicKey, _Key2);
-
-        function PublicKey() {
-            _classCallCheck(this, PublicKey);
-
-            _Key2.apply(this, arguments);
-        }
-
-        return PublicKey;
-    })(Key);
-
-    exports.PublicKey = PublicKey;
-
-    var KeyPair = function KeyPair() {
-        _classCallCheck(this, KeyPair);
+    var Enum = function Enum() {
+        _classCallCheck(this, Enum);
     };
 
-    exports.KeyPair = KeyPair;
+    exports.Enum = Enum;
 
-    var CryptographicService = (function () {
-        function CryptographicService() {
-            _classCallCheck(this, CryptographicService);
-
-            this.crypto = window.crypto.subtle;
-            if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
-        }
-
-        CryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
-            var _this = this;
-
-            return new Promise(function (resolve, reject) {
-                _this.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.digest = function digest(algorithm, data) {
-            var _this2 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this2.crypto.digest(algorithm, data.backingArray).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
-            var _this3 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this3.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.exportKey = function exportKey(format, key) {
-            var _this4 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this4.crypto.exportKey(format, key.innerKey).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
-            return new Promise(function (resolve, reject) {});
-        };
-
-        CryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
-            var _this5 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this5.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
-                    resolve(res);
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.sign = function sign(algorithm, key, data) {
-            var _this6 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this6.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        CryptographicService.prototype.verify = function verify(algorithm, key, signature, data) {
-            var _this7 = this;
-
-            return new Promise(function (resolve, reject) {
-                _this7.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
-                    resolve(new ByteArray(res));
-                })["catch"](function (err) {
-                    reject(err);
-                });
-            });
-        };
-
-        return CryptographicService;
-    })();
-
-    exports.CryptographicService = CryptographicService;
-
-    var KindHelper = (function () {
-        function KindHelper() {
-            _classCallCheck(this, KindHelper);
-        }
-
-        KindHelper.prototype.init = function init(kindName, description) {
-            this.kindInfo = {
-                title: kindName,
-                description: description,
-                type: "object",
-                properties: {}
-            };
-            return this;
-        };
-
-        KindHelper.prototype.field = function field(name, description, dataType, opts) {
-            this.kindInfo.properties[name] = {
-                description: description,
-                type: dataType
-            };
-            return this;
-        };
-
-        KindHelper.prototype.seal = function seal(kind) {
-            var info = this.kindInfo;
-            this.kindInfo = new KindInfo();
-            return info;
-        };
-
-        return KindHelper;
-    })();
-
-    exports.KindHelper = KindHelper;
+    ;
 
     var KindInfo = function KindInfo() {
         _classCallCheck(this, KindInfo);
+
+        this.fields = {};
     };
 
     exports.KindInfo = KindInfo;
 
-    KindInfo.$kindHelper = new KindHelper();
+    var KindBuilder = (function () {
+        function KindBuilder(ctor, description) {
+            _classCallCheck(this, KindBuilder);
+
+            this.ctor = ctor;
+            ctor.kindInfo = {
+                name: ctor.name,
+                description: description,
+                fields: {}
+            };
+        }
+
+        KindBuilder.init = function init(ctor, description) {
+            var builder = new KindBuilder(ctor, description);
+            return builder;
+        };
+
+        KindBuilder.prototype.field = function field(name, description, dataType, opts) {
+            this.ctor.kindInfo.fields[name] = {
+                description: description,
+                dataType: dataType
+            };
+            return this;
+        };
+
+        return KindBuilder;
+    })();
+
+    exports.KindBuilder = KindBuilder;
+
+    var Oranges;
+    (function (Oranges) {
+        Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
+        Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
+        Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
+        Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
+    })(Oranges || (Oranges = {}));
+
+    var FruityKind = function FruityKind() {
+        _classCallCheck(this, FruityKind);
+    };
+
+    KindBuilder.init(FruityKind, 'a Collection of fruit').field('banana', 'a banana', String).field('apple', 'an apple or pear', Number).field('orange', 'some sort of orange', Enum);
 
     var Message = (function () {
         function Message(header, payload) {
@@ -546,12 +384,12 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         }
 
         _createClass(Message, [{
-            key: "header",
+            key: 'header',
             get: function get() {
                 return this._header;
             }
         }, {
-            key: "payload",
+            key: 'payload',
             get: function get() {
                 return this._payload;
             }
@@ -713,15 +551,16 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         Channel.prototype.sendMessage = function sendMessage(origin, message) {
-            var _this8 = this;
+            var _this = this;
 
             var isResponse = message.header && message.header.isResponse;
             if (!this._active) return;
+            if (origin.direction == Direction.IN && !isResponse) throw new Error('Unable to send on IN port');
             this._endPoints.forEach(function (endPoint) {
                 if (origin != endPoint) {
                     if (endPoint.direction != Direction.OUT || isResponse) {
-                        _this8._taskScheduler.queueTask(function () {
-                            endPoint.handleMessage(message, origin, _this8);
+                        _this._taskScheduler.queueTask(function () {
+                            endPoint.handleMessage(message, origin, _this);
                         });
                     }
                 }
@@ -729,12 +568,12 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         _createClass(Channel, [{
-            key: "active",
+            key: 'active',
             get: function get() {
                 return this._active;
             }
         }, {
-            key: "endPoints",
+            key: 'endPoints',
             get: function get() {
                 return this._endPoints;
             }
@@ -784,27 +623,27 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         EndPoint.prototype.detachAll = function detachAll() {
-            var _this9 = this;
+            var _this2 = this;
 
             this._channels.forEach(function (channel) {
-                channel.removeEndPoint(_this9);
+                channel.removeEndPoint(_this2);
             });
             this._channels = [];
         };
 
         EndPoint.prototype.handleMessage = function handleMessage(message, fromEndPoint, fromChannel) {
-            var _this10 = this;
+            var _this3 = this;
 
             this._messageListeners.forEach(function (messageListener) {
-                messageListener(message, _this10, fromChannel);
+                messageListener(message, _this3, fromChannel);
             });
         };
 
         EndPoint.prototype.sendMessage = function sendMessage(message) {
-            var _this11 = this;
+            var _this4 = this;
 
             this._channels.forEach(function (channel) {
-                channel.sendMessage(_this11, message);
+                channel.sendMessage(_this4, message);
             });
         };
 
@@ -813,17 +652,17 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         _createClass(EndPoint, [{
-            key: "id",
+            key: 'id',
             get: function get() {
                 return this._id;
             }
         }, {
-            key: "attached",
+            key: 'attached',
             get: function get() {
                 return this._channels.length > 0;
             }
         }, {
-            key: "direction",
+            key: 'direction',
             get: function get() {
                 return this._direction;
             }
@@ -895,47 +734,10 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         return APDUProtocol;
     })(ClientServerProtocol);
 
-    var ComponentBuilder = (function () {
-        function ComponentBuilder() {
-            _classCallCheck(this, ComponentBuilder);
-        }
-
-        ComponentBuilder.prototype.init = function init(name, description) {
-            this.componentInfo = {
-                name: name,
-                description: description,
-                ports: {}
-            };
-            return this;
-        };
-
-        ComponentBuilder.prototype.port = function port(id, direction, opts) {
-            opts = opts || {};
-            this.componentInfo.ports[id] = {
-                direction: direction,
-                protocol: opts.protocol,
-                maxIndex: opts.maxIndex,
-                required: opts.required
-            };
-            return this;
-        };
-
-        ComponentBuilder.prototype.install = function install(ctor) {
-            var info = this.componentInfo;
-            this.componentInfo = new ComponentInfo();
-            ctor.componentInfo = info;
-            return info;
-        };
-
-        return ComponentBuilder;
-    })();
-
-    exports.ComponentBuilder = ComponentBuilder;
-
     var PortInfo = function PortInfo() {
         _classCallCheck(this, PortInfo);
 
-        this.maxIndex = 0;
+        this.index = 0;
         this.required = false;
     };
 
@@ -944,143 +746,276 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
     var ComponentInfo = function ComponentInfo() {
         _classCallCheck(this, ComponentInfo);
 
+        this.detailLink = '';
+        this.category = '';
+        this.author = '';
         this.ports = {};
-        this.ports = {};
+        this.stores = {};
     };
 
     exports.ComponentInfo = ComponentInfo;
 
-    ComponentInfo.$builder = new ComponentBuilder();
+    var StoreInfo = function StoreInfo() {
+        _classCallCheck(this, StoreInfo);
+    };
+
+    exports.StoreInfo = StoreInfo;
+
+    var ComponentBuilder = (function () {
+        function ComponentBuilder(ctor, description, category) {
+            _classCallCheck(this, ComponentBuilder);
+
+            this.ctor = ctor;
+            ctor.componentInfo = {
+                name: ctor.name,
+                description: description,
+                detailLink: '',
+                category: category,
+                author: '',
+                ports: {},
+                stores: {}
+            };
+        }
+
+        ComponentBuilder.init = function init(ctor, description, category) {
+            var builder = new ComponentBuilder(ctor, description, category);
+            return builder;
+        };
+
+        ComponentBuilder.prototype.port = function port(id, direction, opts) {
+            opts = opts || {};
+            this.ctor.componentInfo.ports[id] = {
+                direction: direction,
+                protocol: opts.protocol,
+                index: opts.index,
+                required: opts.required
+            };
+            return this;
+        };
+
+        ComponentBuilder.prototype.name = function name(_name) {
+            this.ctor.componentInfo.name = _name;
+            return this;
+        };
+
+        return ComponentBuilder;
+    })();
+
+    exports.ComponentBuilder = ComponentBuilder;
 
     var C = function C() {
         _classCallCheck(this, C);
     };
 
-    ComponentInfo.$builder.install(C);
+    ComponentBuilder.init(C, 'Test Component').port('p1', Direction.IN);
 
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
-
-    var ComponentContext = (function () {
-        function ComponentContext(factory, id) {
-            _classCallCheck(this, ComponentContext);
+    var Key = (function () {
+        function Key(id, key) {
+            _classCallCheck(this, Key);
 
             this.id = id;
-            this.factory = factory;
-            this.container = factory.container.createChild();
+            if (key) this.cryptoKey = key;else {
+                this.cryptoKey = {
+                    type: "",
+                    algorithm: "",
+                    extractable: true,
+                    usages: []
+                };
+            }
         }
 
-        ComponentContext.prototype.componentLoaded = function componentLoaded(instance) {
-            this.instance = instance;
-            instance;
-        };
-
-        ComponentContext.prototype.load = function load() {
-            var _this12 = this;
-
-            var me = this;
-            this.instance = null;
-            return new Promise(function (resolve, reject) {
-                if (!_this12.id || _this12.id == "") resolve();else {
-                    _this12.factory.loadComponent(_this12.id).then(function (instance) {
-                        me.instance = instance;
-                        resolve();
-                    })["catch"](function (err) {
-                        reject(err);
-                    });
-                }
-            });
-        };
-
-        _createClass(ComponentContext, [{
-            key: "component",
+        _createClass(Key, [{
+            key: 'type',
             get: function get() {
-                return this.instance;
+                return this.cryptoKey.type;
+            }
+        }, {
+            key: 'algorithm',
+            get: function get() {
+                return this.cryptoKey.algorithm;
+            }
+        }, {
+            key: 'extractable',
+            get: function get() {
+                return this.cryptoKey.extractable;
+            }
+        }, {
+            key: 'usages',
+            get: function get() {
+                return this.cryptoKey.usages;
+            }
+        }, {
+            key: 'innerKey',
+            get: function get() {
+                return this.cryptoKey;
             }
         }]);
 
-        return ComponentContext;
+        return Key;
     })();
 
-    exports.ComponentContext = ComponentContext;
+    exports.Key = Key;
 
-    ;
+    var PrivateKey = (function (_Key) {
+        _inherits(PrivateKey, _Key);
 
-    var ModuleRegistryEntry = function ModuleRegistryEntry(address) {
-        _classCallCheck(this, ModuleRegistryEntry);
-    };
+        function PrivateKey() {
+            _classCallCheck(this, PrivateKey);
 
-    var ModuleLoader = (function () {
-        function ModuleLoader() {
-            _classCallCheck(this, ModuleLoader);
-
-            this.moduleRegistry = new Map();
+            _Key.apply(this, arguments);
         }
 
-        ModuleLoader.prototype.getOrCreateModuleRegistryEntry = function getOrCreateModuleRegistryEntry(address) {
-            return this.moduleRegistry[address] || (this.moduleRegistry[address] = new ModuleRegistryEntry(address));
-        };
+        return PrivateKey;
+    })(Key);
 
-        ModuleLoader.prototype.loadModule = function loadModule(id) {
-            var _this13 = this;
+    exports.PrivateKey = PrivateKey;
 
-            var newId = System.normalizeSync(id);
-            var existing = this.moduleRegistry[newId];
-            if (existing) {
-                return Promise.resolve(existing);
-            }
-            return System["import"](newId).then(function (m) {
-                _this13.moduleRegistry[newId] = m;
-                return m;
+    var PublicKey = (function (_Key2) {
+        _inherits(PublicKey, _Key2);
+
+        function PublicKey() {
+            _classCallCheck(this, PublicKey);
+
+            _Key2.apply(this, arguments);
+        }
+
+        return PublicKey;
+    })(Key);
+
+    exports.PublicKey = PublicKey;
+
+    var KeyPair = function KeyPair() {
+        _classCallCheck(this, KeyPair);
+    };
+
+    exports.KeyPair = KeyPair;
+
+    var CryptographicService = (function () {
+        function CryptographicService() {
+            _classCallCheck(this, CryptographicService);
+
+            this.crypto = window.crypto.subtle;
+            if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
+        }
+
+        CryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
+            var _this5 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this5.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
             });
         };
 
-        return ModuleLoader;
+        CryptographicService.prototype.digest = function digest(algorithm, data) {
+            var _this6 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this6.crypto.digest(algorithm, data.backingArray).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        CryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
+            var _this7 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this7.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        CryptographicService.prototype.exportKey = function exportKey(format, key) {
+            var _this8 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this8.crypto.exportKey(format, key.innerKey).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        CryptographicService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
+            return new Promise(function (resolve, reject) {});
+        };
+
+        CryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+            var _this9 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this9.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
+                    resolve(res);
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        CryptographicService.prototype.sign = function sign(algorithm, key, data) {
+            var _this10 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this10.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        CryptographicService.prototype.verify = function verify(algorithm, key, signature, data) {
+            var _this11 = this;
+
+            return new Promise(function (resolve, reject) {
+                _this11.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
+                    resolve(new ByteArray(res));
+                })['catch'](function (err) {
+                    reject(err);
+                });
+            });
+        };
+
+        return CryptographicService;
     })();
 
-    exports.ModuleLoader = ModuleLoader;
+    exports.CryptographicService = CryptographicService;
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
 
-    var ComponentFactory = (function () {
-        function ComponentFactory(loader, container) {
-            _classCallCheck(this, ComponentFactory);
+    var EventHub = (function () {
+        function EventHub() {
+            _classCallCheck(this, EventHub);
 
-            this.loader = loader;
-            this.container = container;
+            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
         }
 
-        ComponentFactory.prototype.createContext = function createContext(id) {
-            var context = new ComponentContext(this, id);
-            return context;
+        EventHub.prototype.publish = function publish(event, data) {
+            this._eventAggregator.publish(event, data);
         };
 
-        ComponentFactory.prototype.loadComponent = function loadComponent(id) {
-            var createComponent = function createComponent(ctor) {
-                var newInstance = null;
-                var injects = [];
-                newInstance = new ctor();
-                return newInstance;
-            };
-            var ctor = this.get(id);
-            if (ctor) {
-                return new Promise(function (resolve, reject) {
-                    resolve(createComponent(ctor));
-                });
-            }
-            return null;
+        EventHub.prototype.subscribe = function subscribe(event, handler) {
+            return this._eventAggregator.subscribe(event, handler);
         };
 
-        ComponentFactory.prototype.get = function get(id) {
-            return this.components.get(id);
+        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
+            return this._eventAggregator.subscribeOnce(event, handler);
         };
 
-        ComponentFactory.prototype.set = function set(id, type) {
-            this.components.set(id, type);
-        };
-
-        return ComponentFactory;
+        return EventHub;
     })();
 
-    exports.ComponentFactory = ComponentFactory;
+    exports.EventHub = EventHub;
 
     var Port = (function () {
         function Port(owner, endPoint) {
@@ -1110,7 +1045,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         _createClass(Port, [{
-            key: "endPoint",
+            key: 'endPoint',
             get: function get() {
                 return this._endPoint;
             },
@@ -1118,22 +1053,22 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
                 this._endPoint = endPoint;
             }
         }, {
-            key: "owner",
+            key: 'owner',
             get: function get() {
                 return this._owner;
             }
         }, {
-            key: "protocolID",
+            key: 'protocolID',
             get: function get() {
                 return this._protocolID;
             }
         }, {
-            key: "id",
+            key: 'id',
             get: function get() {
                 return this._endPoint.id;
             }
         }, {
-            key: "direction",
+            key: 'direction',
             get: function get() {
                 return this._endPoint.direction;
             }
@@ -1148,7 +1083,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         _inherits(PublicPort, _Port);
 
         function PublicPort(owner, endPoint, attributes) {
-            var _this14 = this;
+            var _this12 = this;
 
             _classCallCheck(this, PublicPort);
 
@@ -1156,10 +1091,10 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
             var proxyDirection = this._endPoint.direction == Direction.IN ? Direction.OUT : this._endPoint.direction == Direction.OUT ? Direction.IN : Direction.INOUT;
             this.proxyEndPoint = new EndPoint(this._endPoint.id, proxyDirection);
             this.proxyEndPoint.onMessage(function (message) {
-                _this14._endPoint.handleMessage(message, _this14.proxyEndPoint, _this14.proxyChannel);
+                _this12._endPoint.handleMessage(message, _this12.proxyEndPoint, _this12.proxyChannel);
             });
             this._endPoint.onMessage(function (message) {
-                _this14.proxyEndPoint.sendMessage(message);
+                _this12.proxyEndPoint.sendMessage(message);
             });
             this.proxyChannel = null;
         }
@@ -1183,37 +1118,38 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
 
     exports.PublicPort = PublicPort;
 
-    var Node = (function () {
+    var Node = (function (_EventHub) {
+        _inherits(Node, _EventHub);
+
         function Node(owner) {
-            var _this15 = this;
+            var _this13 = this;
 
             var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
             _classCallCheck(this, Node);
 
+            _EventHub.call(this);
             this._owner = owner;
             this._id = attributes.id || '';
-            this._componentID = attributes.componentID;
+            this._component = attributes.component;
             this._initialData = attributes.initialData || {};
-            this._ports = {};
+            this._ports = new Map();
             this.metadata = attributes.metadata || {};
             Object.keys(attributes.ports || {}).forEach(function (id) {
-                _this15.addPlaceholderPort(id, attributes.ports[id]);
+                _this13.addPlaceholderPort(id, attributes.ports[id]);
             });
         }
 
         Node.prototype.toObject = function toObject(opts) {
-            var _this16 = this;
-
             var node = {
                 id: this.id,
-                componentID: this._componentID,
+                component: this._component,
                 initialData: this._initialData,
                 ports: {},
                 metadata: this.metadata
             };
-            Object.keys(this._ports).forEach(function (id) {
-                node.ports[id] = _this16._ports[id].toObject();
+            this._ports.forEach(function (port, id) {
+                node.ports[id] = port.toObject();
             });
             return node;
         };
@@ -1221,31 +1157,26 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         Node.prototype.addPlaceholderPort = function addPlaceholderPort(id, attributes) {
             attributes["id"] = id;
             var port = new Port(this, null, attributes);
-            this._ports[id] = port;
+            this._ports.set(id, port);
             return port;
         };
 
-        Node.prototype.getPorts = function getPorts() {
-            var _this17 = this;
-
-            var ports = [];
-            Object.keys(this._ports).forEach(function (id) {
-                ports.push(_this17._ports[id]);
+        Node.prototype.getPortArray = function getPortArray() {
+            var xports = [];
+            this._ports.forEach(function (port, id) {
+                xports.push(port);
             });
-            return ports;
+            return xports;
         };
 
         Node.prototype.getPortByID = function getPortByID(id) {
-            return this._ports[id];
+            return this._ports.get(id);
         };
 
         Node.prototype.identifyPort = function identifyPort(id, protocolID) {
-            var _this18 = this;
-
             var port;
-            if (id) port = this._ports[id];else if (protocolID) {
-                Object.keys(this._ports).forEach(function (id) {
-                    var p = _this18._ports[id];
+            if (id) port = this._ports.get(id);else if (protocolID) {
+                this._ports.forEach(function (p, id) {
                     if (p.protocolID == protocolID) port = p;
                 }, this);
             }
@@ -1253,36 +1184,262 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         Node.prototype.removePort = function removePort(id) {
-            if (this._ports[id]) {
-                delete this._ports[id];
-                return true;
-            }
-            return false;
+            return this._ports['delete'](id);
         };
 
-        Node.prototype.initComponent = function initComponent(factory) {
-            return Promise.resolve(null);
+        Node.prototype.loadComponent = function loadComponent(factory) {
+            this.unloadComponent();
+            var ctx = this._context = factory.createContext(this._component, this._initialData);
+            ctx.container.registerInstance(Node, this);
+            var me = this;
+            return ctx.load();
+        };
+
+        Node.prototype.unloadComponent = function unloadComponent() {
+            if (this._context) {
+                this._context.release();
+                this._context = null;
+            }
         };
 
         _createClass(Node, [{
-            key: "owner",
+            key: 'owner',
             get: function get() {
                 return this._owner;
             }
         }, {
-            key: "id",
+            key: 'id',
             get: function get() {
                 return this._id;
             },
             set: function set(id) {
                 this._id = id;
             }
+        }, {
+            key: 'ports',
+            get: function get() {
+                return this._ports;
+            }
+        }, {
+            key: 'context',
+            get: function get() {
+                return this._context;
+            }
         }]);
 
         return Node;
-    })();
+    })(EventHub);
 
     exports.Node = Node;
+    var RunState;
+    exports.RunState = RunState;
+    (function (RunState) {
+        RunState[RunState["NEWBORN"] = 0] = "NEWBORN";
+        RunState[RunState["LOADING"] = 1] = "LOADING";
+        RunState[RunState["LOADED"] = 2] = "LOADED";
+        RunState[RunState["READY"] = 3] = "READY";
+        RunState[RunState["RUNNING"] = 4] = "RUNNING";
+        RunState[RunState["PAUSED"] = 5] = "PAUSED";
+    })(RunState || (exports.RunState = RunState = {}));
+
+    var RuntimeContext = (function () {
+        function RuntimeContext(factory, container, id, config) {
+            var deps = arguments.length <= 4 || arguments[4] === undefined ? [] : arguments[4];
+
+            _classCallCheck(this, RuntimeContext);
+
+            this._runState = RunState.NEWBORN;
+            this._factory = factory;
+            this._id = id;
+            this._config = config;
+            this._container = container;
+            for (var i in deps) {
+                if (!this._container.hasResolver(deps[i])) this._container.registerSingleton(deps[i], deps[i]);
+            }
+        }
+
+        RuntimeContext.prototype.load = function load() {
+            var _this14 = this;
+
+            var me = this;
+            this._instance = null;
+            return new Promise(function (resolve, reject) {
+                me._runState = RunState.LOADING;
+                _this14._factory.loadComponent(_this14, _this14._id).then(function (instance) {
+                    me._instance = instance;
+                    me.setRunState(RunState.LOADED);
+                    resolve();
+                })['catch'](function (err) {
+                    me._runState = RunState.NEWBORN;
+                    reject(err);
+                });
+            });
+        };
+
+        RuntimeContext.prototype.inState = function inState(states) {
+            return new Set(states).has(this._runState);
+        };
+
+        RuntimeContext.prototype.setRunState = function setRunState(runState) {
+            var inst = this.instance;
+            switch (runState) {
+                case RunState.LOADED:
+                    if (this.inState([RunState.READY, RunState.RUNNING, RunState.PAUSED])) {
+                        if (inst.teardown) {
+                            inst.teardown();
+                            this._instance = null;
+                        }
+                    }
+                    break;
+                case RunState.READY:
+                    if (this.inState([RunState.LOADED])) {
+                        var endPoints = {};
+                        if (inst.initialize) endPoints = this.instance.initialize(this._config);
+                        this.reconcilePorts(endPoints);
+                    } else if (this.inState([RunState.RUNNING, RunState.PAUSED])) {
+                        if (inst.stop) this.instance.stop();
+                    } else throw new Error('Component cannot be initialized, not loaded');
+                    break;
+                case RunState.RUNNING:
+                    if (this.inState([RunState.READY, RunState.RUNNING])) {
+                        if (inst.start) this.instance.start();
+                    } else if (this.inState([RunState.PAUSED])) {
+                        if (inst.resume) this.instance.resume();
+                    } else throw new Error('Component cannot be started, not ready');
+                    break;
+                case RunState.PAUSED:
+                    if (this.inState([RunState.RUNNING])) {
+                        if (inst.pause) this.instance.pause();
+                    } else if (this.inState([RunState.PAUSED])) {} else throw new Error('Component cannot be paused');
+                    break;
+            }
+            this._runState = runState;
+        };
+
+        RuntimeContext.prototype.reconcilePorts = function reconcilePorts(endPoints) {};
+
+        RuntimeContext.prototype.release = function release() {
+            this._instance = null;
+            this._factory = null;
+        };
+
+        _createClass(RuntimeContext, [{
+            key: 'instance',
+            get: function get() {
+                return this._instance;
+            }
+        }, {
+            key: 'container',
+            get: function get() {
+                return this._container;
+            }
+        }, {
+            key: 'runState',
+            get: function get() {
+                return this._runState;
+            }
+        }]);
+
+        return RuntimeContext;
+    })();
+
+    exports.RuntimeContext = RuntimeContext;
+
+    ;
+
+    var ModuleRegistryEntry = function ModuleRegistryEntry(address) {
+        _classCallCheck(this, ModuleRegistryEntry);
+    };
+
+    var SystemModuleLoader = (function () {
+        function SystemModuleLoader() {
+            _classCallCheck(this, SystemModuleLoader);
+
+            this.moduleRegistry = new Map();
+        }
+
+        SystemModuleLoader.prototype.getOrCreateModuleRegistryEntry = function getOrCreateModuleRegistryEntry(address) {
+            return this.moduleRegistry[address] || (this.moduleRegistry[address] = new ModuleRegistryEntry(address));
+        };
+
+        SystemModuleLoader.prototype.loadModule = function loadModule(id) {
+            var _this15 = this;
+
+            var newId = System.normalizeSync(id);
+            var existing = this.moduleRegistry[newId];
+            if (existing) {
+                return Promise.resolve(existing);
+            }
+            return System['import'](newId).then(function (m) {
+                _this15.moduleRegistry[newId] = m;
+                return m;
+            });
+        };
+
+        return SystemModuleLoader;
+    })();
+
+    exports.SystemModuleLoader = SystemModuleLoader;
+
+    var ComponentFactory = (function () {
+        function ComponentFactory(container, loader) {
+            _classCallCheck(this, ComponentFactory);
+
+            this._loader = loader;
+            this._container = container || new _aureliaDependencyInjection.Container();
+            this._components = new Map();
+            this._components.set(undefined, Object);
+            this._components.set("", Object);
+        }
+
+        ComponentFactory.prototype.createContext = function createContext(id, config) {
+            var deps = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+
+            var childContainer = this._container.createChild();
+            return new RuntimeContext(this, childContainer, id, config, deps);
+        };
+
+        ComponentFactory.prototype.getChildContainer = function getChildContainer() {
+            return;
+        };
+
+        ComponentFactory.prototype.loadComponent = function loadComponent(ctx, id) {
+            var _this16 = this;
+
+            var createComponent = function createComponent(ctor) {
+                var newInstance = ctx.container.invoke(ctor);
+                return newInstance;
+            };
+            var me = this;
+            return new Promise(function (resolve, reject) {
+                var ctor = _this16.get(id);
+                if (ctor) {
+                    resolve(createComponent(ctor));
+                } else if (_this16._loader) {
+                    _this16._loader.loadModule(id).then(function (ctor) {
+                        me._components.set(id, ctor);
+                        resolve(createComponent(ctor));
+                    })['catch'](function (e) {
+                        reject('ComponentFactory: Unable to load component "' + id + '" - ' + e);
+                    });
+                } else {
+                    reject('ComponentFactory: Component "' + id + '" not registered, and Loader not available');
+                }
+            });
+        };
+
+        ComponentFactory.prototype.get = function get(id) {
+            return this._components.get(id);
+        };
+
+        ComponentFactory.prototype.register = function register(id, ctor) {
+            this._components.set(id, ctor);
+        };
+
+        return ComponentFactory;
+    })();
+
+    exports.ComponentFactory = ComponentFactory;
 
     var Link = (function () {
         function Link(owner) {
@@ -1318,26 +1475,30 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         };
 
         Link.prototype.disconnect = function disconnect() {
-            var _this19 = this;
+            var _this17 = this;
 
-            this._channel.endPoints.forEach(function (endPoint) {
-                endPoint.detach(_this19._channel);
-            });
-            this._channel = undefined;
+            var chan = this._channel;
+            if (chan) {
+                this._channel.endPoints.forEach(function (endPoint) {
+                    endPoint.detach(_this17._channel);
+                });
+                this._channel = undefined;
+            }
+            return chan;
         };
 
         _createClass(Link, [{
-            key: "id",
+            key: 'id',
             set: function set(id) {
                 this._id = id;
             }
         }, {
-            key: "fromNode",
+            key: 'fromNode',
             get: function get() {
                 return this._owner.getNodeByID(this._from.nodeID);
             }
         }, {
-            key: "fromPort",
+            key: 'fromPort',
             get: function get() {
                 var node = this.fromNode;
                 return node ? node.identifyPort(this._from.portID, this._protocolID) : undefined;
@@ -1350,12 +1511,12 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
                 this._protocolID = port.protocolID;
             }
         }, {
-            key: "toNode",
+            key: 'toNode',
             get: function get() {
                 return this._owner.getNodeByID(this._to.nodeID);
             }
         }, {
-            key: "toPort",
+            key: 'toPort',
             get: function get() {
                 var node = this.toNode;
                 return node ? node.identifyPort(this._to.portID, this._protocolID) : undefined;
@@ -1368,7 +1529,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
                 this._protocolID = port.protocolID;
             }
         }, {
-            key: "protocolID",
+            key: 'protocolID',
             get: function get() {
                 return this._protocolID;
             }
@@ -1379,206 +1540,292 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
 
     exports.Link = Link;
 
-    var Network = (function () {
-        function Network(graph, factory) {
+    var Network = (function (_EventHub2) {
+        _inherits(Network, _EventHub2);
+
+        function Network(factory, graph) {
+            var _this18 = this;
+
             _classCallCheck(this, Network);
 
-            this.graph = graph;
-            this.factory = factory;
+            _EventHub2.call(this);
+            this._factory = factory;
+            this._graph = graph || new Graph(null, {});
+            var me = this;
+            this._graph.subscribe(Graph.EVENT_ADD_NODE, function (data) {
+                var runState = me._graph.context.runState;
+                if (runState != RunState.NEWBORN) {
+                    (function () {
+                        var node = data.node;
+
+                        node.loadComponent(me._factory).then(function () {
+                            if (Network.inState([RunState.RUNNING, RunState.PAUSED, RunState.READY], runState)) Network.setRunState(node, RunState.READY);
+                            if (Network.inState([RunState.RUNNING, RunState.PAUSED], runState)) Network.setRunState(node, runState);
+                            _this18.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
+                        });
+                    })();
+                }
+            });
         }
 
-        Network.prototype.initialize = function initialize() {
-            this.nodes = this.graph.getAllNodes();
-            this.links = this.graph.getAllLinks();
-            this.ports = this.graph.getAllPorts();
-            return this.initializeGraph();
-        };
+        Network.prototype.loadComponents = function loadComponents() {
+            var _this19 = this;
 
-        Network.prototype.initializeGraph = function initializeGraph() {
-            return this.graph.initComponent(this.factory);
-        };
-
-        Network.prototype.wireupGraph = function wireupGraph(router) {
             var me = this;
-            this.nodes.forEach(function (node) {});
-            this.links.forEach(function (link) {
-                var fromNode = link.fromNode;
-                var toNode = link.toNode;
-                var channel = new Channel();
-                link.connect(channel);
-                channel.activate();
+            this.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADING });
+            return this._graph.loadComponent(this._factory).then(function () {
+                _this19.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
             });
         };
 
+        Network.prototype.initialize = function initialize() {
+            this.setRunState(RunState.READY);
+        };
+
+        Network.prototype.teardown = function teardown() {
+            this.setRunState(RunState.LOADED);
+        };
+
+        Network.inState = function inState(states, runState) {
+            return new Set(states).has(runState);
+        };
+
+        Network.setRunState = function setRunState(node, runState) {
+            var ctx = node.context;
+            var currentState = ctx.runState;
+            if (node instanceof Graph) {
+                var nodes = node.nodes;
+                if (runState == RunState.LOADED && currentState >= RunState.READY) {
+                    var links = node.links;
+                    links.forEach(function (link) {
+                        Network.unwireLink(link);
+                    });
+                }
+                nodes.forEach(function (subNode) {
+                    Network.setRunState(subNode, runState);
+                });
+                ctx.setRunState(runState);
+                if (runState == RunState.READY && currentState >= RunState.LOADED) {
+                    var links = node.links;
+                    links.forEach(function (link) {
+                        Network.wireLink(link);
+                    });
+                }
+            } else {
+                ctx.setRunState(runState);
+            }
+        };
+
+        Network.unwireLink = function unwireLink(link) {
+            var fromNode = link.fromNode;
+            var toNode = link.toNode;
+            var chan = link.disconnect();
+            if (chan) chan.deactivate();
+        };
+
+        Network.wireLink = function wireLink(link) {
+            var fromNode = link.fromNode;
+            var toNode = link.toNode;
+            var channel = new Channel();
+            link.connect(channel);
+            channel.activate();
+        };
+
+        Network.prototype.setRunState = function setRunState(runState) {
+            Network.setRunState(this._graph, runState);
+            this.publish(Network.EVENT_STATE_CHANGE, { state: runState });
+        };
+
+        Network.prototype.start = function start() {
+            var initiallyPaused = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+            this.setRunState(initiallyPaused ? RunState.PAUSED : RunState.RUNNING);
+        };
+
+        Network.prototype.step = function step() {};
+
+        Network.prototype.stop = function stop() {
+            this.setRunState(RunState.READY);
+        };
+
+        Network.prototype.pause = function pause() {
+            this.setRunState(RunState.PAUSED);
+        };
+
+        Network.prototype.resume = function resume() {
+            this.setRunState(RunState.RUNNING);
+        };
+
+        _createClass(Network, [{
+            key: 'graph',
+            get: function get() {
+                return this._graph;
+            }
+        }]);
+
         return Network;
-    })();
+    })(EventHub);
 
     exports.Network = Network;
+
+    Network.EVENT_STATE_CHANGE = 'network:state-change';
+    Network.EVENT_GRAPH_CHANGE = 'network:graph-change';
 
     var Graph = (function (_Node) {
         _inherits(Graph, _Node);
 
-        function Graph(owner, attributes) {
-            var _this20 = this;
+        function Graph(owner) {
+            var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
             _classCallCheck(this, Graph);
 
             _Node.call(this, owner, attributes);
-            this.id = attributes.id || "<graph>";
-            this.nodes = {};
-            this.links = {};
-            this.nodes[this.id] = this;
+            this.initFromObject(attributes);
+        }
+
+        Graph.prototype.initFromString = function initFromString(jsonString) {
+            this.initFromObject(JSON.parse(jsonString));
+        };
+
+        Graph.prototype.initFromObject = function initFromObject(attributes) {
+            var _this20 = this;
+
+            this.id = attributes.id || "$graph";
+            this._nodes = new Map();
+            this._links = new Map();
             Object.keys(attributes.nodes || {}).forEach(function (id) {
                 _this20.addNode(id, attributes.nodes[id]);
             });
             Object.keys(attributes.links || {}).forEach(function (id) {
                 _this20.addLink(id, attributes.links[id]);
             });
-        }
+        };
 
         Graph.prototype.toObject = function toObject(opts) {
-            var _this21 = this;
-
             var graph = _Node.prototype.toObject.call(this);
             var nodes = graph["nodes"] = {};
-            Object.keys(this.nodes).forEach(function (id) {
-                var node = _this21.nodes[id];
-                if (node != _this21) nodes[id] = node.toObject();
+            this._nodes.forEach(function (node, id) {
+                nodes[id] = node.toObject();
             });
             var links = graph["links"] = {};
-            Object.keys(this.links).forEach(function (id) {
-                links[id] = _this21.links[id].toObject();
+            this._links.forEach(function (link, id) {
+                links[id] = link.toObject();
             });
             return graph;
         };
 
-        Graph.prototype.initComponent = function initComponent(factory) {
-            var _this22 = this;
+        Graph.prototype.loadComponent = function loadComponent(factory) {
+            var _this21 = this;
 
             return new Promise(function (resolve, reject) {
                 var pendingCount = 0;
-                Object.keys(_this22.nodes).forEach(function (id) {
-                    var node = _this22.nodes[id];
-                    if (node != _this22) {
-                        pendingCount++;
-                        node.initComponent(factory).then(function () {
-                            --pendingCount;
-                            if (pendingCount == 0) resolve();
-                        })["catch"](function (reason) {
-                            reject(reason);
-                        });
+                var nodes = new Map(_this21._nodes);
+                nodes.set('$graph', _this21);
+                nodes.forEach(function (node, id) {
+                    var done = undefined;
+                    pendingCount++;
+                    if (node == _this21) {
+                        done = _Node.prototype.loadComponent.call(_this21, factory);
+                    } else {
+                        done = node.loadComponent(factory);
                     }
+                    done.then(function () {
+                        --pendingCount;
+                        if (pendingCount == 0) resolve();
+                    })['catch'](function (reason) {
+                        reject(reason);
+                    });
                 });
             });
         };
 
-        Graph.prototype.getNodes = function getNodes() {
-            return this.nodes;
-        };
-
-        Graph.prototype.getAllNodes = function getAllNodes() {
-            var _this23 = this;
-
-            var nodes = [];
-            Object.keys(this.nodes).forEach(function (id) {
-                var node = _this23.nodes[id];
-                if (node != _this23 && node instanceof Graph) nodes = nodes.concat(node.getAllNodes());
-                nodes.push(node);
-            });
-            return nodes;
-        };
-
-        Graph.prototype.getLinks = function getLinks() {
-            return this.links;
-        };
-
-        Graph.prototype.getAllLinks = function getAllLinks() {
-            var _this24 = this;
-
-            var links = [];
-            Object.keys(this.nodes).forEach(function (id) {
-                var node = _this24.nodes[id];
-                if (node != _this24 && node instanceof Graph) links = links.concat(node.getAllLinks());
-            });
-            Object.keys(this.links).forEach(function (id) {
-                var link = _this24.links[id];
-                links.push(link);
-            });
-            return links;
-        };
-
-        Graph.prototype.getAllPorts = function getAllPorts() {
-            var _this25 = this;
-
-            var ports = _Node.prototype.getPorts.call(this);
-            Object.keys(this.nodes).forEach(function (id) {
-                var node = _this25.nodes[id];
-                if (node != _this25 && node instanceof Graph) ports = ports.concat(node.getAllPorts());else ports = ports.concat(node.getPorts());
-            });
-            return ports;
-        };
-
         Graph.prototype.getNodeByID = function getNodeByID(id) {
-            return this.nodes[id];
+            if (id == '$graph') return this;
+            return this._nodes.get(id);
         };
 
         Graph.prototype.addNode = function addNode(id, attributes) {
             var node = new Node(this, attributes);
             node.id = id;
-            this.nodes[id] = node;
+            this._nodes.set(id, node);
+            this.publish(Graph.EVENT_ADD_NODE, { node: node });
             return node;
         };
 
         Graph.prototype.renameNode = function renameNode(id, newID) {
+            var node = this._nodes.get(id);
             if (id != newID) {
-                var node = this.nodes[id];
-                this.nodes[newID] = node;
+                var eventData = { node: node, attrs: { id: node.id } };
+                this._nodes['delete'](id);
                 node.id = newID;
-                delete this.nodes[id];
+                this._nodes.set(newID, node);
+                this.publish(Graph.EVENT_UPD_NODE, eventData);
             }
         };
 
         Graph.prototype.removeNode = function removeNode(id) {
-            if (this.nodes[id]) {
-                delete this.nodes[id];
-                return true;
-            }
-            return false;
+            var node = this._nodes.get(id);
+            if (node) this.publish(Graph.EVENT_DEL_NODE, { node: node });
+            return this._nodes['delete'](id);
         };
 
         Graph.prototype.getLinkByID = function getLinkByID(id) {
-            return this.links[id];
+            return this._links[id];
         };
 
         Graph.prototype.addLink = function addLink(id, attributes) {
             var link = new Link(this, attributes);
             link.id = id;
-            this.links[id] = link;
+            this._links.set(id, link);
+            this.publish(Graph.EVENT_ADD_LINK, { link: link });
             return link;
         };
 
         Graph.prototype.renameLink = function renameLink(id, newID) {
-            var link = this.links[id];
+            var link = this._links.get(id);
+            this._links['delete'](id);
+            var eventData = { link: link, attrs: { id: link.id } };
             link.id = newID;
-            this.links[newID] = link;
-            delete this.links[id];
+            this.publish(Graph.EVENT_UPD_NODE, eventData);
+            this._links.set(newID, link);
         };
 
         Graph.prototype.removeLink = function removeLink(id) {
-            delete this.links[id];
+            var link = this._links.get(id);
+            if (link) this.publish(Graph.EVENT_DEL_LINK, { link: link });
+            return this._links['delete'](id);
         };
 
         Graph.prototype.addPublicPort = function addPublicPort(id, attributes) {
             attributes["id"] = id;
             var port = new PublicPort(this, null, attributes);
-            this._ports[id] = port;
+            this._ports.set(id, port);
             return port;
         };
+
+        _createClass(Graph, [{
+            key: 'nodes',
+            get: function get() {
+                return this._nodes;
+            }
+        }, {
+            key: 'links',
+            get: function get() {
+                return this._links;
+            }
+        }]);
 
         return Graph;
     })(Node);
 
     exports.Graph = Graph;
+
+    Graph.EVENT_ADD_NODE = 'graph:add-node';
+    Graph.EVENT_UPD_NODE = 'graph:upd-node';
+    Graph.EVENT_DEL_NODE = 'graph:del-node';
+    Graph.EVENT_ADD_LINK = 'graph:add-link';
+    Graph.EVENT_UPD_LINK = 'graph:upd-link';
+    Graph.EVENT_DEL_LINK = 'graph:del-link';
 
     var SimulationEngine = (function () {
         function SimulationEngine(loader, container) {
@@ -1589,7 +1836,7 @@ define(["exports", "aurelia-dependency-injection"], function (exports, _aureliaD
         }
 
         SimulationEngine.prototype.getComponentFactory = function getComponentFactory() {
-            return new ComponentFactory(this.loader, this.container);
+            return new ComponentFactory(this.container, this.loader);
         };
 
         return SimulationEngine;
