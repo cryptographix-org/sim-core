@@ -1,6 +1,6 @@
 {
   "name": "cryptographix-sim-core",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "An extensible framework for simulation of application-security building blocks",
   "keywords": [
     "cryptographic",
@@ -11,14 +11,14 @@
   ],
   "homepage": "http://cryptographix.com",
   "bugs": {
-    "url": "https://github.com/cryptographics/sim-core/issues"
+    "url": "https://github.com/cryptographix/sim-core/issues"
   },
   "license": "MIT",
   "author": "Sean Wykes <sean.public@nascent.com.br> (http://nascent.com.br/)",
   "main": "dist/cjs/sim-core.js",
   "repository": {
     "type": "git",
-    "url": "http://github.com/cryptographics/sim-core"
+    "url": "http://github.com/cryptographix/sim-core"
   },
   "jspm": {
     "registry": "npm",
@@ -28,19 +28,17 @@
       "lib": "dist/amd"
     },
     "dependencies": {
-      "aurelia-dependency-injection": "^1.0.0-beta.1",
-      "aurelia-event-aggregator": "^1.0.0-beta.1",
+      "aurelia-dependency-injection": "^1.0.0-beta.1.1.3",
+      "aurelia-event-aggregator": "^1.0.0-beta.1.1.1",
       "jasmine-core": "^2.4.1",
       "jasmine2-reporter": "^0.1.1"
     },
     "devDependencies": {}
   },
-  "dependencies": {
-    "aurelia-dependency-injection": "^1.0.0-beta.1"
-  },
   "devDependencies": {
     "cgfx-build-tools": "^0.3.2",
-    "gulp": "^3.9.0"
+    "gulp": "^3.9.0",
+    "systemjs": "^0.19.20"
   },
   "scripts": {
     "build": "gulp build"

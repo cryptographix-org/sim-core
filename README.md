@@ -3,6 +3,8 @@ Simulation framework for Smart and Secure Process Networks, in TypeScript
 
 ## Dependencies
 aurelia-dependency-injection
+aurelia-event-emittor
+systemjs (for building and testing)
 
 ## Used By
 
@@ -27,21 +29,22 @@ To build the code, follow these steps.
   ```shell
   npm install -g gulp
   ```
-4. To build the code, you can now run:
+4. You make need to install and configure jspm beforehand, this obtains the typescript defn files needed
+to build successfully
+  ```shell
+  npm install -g jspm-cli
+  jspm install -y
+  ```
+5. To build the code, you can now run:
 
   ```shell
   gulp build
   ```
-5. You will find the compiled code in the `dist` folder, available in three module formats: AMD, CommonJS and ES6.
-6. To run the tests, you can simply run:
+6. You will find the compiled code in the `dist` folder, available in three module formats: AMD, CommonJS and ES6.
+7. To run the tests, you can simply run:
 
   ```shell
-  gulp test
-  ```
-  You make need to install and configure jspm beforehand
-  ```shell
-  npm install -g jspm-cli
-  jspm install -y
+  gulp test-node
   ```
 
 

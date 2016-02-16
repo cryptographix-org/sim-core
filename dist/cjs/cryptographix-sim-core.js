@@ -8,9 +8,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _aureliaDependencyInjection = require('aurelia-dependency-injection');
-
 var _aureliaEventAggregator = require('aurelia-event-aggregator');
+
+var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
 var HexCodec = (function () {
     function HexCodec() {
@@ -993,8 +993,6 @@ var CryptographicService = (function () {
 })();
 
 exports.CryptographicService = CryptographicService;
-exports.Container = _aureliaDependencyInjection.Container;
-exports.inject = _aureliaDependencyInjection.autoinject;
 
 var EventHub = (function () {
     function EventHub() {
@@ -1019,6 +1017,8 @@ var EventHub = (function () {
 })();
 
 exports.EventHub = EventHub;
+exports.Container = _aureliaDependencyInjection.Container;
+exports.inject = _aureliaDependencyInjection.autoinject;
 
 var Port = (function () {
     function Port(owner, endPoint) {

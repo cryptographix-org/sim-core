@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], function (exports, _aureliaDependencyInjection, _aureliaEventAggregator) {
+define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], function (exports, _aureliaEventAggregator, _aureliaDependencyInjection) {
     'use strict';
 
     exports.__esModule = true;
@@ -990,8 +990,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     })();
 
     exports.CryptographicService = CryptographicService;
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
 
     var EventHub = (function () {
         function EventHub() {
@@ -1016,6 +1014,8 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     })();
 
     exports.EventHub = EventHub;
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
 
     var Port = (function () {
         function Port(owner, endPoint) {
