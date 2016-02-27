@@ -1,7 +1,7 @@
 System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], function (_export) {
     'use strict';
 
-    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteArray, Enum, KindInfo, KindBuilder, Oranges, FruityKind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, C, Key, PrivateKey, PublicKey, KeyPair, CryptographicService, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
+    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteArray, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, C, EventHub, Key, PrivateKey, PublicKey, KeyPair, CryptographicService, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
 
     var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -287,7 +287,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
                 ByteArray.prototype.toString = function toString(format, opt) {
                     var s = "";
-                    for (var i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).substring(-2);
+                    for (var i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).slice(-2);
                     return s;
                 };
 
@@ -328,7 +328,38 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('Enum', Enum);
 
-            ;
+            Integer = (function (_Number) {
+                _inherits(Integer, _Number);
+
+                function Integer() {
+                    _classCallCheck(this, Integer);
+
+                    _Number.apply(this, arguments);
+                }
+
+                return Integer;
+            })(Number);
+
+            _export('Integer', Integer);
+
+            FieldArray = function FieldArray() {
+                _classCallCheck(this, FieldArray);
+            };
+
+            _export('FieldArray', FieldArray);
+
+            FieldTypes = {
+                Boolean: Boolean,
+                Number: Number,
+                Integer: Integer,
+                ByteArray: ByteArray,
+                Enum: Enum,
+                Array: FieldArray,
+                String: String,
+                Kind: Kind
+            };
+
+            _export('FieldTypes', FieldTypes);
 
             KindInfo = function KindInfo() {
                 _classCallCheck(this, KindInfo);
@@ -355,12 +386,71 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     return builder;
                 };
 
-                KindBuilder.prototype.field = function field(name, description, dataType, opts) {
-                    this.ctor.kindInfo.fields[name] = {
-                        description: description,
-                        dataType: dataType
-                    };
+                KindBuilder.prototype.field = function field(name, description, fieldType) {
+                    var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+                    var field = opts;
+                    field.description = description;
+                    field.fieldType = fieldType;
+                    this.ctor.kindInfo.fields[name] = field;
                     return this;
+                };
+
+                KindBuilder.prototype.boolField = function boolField(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    return this.field(name, description, Boolean, opts);
+                };
+
+                KindBuilder.prototype.numberField = function numberField(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    return this.field(name, description, Number, opts);
+                };
+
+                KindBuilder.prototype.integerField = function integerField(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    return this.field(name, description, Integer, opts);
+                };
+
+                KindBuilder.prototype.uint32Field = function uint32Field(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    opts.minimum = opts.minimum || 0;
+                    opts.maximum = opts.maximum || 0xFFFFFFFF;
+                    return this.field(name, description, Integer, opts);
+                };
+
+                KindBuilder.prototype.byteField = function byteField(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    opts.minimum = opts.minimum || 0;
+                    opts.maximum = opts.maximum || 255;
+                    return this.field(name, description, Integer, opts);
+                };
+
+                KindBuilder.prototype.stringField = function stringField(name, description) {
+                    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                    return this.field(name, description, String, opts);
+                };
+
+                KindBuilder.prototype.kindField = function kindField(name, description, kind) {
+                    var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+                    opts.kind = kind;
+                    return this.field(name, description, Kind, opts);
+                };
+
+                KindBuilder.prototype.enumField = function enumField(name, description, enumm) {
+                    var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+                    opts.enumMap = new Map();
+                    for (var idx in enumm) {
+                        if (1 * idx == idx) opts.enumMap.set(idx, enumm[idx]);
+                    }
+                    return this.field(name, description, Enum, opts);
                 };
 
                 return KindBuilder;
@@ -368,18 +458,37 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('KindBuilder', KindBuilder);
 
-            (function (Oranges) {
-                Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
-                Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
-                Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
-                Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
-            })(Oranges || (Oranges = {}));
+            Kind = (function () {
+                function Kind() {
+                    _classCallCheck(this, Kind);
+                }
 
-            FruityKind = function FruityKind() {
-                _classCallCheck(this, FruityKind);
-            };
+                Kind.getKindInfo = function getKindInfo(kind) {
+                    return kind.constructor.kindInfo;
+                };
 
-            KindBuilder.init(FruityKind, 'a Collection of fruit').field('banana', 'a banana', String).field('apple', 'an apple or pear', Number).field('orange', 'some sort of orange', Enum);
+                Kind.initFields = function initFields(kind) {
+                    var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+                    var kindInfo = Kind.getKindInfo(kind);
+                    for (var id in kindInfo.fields) {
+                        var field = kindInfo.fields[id];
+                        var fieldType = field.fieldType;
+                        var val = undefined;
+                        if (!field.calculated) {
+                            if (attributes[id]) val = attributes[id];else if (field['default'] != undefined) val = field['default'];else if (fieldType == String) val = '';else if (fieldType == Number) val = 0;else if (fieldType == Integer) val = field.minimum || 0;else if (fieldType == Boolean) val = false;else if (fieldType == ByteArray) val = new ByteArray();else if (fieldType == Enum) val = field.enumMap.keys[0];else if (fieldType == Kind) {
+                                var xx = fieldType.constructor;
+                                val = Object.create(xx);
+                            }
+                            kind[id] = val;
+                        }
+                    }
+                };
+
+                return Kind;
+            })();
+
+            _export('Kind', Kind);
 
             Message = (function () {
                 function Message(header, payload) {
@@ -817,6 +926,34 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             ComponentBuilder.init(C, 'Test Component').port('p1', Direction.IN);
 
+            _export('Container', Container);
+
+            _export('inject', inject);
+
+            EventHub = (function () {
+                function EventHub() {
+                    _classCallCheck(this, EventHub);
+
+                    this._eventAggregator = new EventAggregator();
+                }
+
+                EventHub.prototype.publish = function publish(event, data) {
+                    this._eventAggregator.publish(event, data);
+                };
+
+                EventHub.prototype.subscribe = function subscribe(event, handler) {
+                    return this._eventAggregator.subscribe(event, handler);
+                };
+
+                EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
+                    return this._eventAggregator.subscribeOnce(event, handler);
+                };
+
+                return EventHub;
+            })();
+
+            _export('EventHub', EventHub);
+
             Key = (function () {
                 function Key(id, key) {
                     _classCallCheck(this, Key);
@@ -999,34 +1136,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('CryptographicService', CryptographicService);
 
-            _export('Container', Container);
-
-            _export('inject', inject);
-
-            EventHub = (function () {
-                function EventHub() {
-                    _classCallCheck(this, EventHub);
-
-                    this._eventAggregator = new EventAggregator();
-                }
-
-                EventHub.prototype.publish = function publish(event, data) {
-                    this._eventAggregator.publish(event, data);
-                };
-
-                EventHub.prototype.subscribe = function subscribe(event, handler) {
-                    return this._eventAggregator.subscribe(event, handler);
-                };
-
-                EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
-                    return this._eventAggregator.subscribeOnce(event, handler);
-                };
-
-                return EventHub;
-            })();
-
-            _export('EventHub', EventHub);
-
             Port = (function () {
                 function Port(owner, endPoint) {
                     var attributes = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
@@ -1164,6 +1273,26 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     return node;
                 };
 
+                Node.prototype.updatePorts = function updatePorts(endPoints) {
+                    var _this14 = this;
+
+                    var currentPorts = this._ports;
+                    var newPorts = new Map();
+                    endPoints.forEach(function (ep) {
+                        var id = ep.id;
+                        if (currentPorts.has(id)) {
+                            var port = currentPorts.get(id);
+                            port.endPoint = ep;
+                            newPorts.set(id, port);
+                            currentPorts['delete'](id);
+                        } else {
+                            var port = new Port(_this14, ep, { id: id, direction: ep.direction });
+                            newPorts.set(id, port);
+                        }
+                    });
+                    this._ports = newPorts;
+                };
+
                 Node.prototype.addPlaceholderPort = function addPlaceholderPort(id, attributes) {
                     attributes["id"] = id;
                     var port = new Port(this, null, attributes);
@@ -1200,7 +1329,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 Node.prototype.loadComponent = function loadComponent(factory) {
                     this.unloadComponent();
                     var ctx = this._context = factory.createContext(this._component, this._initialData);
-                    ctx.container.registerInstance(Node, this);
+                    ctx.node = this;
                     var me = this;
                     return ctx.load();
                 };
@@ -1270,13 +1399,13 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 }
 
                 RuntimeContext.prototype.load = function load() {
-                    var _this14 = this;
+                    var _this15 = this;
 
                     var me = this;
                     this._instance = null;
                     return new Promise(function (resolve, reject) {
                         me._runState = RunState.LOADING;
-                        _this14._factory.loadComponent(_this14, _this14._id).then(function (instance) {
+                        _this15._factory.loadComponent(_this15, _this15._id).then(function (instance) {
                             me._instance = instance;
                             me.setRunState(RunState.LOADED);
                             resolve();
@@ -1304,9 +1433,9 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                             break;
                         case RunState.READY:
                             if (this.inState([RunState.LOADED])) {
-                                var endPoints = {};
+                                var endPoints = [];
                                 if (inst.initialize) endPoints = this.instance.initialize(this._config);
-                                this.reconcilePorts(endPoints);
+                                if (this._node) this._node.updatePorts(endPoints);
                             } else if (this.inState([RunState.RUNNING, RunState.PAUSED])) {
                                 if (inst.stop) this.instance.stop();
                             } else throw new Error('Component cannot be initialized, not loaded');
@@ -1327,14 +1456,21 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     this._runState = runState;
                 };
 
-                RuntimeContext.prototype.reconcilePorts = function reconcilePorts(endPoints) {};
-
                 RuntimeContext.prototype.release = function release() {
                     this._instance = null;
                     this._factory = null;
                 };
 
                 _createClass(RuntimeContext, [{
+                    key: 'node',
+                    get: function get() {
+                        return this._node;
+                    },
+                    set: function set(node) {
+                        this._node = node;
+                        this._container.registerInstance(Node, this);
+                    }
+                }, {
                     key: 'instance',
                     get: function get() {
                         return this._instance;
@@ -1374,7 +1510,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 SystemModuleLoader.prototype.loadModule = function loadModule(id) {
-                    var _this15 = this;
+                    var _this16 = this;
 
                     var newId = System.normalizeSync(id);
                     var existing = this.moduleRegistry[newId];
@@ -1382,7 +1518,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                         return Promise.resolve(existing);
                     }
                     return System['import'](newId).then(function (m) {
-                        _this15.moduleRegistry[newId] = m;
+                        _this16.moduleRegistry[newId] = m;
                         return m;
                     });
                 };
@@ -1415,7 +1551,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 ComponentFactory.prototype.loadComponent = function loadComponent(ctx, id) {
-                    var _this16 = this;
+                    var _this17 = this;
 
                     var createComponent = function createComponent(ctor) {
                         var newInstance = ctx.container.invoke(ctor);
@@ -1423,11 +1559,11 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     };
                     var me = this;
                     return new Promise(function (resolve, reject) {
-                        var ctor = _this16.get(id);
+                        var ctor = _this17.get(id);
                         if (ctor) {
                             resolve(createComponent(ctor));
-                        } else if (_this16._loader) {
-                            _this16._loader.loadModule(id).then(function (ctor) {
+                        } else if (_this17._loader) {
+                            _this17._loader.loadModule(id).then(function (ctor) {
                                 me._components.set(id, ctor);
                                 resolve(createComponent(ctor));
                             })['catch'](function (e) {
@@ -1486,12 +1622,12 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Link.prototype.disconnect = function disconnect() {
-                    var _this17 = this;
+                    var _this18 = this;
 
                     var chan = this._channel;
                     if (chan) {
                         this._channel.endPoints.forEach(function (endPoint) {
-                            endPoint.detach(_this17._channel);
+                            endPoint.detach(_this18._channel);
                         });
                         this._channel = undefined;
                     }
@@ -1555,7 +1691,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 _inherits(Network, _EventHub2);
 
                 function Network(factory, graph) {
-                    var _this18 = this;
+                    var _this19 = this;
 
                     _classCallCheck(this, Network);
 
@@ -1572,7 +1708,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                                 node.loadComponent(me._factory).then(function () {
                                     if (Network.inState([RunState.RUNNING, RunState.PAUSED, RunState.READY], runState)) Network.setRunState(node, RunState.READY);
                                     if (Network.inState([RunState.RUNNING, RunState.PAUSED], runState)) Network.setRunState(node, runState);
-                                    _this18.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
+                                    _this19.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
                                 });
                             })();
                         }
@@ -1580,12 +1716,12 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 }
 
                 Network.prototype.loadComponents = function loadComponents() {
-                    var _this19 = this;
+                    var _this20 = this;
 
                     var me = this;
                     this.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADING });
                     return this._graph.loadComponent(this._factory).then(function () {
-                        _this19.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
+                        _this20.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
                     });
                 };
 
@@ -1699,16 +1835,16 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Graph.prototype.initFromObject = function initFromObject(attributes) {
-                    var _this20 = this;
+                    var _this21 = this;
 
                     this.id = attributes.id || "$graph";
                     this._nodes = new Map();
                     this._links = new Map();
                     Object.keys(attributes.nodes || {}).forEach(function (id) {
-                        _this20.addNode(id, attributes.nodes[id]);
+                        _this21.addNode(id, attributes.nodes[id]);
                     });
                     Object.keys(attributes.links || {}).forEach(function (id) {
-                        _this20.addLink(id, attributes.links[id]);
+                        _this21.addLink(id, attributes.links[id]);
                     });
                 };
 
@@ -1726,17 +1862,17 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Graph.prototype.loadComponent = function loadComponent(factory) {
-                    var _this21 = this;
+                    var _this22 = this;
 
                     return new Promise(function (resolve, reject) {
                         var pendingCount = 0;
-                        var nodes = new Map(_this21._nodes);
-                        nodes.set('$graph', _this21);
+                        var nodes = new Map(_this22._nodes);
+                        nodes.set('$graph', _this22);
                         nodes.forEach(function (node, id) {
                             var done = undefined;
                             pendingCount++;
-                            if (node == _this21) {
-                                done = _Node.prototype.loadComponent.call(_this21, factory);
+                            if (node == _this22) {
+                                done = _Node.prototype.loadComponent.call(_this22, factory);
                             } else {
                                 done = node.loadComponent(factory);
                             }

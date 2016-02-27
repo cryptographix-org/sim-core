@@ -45,14 +45,35 @@ declare module 'cryptographix-sim-core'
 
   export class Enum {
   }
-  export type DataType = String | Number | Enum | ByteArray | Kind;
-  export interface FieldInfo {
-      id?: string;
+  export class Integer extends Number {
+  }
+  export interface FieldArray extends Array<FieldType> {
+  }
+  export type FieldType = String | Number | Integer | Enum | ByteArray | Kind | FieldArray;
+  export class FieldArray implements FieldArray {
+  }
+  export var FieldTypes: {
+      Boolean: BooleanConstructor;
+      Number: NumberConstructor;
+      Integer: typeof Integer;
+      ByteArray: typeof ByteArray;
+      Enum: typeof Enum;
+      Array: typeof FieldArray;
+      String: StringConstructor;
+      Kind: typeof Kind;
+  };
+  export interface FieldOptions {
+      minimum?: number;
+      maximum?: number;
+      "default"?: any;
+      calculated?: boolean;
+      kind?: Kind;
+      arrayInfo?: FieldInfo;
+      enumMap?: Map<number, string>;
+  }
+  export interface FieldInfo extends FieldOptions {
       description: string;
-      dataType: DataType;
-      enumInfo?: Map<number, string>;
-      minLength?: number;
-      maxLength?: number;
+      fieldType: FieldType;
   }
   export class KindInfo {
       name: string;
@@ -66,9 +87,23 @@ declare module 'cryptographix-sim-core'
       constructor(ctor: KindConstructor, description: string);
       private kindInfo;
       static init(ctor: KindConstructor, description: string): KindBuilder;
-      field(name: string, description: string, dataType: DataType, opts?: any): KindBuilder;
+      field(name: string, description: string, fieldType: FieldType, opts?: FieldOptions): KindBuilder;
+      boolField(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      numberField(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      integerField(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      uint32Field(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      byteField(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      stringField(name: string, description: string, opts?: FieldOptions): KindBuilder;
+      kindField(name: string, description: string, kind: Kind, opts?: FieldOptions): KindBuilder;
+      enumField(name: string, description: string, enumm: {
+          [idx: number]: string;
+      }, opts?: FieldOptions): KindBuilder;
   }
   export interface Kind {
+  }
+  export class Kind implements Kind {
+      static getKindInfo(kind: Kind): KindInfo;
+      static initFields(kind: Kind, attributes?: {}): void;
   }
   export interface KindConstructor {
       new (...args: any[]): Kind;
@@ -216,7 +251,7 @@ declare module 'cryptographix-sim-core'
       name(name: string): this;
   }
   export interface Component {
-      initialize?(config: Kind): EndPointCollection;
+      initialize?(config: Kind): EndPoint[];
       teardown?(): any;
       start?(): any;
       stop?(): any;
@@ -226,6 +261,19 @@ declare module 'cryptographix-sim-core'
   export interface ComponentConstructor {
       new (...args: any[]): Component;
       componentInfo?: ComponentInfo;
+  }
+
+  export { Container, inject };
+  export interface Injectable {
+      new (...args: any[]): Object;
+  }
+
+  export class EventHub {
+      _eventAggregator: EventAggregator;
+      constructor();
+      publish(event: string, data?: any): void;
+      subscribe(event: string, handler: Function): Subscription;
+      subscribeOnce(event: string, handler: Function): Subscription;
   }
 
   export class Key {
@@ -270,19 +318,6 @@ declare module 'cryptographix-sim-core'
       verify(algorithm: string | Algorithm, key: Key, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
   }
 
-  export { Container, inject };
-  export interface Injectable {
-      new (...args: any[]): Object;
-  }
-
-  export class EventHub {
-      _eventAggregator: EventAggregator;
-      constructor();
-      publish(event: string, data?: any): void;
-      subscribe(event: string, handler: Function): Subscription;
-      subscribeOnce(event: string, handler: Function): Subscription;
-  }
-
 
 
 
@@ -314,6 +349,7 @@ declare module 'cryptographix-sim-core'
 
 
 
+
   export class Node extends EventHub {
       protected _owner: Graph;
       protected _id: string;
@@ -326,6 +362,7 @@ declare module 'cryptographix-sim-core'
       toObject(opts?: any): Object;
       owner: Graph;
       id: string;
+      updatePorts(endPoints: EndPoint[]): void;
       protected addPlaceholderPort(id: string, attributes: {}): Port;
       ports: Map<string, Port>;
       getPortArray(): Port[];
@@ -355,7 +392,9 @@ declare module 'cryptographix-sim-core'
       private _config;
       private _container;
       private _factory;
+      private _node;
       constructor(factory: ComponentFactory, container: Container, id: string, config: {}, deps?: Injectable[]);
+      node: Node;
       instance: Component;
       container: Container;
       load(): Promise<void>;
@@ -363,7 +402,6 @@ declare module 'cryptographix-sim-core'
       runState: RunState;
       private inState(states);
       setRunState(runState: RunState): void;
-      protected reconcilePorts(endPoints: EndPointCollection): void;
       release(): void;
   }
 

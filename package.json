@@ -1,6 +1,6 @@
 {
   "name": "cryptographix-sim-core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "An extensible framework for simulation of application-security building blocks",
   "keywords": [
     "cryptographic",

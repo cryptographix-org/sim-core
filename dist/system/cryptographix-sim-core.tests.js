@@ -1,16 +1,29 @@
 System.register(["cryptographix-sim-core"], function (_export) {
     "use strict";
 
-    var Container, inject, Graph, Node, Port, Direction, Network, ComponentFactory, RunState, Channel, EndPoint, Message, ByteArray, __decorate, __metadata, C1, C2, jsonGraph1, IntegerMessage, __decorate, __metadata, gr1, C, __decorate, __metadata, StateLogger;
+    var Graph, Node, Port, Direction, Network, ComponentFactory, RunState, Container, inject, ByteArray, Kind, KindBuilder, FieldTypes, Channel, EndPoint, Message, jsonGraph1, __decorate, __metadata, C1, C2, Oranges, FruityKind, IntegerMessage, __decorate, __metadata, gr1, C, __decorate, __metadata, StateLogger;
 
     function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+    function dumpKind(kind) {
+        var fields = Kind.getKindInfo(kind).fields;
+        for (var _name in fields) {
+            var field = fields[_name];
+
+            var fieldType = field.fieldType;
+            console.log(_name + ' => ' + typeof fieldType);
+            if (fieldType == String) console.log("string");else if (fieldType == Number) console.log("number");else if (fieldType == FieldTypes.Integer) console.log("integer");else if (fieldType == Boolean) console.log("boolean");else if (fieldType == FieldTypes.Enum) {
+                console.log("enum: " + field.enumMap.size);
+                field.enumMap.forEach(function (v, i) {
+                    console.log(v + ' = ' + i);
+                });
+            } else console.log(fieldType.toString);
+        }
+    }
     return {
         setters: [function (_cryptographixSimCore) {
-            Container = _cryptographixSimCore.Container;
-            inject = _cryptographixSimCore.inject;
             Graph = _cryptographixSimCore.Graph;
             Node = _cryptographixSimCore.Node;
             Port = _cryptographixSimCore.Port;
@@ -18,43 +31,17 @@ System.register(["cryptographix-sim-core"], function (_export) {
             Network = _cryptographixSimCore.Network;
             ComponentFactory = _cryptographixSimCore.ComponentFactory;
             RunState = _cryptographixSimCore.RunState;
+            Container = _cryptographixSimCore.Container;
+            inject = _cryptographixSimCore.inject;
+            ByteArray = _cryptographixSimCore.ByteArray;
+            Kind = _cryptographixSimCore.Kind;
+            KindBuilder = _cryptographixSimCore.KindBuilder;
+            FieldTypes = _cryptographixSimCore.FieldTypes;
             Channel = _cryptographixSimCore.Channel;
             EndPoint = _cryptographixSimCore.EndPoint;
             Message = _cryptographixSimCore.Message;
-            ByteArray = _cryptographixSimCore.ByteArray;
         }],
         execute: function () {
-            __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
-                var c = arguments.length,
-                    r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-                    d;
-                if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-                return c > 3 && r && Object.defineProperty(target, key, r), r;
-            };
-
-            __metadata = undefined && undefined.__metadata || function (k, v) {
-                if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-            };
-
-            C1 = function C1() {
-                _classCallCheck(this, C1);
-            };
-
-            C2 = function C2(c1) {
-                _classCallCheck(this, C2);
-
-                this.c1 = c1;
-            };
-
-            C2 = __decorate([inject(), __metadata('design:paramtypes', [C1])], C2);
-            describe("A DI Container", function () {
-                it("injects into the class constructor", function () {
-                    var jector = new Container();
-                    var c2 = jector.invoke(C2);
-                    expect(c2.c1 instanceof C1).toBe(true);
-                });
-            });
-
             jsonGraph1 = {
                 id: "Graph1",
                 component: "g",
@@ -234,6 +221,82 @@ System.register(["cryptographix-sim-core"], function (_export) {
                 });
             });
 
+            __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+                var c = arguments.length,
+                    r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+                    d;
+                if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+                return c > 3 && r && Object.defineProperty(target, key, r), r;
+            };
+
+            __metadata = undefined && undefined.__metadata || function (k, v) {
+                if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+            };
+
+            C1 = function C1() {
+                _classCallCheck(this, C1);
+            };
+
+            C2 = function C2(c1) {
+                _classCallCheck(this, C2);
+
+                this.c1 = c1;
+            };
+
+            C2 = __decorate([inject(), __metadata('design:paramtypes', [C1])], C2);
+            describe("A DI Container", function () {
+                it("injects into the class constructor", function () {
+                    var jector = new Container();
+                    var c2 = jector.invoke(C2);
+                    expect(c2.c1 instanceof C1).toBe(true);
+                });
+            });
+
+            describe('A ByteArray', function () {
+                it('stores a sequence of bytes', function () {
+                    var bs = new ByteArray([0, 1, 2, 3, 4]);
+                    expect(bs.toString()).toBe("0001020304");
+                });
+                it('can be instanciated from an array of bytes', function () {
+                    var bs = new ByteArray([0, 1, 2, 3, 4]);
+                    expect(bs.toString()).toBe("0001020304");
+                    var bytes = [];
+                    for (var i = 0; i < 10000; ++i) {
+                        bytes[i] = i & 0xff;
+                    }bs = new ByteArray(bytes);
+                    expect(bs.length).toBe(10000);
+                });
+                it('can be compared (equal)', function () {
+                    var bs1 = new ByteArray([0, 1, 2, 3, 4]);
+                    var bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
+                    var bs3 = bs1.clone().setByteAt(1, 0x99);
+
+                    expect(bs1.equals(bs1)).toBe(true);
+
+                    expect(bs1.equals(bs2)).toBe(true);
+                    expect(bs1.equals(bs3)).not.toBe(true);
+                });
+            });
+            (function (Oranges) {
+                Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
+                Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
+                Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
+                Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
+            })(Oranges || (Oranges = {}));
+
+            FruityKind = function FruityKind() {
+                _classCallCheck(this, FruityKind);
+            };
+
+            KindBuilder.init(FruityKind, 'a Collection of fruit').stringField('banana', 'a banana').numberField('apple', 'an apple').enumField('orange', 'some sort of orange', Oranges).boolField('bit', 'a bitapple').byteField('pear', 'a pear');
+            describe('A Kind', function () {
+                it('is an interface implemented by classes', function () {
+                    var fk = new FruityKind();
+                    console.log(Kind.getKindInfo(fk).name);
+                    dumpKind(fk);
+                });
+            });
+
             IntegerMessage = (function (_Message) {
                 _inherits(IntegerMessage, _Message);
 
@@ -377,32 +440,6 @@ System.register(["cryptographix-sim-core"], function (_export) {
                 });
             });
 
-            describe('A ByteArray', function () {
-                it('stores a sequence of bytes', function () {
-                    var bs = new ByteArray([0, 1, 2, 3, 4]);
-                    expect(bs.toString()).toBe("0001020304");
-                });
-                it('can be instanciated from an array of bytes', function () {
-                    var bs = new ByteArray([0, 1, 2, 3, 4]);
-                    expect(bs.toString()).toBe("0001020304");
-                    var bytes = [];
-                    for (var i = 0; i < 10000; ++i) {
-                        bytes[i] = i & 0xff;
-                    }bs = new ByteArray(bytes);
-                    expect(bs.length).toBe(10000);
-                });
-                it('can be compared (equal)', function () {
-                    var bs1 = new ByteArray([0, 1, 2, 3, 4]);
-                    var bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
-                    var bs3 = bs1.clone().setByteAt(1, 0x99);
-
-                    expect(bs1.equals(bs1)).toBe(true);
-
-                    expect(bs1.equals(bs2)).toBe(true);
-                    expect(bs1.equals(bs3)).not.toBe(true);
-                });
-            });
-
             __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
                 var c = arguments.length,
                     r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
@@ -432,7 +469,7 @@ System.register(["cryptographix-sim-core"], function (_export) {
 
                 C.prototype.initialize = function initialize(initialData) {
                     console.log('C1 created with init data' + JSON.stringify(initialData));
-                    return {};
+                    return [];
                 };
 
                 C.prototype.start = function start() {
@@ -490,7 +527,7 @@ System.register(["cryptographix-sim-core"], function (_export) {
 
                 StateLogger.prototype.initialize = function initialize(initialData) {
                     this.state = "initialized";
-                    return {};
+                    return [];
                 };
 
                 StateLogger.prototype.teardown = function teardown() {
