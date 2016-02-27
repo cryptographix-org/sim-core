@@ -4,6 +4,7 @@ import { EventHub } from '../event-hub/event-hub';
 
 import { Graph } from './graph';
 import { Port } from './port';
+import { EndPoint } from '../messaging/end-point';
 
 export class Node extends EventHub
 {
@@ -86,6 +87,38 @@ export class Node extends EventHub
     this._id = id;
   }
 
+  public updatePorts( endPoints: EndPoint[] ) {
+    let currentPorts = this._ports;
+    let newPorts: Map<string,Port> = new Map<string, Port>();
+
+    // Param endPoints is an array of EndPoints exported by a component
+    // update our map of Ports to reflect this array
+    // This may mean including a new Port, updating an existing Port to
+    // use this supplied EndPoint, or even deleting a 'no-longer' valid Port
+    endPoints.forEach( (ep: EndPoint ) => {
+      let id = ep.id;
+
+      if ( currentPorts.has( id ) ) {
+        let port = currentPorts.get( id );
+
+        port.endPoint = ep;
+
+        newPorts.set( id, port );
+
+        currentPorts.delete( id );
+      }
+      else {
+        // endPoint not found, create a port for it
+        let port = new Port( this, ep, { id: id, direction: ep.direction } );
+
+        newPorts.set( id, port );
+      }
+    });
+
+    this._ports = newPorts;
+  }
+
+
   /**
    * Add a placeholder Port
    */
@@ -165,8 +198,8 @@ export class Node extends EventHub
     // Get a ComponentContext responsable for Component's life-cycle control
     let ctx = this._context = factory.createContext( this._component, this._initialData );
 
-    // Make Node visible to instance
-    ctx.container.registerInstance( Node, this );
+    // Make ourselves visible to context (and instance)
+    ctx.node = this;
 
     let me = this;
 

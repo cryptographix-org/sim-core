@@ -11,9 +11,9 @@ class StateLogger implements Component {
     this.state = "created";
   }
 
-  initialize( initialData: Kind ): EndPointCollection {
+  initialize( initialData: Kind ): EndPoint[] {
     this.state = "initialized";
-    return {};
+    return [];
   }
 
   teardown() {

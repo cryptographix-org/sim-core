@@ -1,4 +1,4 @@
-import { Kind, EndPoint, EndPointCollection} from 'cryptographix-sim-core';
+import { Kind, EndPoint } from 'cryptographix-sim-core';
 import { Network, Graph, Node } from 'cryptographix-sim-core';
 import { ComponentFactory, ModuleLoader, Container, inject } from 'cryptographix-sim-core';
 
@@ -18,10 +18,10 @@ class C {
     console.log( 'C1 got node: ' + node.id );
   }
 
-  initialize( initialData: Kind ): EndPointCollection {
+  initialize( initialData: Kind ): EndPoint[] {
     console.log( 'C1 created with init data' + JSON.stringify( initialData ) );
 
-    return {};
+    return [];
   }
 
   start() {

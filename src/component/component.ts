@@ -1,7 +1,7 @@
 import { PortInfo } from './port-info';
 import { StoreInfo } from './store-info';
 import { ComponentInfo } from './component-info';
-import { EndPointCollection, Direction } from '../messaging/end-point';
+import { EndPoint, Direction } from '../messaging/end-point';
 import { Protocol } from '../messaging/protocol';
 import { Kind } from '../kind/kind';
 
@@ -52,19 +52,18 @@ export class ComponentBuilder
     this.ctor.componentInfo.name = name;
     return this;
   }
-
 }
 
 /**
 * Components are runtime objects that execute within a Graph.
-* A graph Node is a placeholder for the actual Component what
+* A graph Node is a placeholder for the actual Component that
 * will execute.
 * This interface defines the standard methods and properties that a Component
 * can optionally implement.
 */
 export interface Component
 {
-  initialize?( config: Kind ): EndPointCollection;
+  initialize?( config: Kind ): EndPoint[];
   teardown?();
 
   start?();

@@ -67,6 +67,5 @@ describe("A Graph", ()=> {
 
     expect( p1x.direction ).toEqual( Direction.INOUT );
     expect( p2a.direction ).toEqual( Direction.IN );
-
   } );
 } );

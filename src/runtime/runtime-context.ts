@@ -1,6 +1,7 @@
 import { Kind } from '../kind/kind';
-import { EndPointCollection } from '../messaging/end-point';
+import { EndPoint, EndPointCollection } from '../messaging/end-point';
 import { Node } from '../graph/node';
+import { Port } from '../graph/port';
 import { ComponentFactory} from './component-factory';
 import { Component } from '../component/component';
 
@@ -46,6 +47,11 @@ export class RuntimeContext
   private _factory: ComponentFactory;
 
   /**
+  * The node
+  */
+  private _node: Node;
+
+  /**
   *
   *
   */
@@ -65,6 +71,16 @@ export class RuntimeContext
       if ( !this._container.hasResolver( deps[i] ) )
         this._container.registerSingleton( deps[i], deps[i] );
     }
+  }
+
+  get node(): Node {
+    return this._node;
+  }
+  set node( node: Node ) {
+    this._node = node;
+
+    // make node 'injectable' in container
+    this._container.registerInstance( Node, this );
   }
 
   get instance(): Component {
@@ -144,13 +160,14 @@ export class RuntimeContext
       case RunState.READY:  // initialize or stop node
         if ( this.inState( [ RunState.LOADED ] ) ) {
           // initialize component
-          let endPoints: EndPointCollection = {};
 
-          // TODO:
+          let endPoints: EndPoint[] = [];
+
           if ( inst.initialize )
             endPoints = this.instance.initialize( <Kind>this._config );
 
-          this.reconcilePorts( endPoints );
+          if ( this._node )
+            this._node.updatePorts( endPoints );
         }
         else if ( this.inState( [ RunState.RUNNING, RunState.PAUSED ] ) ) {
           // stop component
@@ -190,11 +207,6 @@ export class RuntimeContext
     }
 
     this._runState = runState;
-  }
-
-  protected reconcilePorts( endPoints: EndPointCollection ) {
-    //let ports = this.node.ports;
-    //end
   }
 
   release() {

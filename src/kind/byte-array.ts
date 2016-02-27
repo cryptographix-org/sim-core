@@ -262,7 +262,7 @@ export class ByteArray //extends Uint8Array
   {
     let s = "";
     for( var i = 0; i < this.length; ++i )
-      s += ( "0" + this.byteArray[ i ].toString( 16 )).substring( -2 );
+      s += ( "0" + this.byteArray[ i ].toString( 16 )).slice( -2 );
 
     return s;
   }
