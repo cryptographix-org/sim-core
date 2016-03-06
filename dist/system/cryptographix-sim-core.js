@@ -1,7 +1,7 @@
 System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], function (_export) {
     'use strict';
 
-    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteArray, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, C, EventHub, Key, PrivateKey, PublicKey, KeyPair, CryptographicService, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
+    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteEncoding, ByteArray, CryptographicOperation, CryptographicServiceRegistry, CryptographicServiceProvider, WebCryptoService, DESSecretKey, DESCryptographicService, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
 
     var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -158,20 +158,29 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('Base64Codec', Base64Codec);
 
+            _export('ByteEncoding', ByteEncoding);
+
+            (function (ByteEncoding) {
+                ByteEncoding[ByteEncoding["RAW"] = 0] = "RAW";
+                ByteEncoding[ByteEncoding["HEX"] = 1] = "HEX";
+                ByteEncoding[ByteEncoding["BASE64"] = 2] = "BASE64";
+                ByteEncoding[ByteEncoding["UTF8"] = 3] = "UTF8";
+            })(ByteEncoding || _export('ByteEncoding', ByteEncoding = {}));
+
             ByteArray = (function () {
-                function ByteArray(bytes, format, opt) {
+                function ByteArray(bytes, encoding, opt) {
                     _classCallCheck(this, ByteArray);
 
                     if (!bytes) {
                         this.byteArray = new Uint8Array(0);
-                    } else if (!format || format == ByteArray.BYTES) {
+                    } else if (!encoding || encoding == ByteEncoding.RAW) {
                         if (bytes instanceof ArrayBuffer) this.byteArray = new Uint8Array(bytes);else if (bytes instanceof Uint8Array) this.byteArray = bytes;else if (bytes instanceof ByteArray) this.byteArray = bytes.byteArray;else if (bytes instanceof Array) this.byteArray = new Uint8Array(bytes);
                     } else if (typeof bytes == "string") {
-                        if (format == ByteArray.BASE64) {
+                        if (encoding == ByteEncoding.BASE64) {
                             this.byteArray = Base64Codec.decode(bytes);
-                        } else if (format == ByteArray.HEX) {
+                        } else if (encoding == ByteEncoding.HEX) {
                             this.byteArray = HexCodec.decode(bytes);
-                        } else if (format == ByteArray.UTF8) {
+                        } else if (encoding == ByteEncoding.UTF8) {
                             var l = bytes.length;
                             var ba = new Uint8Array(l);
                             for (var i = 0; i < l; ++i) {
@@ -183,6 +192,23 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                         throw new Error("Invalid Params for ByteArray()");
                     }
                 }
+
+                ByteArray.encodingToString = function encodingToString(encoding) {
+                    switch (encoding) {
+                        case ByteEncoding.BASE64:
+                            return 'BASE64';
+                        case ByteEncoding.UTF8:
+                            return 'UTF8';
+                        case ByteEncoding.HEX:
+                            return 'HEX';
+                        default:
+                            return 'RAW';
+                    }
+                };
+
+                ByteArray.stringToEncoding = function stringToEncoding(encoding) {
+                    if (encoding.toUpperCase() == 'BASE64') return ByteEncoding.BASE64;else if (encoding.toUpperCase() == 'UTF8') return ByteEncoding.UTF8;else if (encoding.toUpperCase() == 'HEX') return ByteEncoding.HEX;else return ByteEncoding.RAW;
+                };
 
                 ByteArray.prototype.equals = function equals(value) {
                     var ba = this.byteArray;
@@ -317,10 +343,592 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('ByteArray', ByteArray);
 
-            ByteArray.BYTES = 0;
-            ByteArray.HEX = 1;
-            ByteArray.BASE64 = 2;
-            ByteArray.UTF8 = 3;
+            ByteArray.RAW = ByteEncoding.RAW;
+            ByteArray.HEX = ByteEncoding.HEX;
+            ByteArray.BASE64 = ByteEncoding.BASE64;
+            ByteArray.UTF8 = ByteEncoding.UTF8;
+
+            _export('CryptographicOperation', CryptographicOperation);
+
+            (function (CryptographicOperation) {
+                CryptographicOperation[CryptographicOperation["ENCRYPT"] = 0] = "ENCRYPT";
+                CryptographicOperation[CryptographicOperation["DECRYPT"] = 1] = "DECRYPT";
+                CryptographicOperation[CryptographicOperation["DIGEST"] = 2] = "DIGEST";
+                CryptographicOperation[CryptographicOperation["SIGN"] = 3] = "SIGN";
+                CryptographicOperation[CryptographicOperation["VERIFY"] = 4] = "VERIFY";
+                CryptographicOperation[CryptographicOperation["DERIVE_BITS"] = 5] = "DERIVE_BITS";
+                CryptographicOperation[CryptographicOperation["DERIVE_KEY"] = 6] = "DERIVE_KEY";
+                CryptographicOperation[CryptographicOperation["IMPORT_KEY"] = 7] = "IMPORT_KEY";
+                CryptographicOperation[CryptographicOperation["EXPORT_KEY"] = 8] = "EXPORT_KEY";
+                CryptographicOperation[CryptographicOperation["GENERATE_KEY"] = 9] = "GENERATE_KEY";
+                CryptographicOperation[CryptographicOperation["WRAP_KEY"] = 10] = "WRAP_KEY";
+                CryptographicOperation[CryptographicOperation["UNWRAP_KEY"] = 11] = "UNWRAP_KEY";
+            })(CryptographicOperation || _export('CryptographicOperation', CryptographicOperation = {}));
+
+            CryptographicServiceRegistry = (function () {
+                function CryptographicServiceRegistry() {
+                    _classCallCheck(this, CryptographicServiceRegistry);
+
+                    this._serviceMap = new Map();
+                    this._keyServiceMap = new Map();
+                }
+
+                CryptographicServiceRegistry.prototype.getService = function getService(algorithm) {
+                    var algo = algorithm instanceof Object ? algorithm.name : algorithm;
+                    var service = this._serviceMap.get(algo);
+                    return { name: algo, instance: service ? new service() : null };
+                };
+
+                CryptographicServiceRegistry.prototype.getKeyService = function getKeyService(algorithm) {
+                    var algo = algorithm instanceof Object ? algorithm.name : algorithm;
+                    var service = this._keyServiceMap.get(algo);
+                    return { name: algo, instance: service ? new service() : null };
+                };
+
+                CryptographicServiceRegistry.prototype.setService = function setService(algorithm, ctor, opers) {
+                    ctor.supportedOperations = opers;
+                    this._serviceMap.set(algorithm, ctor);
+                };
+
+                CryptographicServiceRegistry.prototype.setKeyService = function setKeyService(algorithm, ctor, opers) {
+                    ctor.supportedOperations = opers;
+                    this._keyServiceMap.set(algorithm, ctor);
+                };
+
+                return CryptographicServiceRegistry;
+            })();
+
+            _export('CryptographicServiceRegistry', CryptographicServiceRegistry);
+
+            CryptographicServiceProvider = (function () {
+                function CryptographicServiceProvider() {
+                    _classCallCheck(this, CryptographicServiceProvider);
+                }
+
+                CryptographicServiceProvider.registerService = function registerService(name, ctor, opers) {
+                    CryptographicServiceProvider._registry.setService(name, ctor, opers);
+                };
+
+                CryptographicServiceProvider.registerKeyService = function registerKeyService(name, ctor, opers) {
+                    CryptographicServiceProvider._registry.setKeyService(name, ctor, opers);
+                };
+
+                CryptographicServiceProvider.prototype.encrypt = function encrypt(algorithm, key, data) {
+                    var _registry$getService = this.registry.getService(algorithm);
+
+                    var name = _registry$getService.name;
+                    var instance = _registry$getService.instance;
+
+                    return instance && instance.encrypt ? instance.encrypt(name, key, data) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.decrypt = function decrypt(algorithm, key, data) {
+                    var _registry$getService2 = this.registry.getService(algorithm);
+
+                    var name = _registry$getService2.name;
+                    var instance = _registry$getService2.instance;
+
+                    return instance && instance.decrypt ? instance.decrypt(name, key, data) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.digest = function digest(algorithm, data) {
+                    var _registry$getService3 = this.registry.getService(algorithm);
+
+                    var name = _registry$getService3.name;
+                    var instance = _registry$getService3.instance;
+
+                    return instance && instance.digest ? instance.digest(name, data) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.sign = function sign(algorithm, key, data) {
+                    var _registry$getService4 = this.registry.getService(algorithm);
+
+                    var name = _registry$getService4.name;
+                    var instance = _registry$getService4.instance;
+
+                    return instance && instance.sign ? instance.sign(name, key, data) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.verify = function verify(algorithm, key, signature, data) {
+                    var _registry$getService5 = this.registry.getService(algorithm);
+
+                    var name = _registry$getService5.name;
+                    var instance = _registry$getService5.instance;
+
+                    return instance && instance.verify ? instance.verify(name, key, signature, data) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.exportKey = function exportKey(format, key) {
+                    var _registry$getKeyService = this.registry.getKeyService(key.algorithm);
+
+                    var name = _registry$getKeyService.name;
+                    var instance = _registry$getKeyService.instance;
+
+                    return instance && instance.exportKey ? instance.exportKey(format, key) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
+                    var _registry$getKeyService2 = this.registry.getKeyService(algorithm);
+
+                    var name = _registry$getKeyService2.name;
+                    var instance = _registry$getKeyService2.instance;
+
+                    return instance && instance.generateKey ? instance.generateKey(name, extractable, keyUsages) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+                    var _registry$getKeyService3 = this.registry.getKeyService(algorithm);
+
+                    var name = _registry$getKeyService3.name;
+                    var instance = _registry$getKeyService3.instance;
+
+                    return instance && instance.importKey ? instance.importKey(format, keyData, name, extractable, keyUsages) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.deriveKey = function deriveKey(algorithm, baseKey, derivedKeyType, extractable, keyUsages) {
+                    var _registry$getKeyService4 = this.registry.getKeyService(algorithm);
+
+                    var name = _registry$getKeyService4.name;
+                    var instance = _registry$getKeyService4.instance;
+
+                    return instance && instance.deriveKey ? instance.deriveKey(name, baseKey, derivedKeyType, extractable, keyUsages) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.deriveBits = function deriveBits(algorithm, baseKey, length) {
+                    var _registry$getService6 = this.registry.getService(algorithm);
+
+                    var name = _registry$getService6.name;
+                    var instance = _registry$getService6.instance;
+
+                    return instance && instance.deriveBits ? instance.deriveBits(name, baseKey, length) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.wrapKey = function wrapKey(format, key, wrappingKey, wrapAlgorithm) {
+                    var _registry$getKeyService5 = this.registry.getKeyService(key.algorithm);
+
+                    var name = _registry$getKeyService5.name;
+                    var instance = _registry$getKeyService5.instance;
+
+                    return instance && instance.wrapKey ? instance.wrapKey(format, key, wrappingKey, wrapAlgorithm) : Promise.reject("");
+                };
+
+                CryptographicServiceProvider.prototype.unwrapKey = function unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgorithm, unwrappedKeyAlgorithm, extractable, keyUsages) {
+                    var _registry$getKeyService6 = this.registry.getKeyService(unwrapAlgorithm);
+
+                    var name = _registry$getKeyService6.name;
+                    var instance = _registry$getKeyService6.instance;
+
+                    return instance && instance.unwrapKey ? instance.unwrapKey(format, wrappedKey, unwrappingKey, name, unwrappedKeyAlgorithm, extractable, keyUsages) : Promise.reject("");
+                };
+
+                _createClass(CryptographicServiceProvider, [{
+                    key: 'registry',
+                    get: function get() {
+                        return CryptographicServiceProvider._registry;
+                    }
+                }]);
+
+                return CryptographicServiceProvider;
+            })();
+
+            _export('CryptographicServiceProvider', CryptographicServiceProvider);
+
+            CryptographicServiceProvider._registry = new CryptographicServiceRegistry();
+
+            WebCryptoService = (function () {
+                function WebCryptoService() {
+                    _classCallCheck(this, WebCryptoService);
+                }
+
+                WebCryptoService.prototype.encrypt = function encrypt(algorithm, key, data) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.encrypt(algorithm, key, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.decrypt = function decrypt(algorithm, key, data) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.decrypt(algorithm, key, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.digest = function digest(algorithm, data) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.digest(algorithm, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.exportKey = function exportKey(format, key) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.exportKey(format, key).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
+                    return new Promise(function (resolve, reject) {});
+                };
+
+                WebCryptoService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
+                            resolve(res);
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.sign = function sign(algorithm, key, data) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.sign(algorithm, key, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                WebCryptoService.prototype.verify = function verify(algorithm, key, signature, data) {
+                    return new Promise(function (resolve, reject) {
+                        WebCryptoService.subtle.verify(algorithm, key, signature.backingArray, data.backingArray).then(function (res) {
+                            resolve(new ByteArray(res));
+                        })['catch'](function (err) {
+                            reject(err);
+                        });
+                    });
+                };
+
+                _createClass(WebCryptoService, null, [{
+                    key: 'subtle',
+                    get: function get() {
+                        var subtle = WebCryptoService._subtle || window && window.crypto.subtle || msrcrypto;
+                        if (!WebCryptoService._subtle) WebCryptoService._subtle = subtle;
+                        return subtle;
+                    }
+                }]);
+
+                return WebCryptoService;
+            })();
+
+            _export('WebCryptoService', WebCryptoService);
+
+            if (WebCryptoService.subtle) {
+                CryptographicServiceProvider.registerService('AES-CBC', WebCryptoService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+                CryptographicServiceProvider.registerService('AES-GCM', WebCryptoService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+            }
+
+            DESSecretKey = (function () {
+                function DESSecretKey(keyMaterial, algorithm, extractable, usages) {
+                    _classCallCheck(this, DESSecretKey);
+
+                    this._keyMaterial = keyMaterial;
+                    this._algorithm = algorithm;
+                    this._extractable = extractable;
+                    this._type = 'secret';
+                    this._usages = usages;
+                    Object.freeze(this._usages);
+                }
+
+                _createClass(DESSecretKey, [{
+                    key: 'algorithm',
+                    get: function get() {
+                        return this._algorithm;
+                    }
+                }, {
+                    key: 'extractable',
+                    get: function get() {
+                        return this._extractable;
+                    }
+                }, {
+                    key: 'type',
+                    get: function get() {
+                        return this._type;
+                    }
+                }, {
+                    key: 'usages',
+                    get: function get() {
+                        return Array.from(this._usages);
+                    }
+                }, {
+                    key: 'keyMaterial',
+                    get: function get() {
+                        return this._keyMaterial;
+                    }
+                }]);
+
+                return DESSecretKey;
+            })();
+
+            DESCryptographicService = (function () {
+                function DESCryptographicService() {
+                    _classCallCheck(this, DESCryptographicService);
+                }
+
+                DESCryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
+                    var _this = this;
+
+                    return new Promise(function (resolve, reject) {
+                        var desKey = key;
+                        resolve(new ByteArray(_this.des(desKey.keyMaterial.backingArray, data.backingArray, 1, 0)));
+                    });
+                };
+
+                DESCryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
+                    var _this2 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        var desKey = key;
+                        resolve(new ByteArray(_this2.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
+                    });
+                };
+
+                DESCryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+                    return new Promise(function (resolve, reject) {
+                        var desKey = new DESSecretKey(keyData, algorithm, extractable, keyUsages);
+                        resolve(desKey);
+                    });
+                };
+
+                DESCryptographicService.prototype.sign = function sign(algorithm, key, data) {
+                    var _this3 = this;
+
+                    return new Promise(function (resolve, reject) {
+                        var desKey = key;
+                        resolve(new ByteArray(_this3.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
+                    });
+                };
+
+                DESCryptographicService.prototype.des = function des(key, message, encrypt, mode, iv, padding) {
+                    function des_createKeys(key) {
+                        var desPC = DESCryptographicService.desPC;
+                        if (!desPC) {
+                            desPC = DESCryptographicService.desPC = {
+                                pc2bytes0: new Uint32Array([0, 0x4, 0x20000000, 0x20000004, 0x10000, 0x10004, 0x20010000, 0x20010004, 0x200, 0x204, 0x20000200, 0x20000204, 0x10200, 0x10204, 0x20010200, 0x20010204]),
+                                pc2bytes1: new Uint32Array([0, 0x1, 0x100000, 0x100001, 0x4000000, 0x4000001, 0x4100000, 0x4100001, 0x100, 0x101, 0x100100, 0x100101, 0x4000100, 0x4000101, 0x4100100, 0x4100101]),
+                                pc2bytes2: new Uint32Array([0, 0x8, 0x800, 0x808, 0x1000000, 0x1000008, 0x1000800, 0x1000808, 0, 0x8, 0x800, 0x808, 0x1000000, 0x1000008, 0x1000800, 0x1000808]),
+                                pc2bytes3: new Uint32Array([0, 0x200000, 0x8000000, 0x8200000, 0x2000, 0x202000, 0x8002000, 0x8202000, 0x20000, 0x220000, 0x8020000, 0x8220000, 0x22000, 0x222000, 0x8022000, 0x8222000]),
+                                pc2bytes4: new Uint32Array([0, 0x40000, 0x10, 0x40010, 0, 0x40000, 0x10, 0x40010, 0x1000, 0x41000, 0x1010, 0x41010, 0x1000, 0x41000, 0x1010, 0x41010]),
+                                pc2bytes5: new Uint32Array([0, 0x400, 0x20, 0x420, 0, 0x400, 0x20, 0x420, 0x2000000, 0x2000400, 0x2000020, 0x2000420, 0x2000000, 0x2000400, 0x2000020, 0x2000420]),
+                                pc2bytes6: new Uint32Array([0, 0x10000000, 0x80000, 0x10080000, 0x2, 0x10000002, 0x80002, 0x10080002, 0, 0x10000000, 0x80000, 0x10080000, 0x2, 0x10000002, 0x80002, 0x10080002]),
+                                pc2bytes7: new Uint32Array([0, 0x10000, 0x800, 0x10800, 0x20000000, 0x20010000, 0x20000800, 0x20010800, 0x20000, 0x30000, 0x20800, 0x30800, 0x20020000, 0x20030000, 0x20020800, 0x20030800]),
+                                pc2bytes8: new Uint32Array([0, 0x40000, 0, 0x40000, 0x2, 0x40002, 0x2, 0x40002, 0x2000000, 0x2040000, 0x2000000, 0x2040000, 0x2000002, 0x2040002, 0x2000002, 0x2040002]),
+                                pc2bytes9: new Uint32Array([0, 0x10000000, 0x8, 0x10000008, 0, 0x10000000, 0x8, 0x10000008, 0x400, 0x10000400, 0x408, 0x10000408, 0x400, 0x10000400, 0x408, 0x10000408]),
+                                pc2bytes10: new Uint32Array([0, 0x20, 0, 0x20, 0x100000, 0x100020, 0x100000, 0x100020, 0x2000, 0x2020, 0x2000, 0x2020, 0x102000, 0x102020, 0x102000, 0x102020]),
+                                pc2bytes11: new Uint32Array([0, 0x1000000, 0x200, 0x1000200, 0x200000, 0x1200000, 0x200200, 0x1200200, 0x4000000, 0x5000000, 0x4000200, 0x5000200, 0x4200000, 0x5200000, 0x4200200, 0x5200200]),
+                                pc2bytes12: new Uint32Array([0, 0x1000, 0x8000000, 0x8001000, 0x80000, 0x81000, 0x8080000, 0x8081000, 0x10, 0x1010, 0x8000010, 0x8001010, 0x80010, 0x81010, 0x8080010, 0x8081010]),
+                                pc2bytes13: new Uint32Array([0, 0x4, 0x100, 0x104, 0, 0x4, 0x100, 0x104, 0x1, 0x5, 0x101, 0x105, 0x1, 0x5, 0x101, 0x105])
+                            };
+                        }
+                        var iterations = key.length > 8 ? 3 : 1;
+                        var keys = new Uint32Array(32 * iterations);
+                        var shifts = [0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0];
+                        var lefttemp,
+                            righttemp,
+                            m = 0,
+                            n = 0,
+                            temp;
+                        for (var j = 0; j < iterations; j++) {
+                            left = key[m++] << 24 | key[m++] << 16 | key[m++] << 8 | key[m++];
+                            right = key[m++] << 24 | key[m++] << 16 | key[m++] << 8 | key[m++];
+                            temp = (left >>> 4 ^ right) & 0x0f0f0f0f;
+                            right ^= temp;
+                            left ^= temp << 4;
+                            temp = (right >>> -16 ^ left) & 0x0000ffff;
+                            left ^= temp;
+                            right ^= temp << -16;
+                            temp = (left >>> 2 ^ right) & 0x33333333;
+                            right ^= temp;
+                            left ^= temp << 2;
+                            temp = (right >>> -16 ^ left) & 0x0000ffff;
+                            left ^= temp;
+                            right ^= temp << -16;
+                            temp = (left >>> 1 ^ right) & 0x55555555;
+                            right ^= temp;
+                            left ^= temp << 1;
+                            temp = (right >>> 8 ^ left) & 0x00ff00ff;
+                            left ^= temp;
+                            right ^= temp << 8;
+                            temp = (left >>> 1 ^ right) & 0x55555555;
+                            right ^= temp;
+                            left ^= temp << 1;
+                            temp = left << 8 | right >>> 20 & 0x000000f0;
+                            left = right << 24 | right << 8 & 0xff0000 | right >>> 8 & 0xff00 | right >>> 24 & 0xf0;
+                            right = temp;
+                            for (var i = 0; i < shifts.length; i++) {
+                                if (shifts[i]) {
+                                    left = left << 2 | left >>> 26;
+                                    right = right << 2 | right >>> 26;
+                                } else {
+                                    left = left << 1 | left >>> 27;
+                                    right = right << 1 | right >>> 27;
+                                }
+                                left &= -0xf;
+                                right &= -0xf;
+                                lefttemp = desPC.pc2bytes0[left >>> 28] | desPC.pc2bytes1[left >>> 24 & 0xf] | desPC.pc2bytes2[left >>> 20 & 0xf] | desPC.pc2bytes3[left >>> 16 & 0xf] | desPC.pc2bytes4[left >>> 12 & 0xf] | desPC.pc2bytes5[left >>> 8 & 0xf] | desPC.pc2bytes6[left >>> 4 & 0xf];
+                                righttemp = desPC.pc2bytes7[right >>> 28] | desPC.pc2bytes8[right >>> 24 & 0xf] | desPC.pc2bytes9[right >>> 20 & 0xf] | desPC.pc2bytes10[right >>> 16 & 0xf] | desPC.pc2bytes11[right >>> 12 & 0xf] | desPC.pc2bytes12[right >>> 8 & 0xf] | desPC.pc2bytes13[right >>> 4 & 0xf];
+                                temp = (righttemp >>> 16 ^ lefttemp) & 0x0000ffff;
+                                keys[n++] = lefttemp ^ temp;
+                                keys[n++] = righttemp ^ temp << 16;
+                            }
+                        }
+                        return keys;
+                    }
+                    var desSP = DESCryptographicService.desSP;
+                    if (desSP == undefined) {
+                        desSP = DESCryptographicService.desSP = {
+                            spfunction1: new Uint32Array([0x1010400, 0, 0x10000, 0x1010404, 0x1010004, 0x10404, 0x4, 0x10000, 0x400, 0x1010400, 0x1010404, 0x400, 0x1000404, 0x1010004, 0x1000000, 0x4, 0x404, 0x1000400, 0x1000400, 0x10400, 0x10400, 0x1010000, 0x1010000, 0x1000404, 0x10004, 0x1000004, 0x1000004, 0x10004, 0, 0x404, 0x10404, 0x1000000, 0x10000, 0x1010404, 0x4, 0x1010000, 0x1010400, 0x1000000, 0x1000000, 0x400, 0x1010004, 0x10000, 0x10400, 0x1000004, 0x400, 0x4, 0x1000404, 0x10404, 0x1010404, 0x10004, 0x1010000, 0x1000404, 0x1000004, 0x404, 0x10404, 0x1010400, 0x404, 0x1000400, 0x1000400, 0, 0x10004, 0x10400, 0, 0x1010004]),
+                            spfunction2: new Uint32Array([-0x7fef7fe0, -0x7fff8000, 0x8000, 0x108020, 0x100000, 0x20, -0x7fefffe0, -0x7fff7fe0, -0x7fffffe0, -0x7fef7fe0, -0x7fef8000, -0x80000000, -0x7fff8000, 0x100000, 0x20, -0x7fefffe0, 0x108000, 0x100020, -0x7fff7fe0, 0, -0x80000000, 0x8000, 0x108020, -0x7ff00000, 0x100020, -0x7fffffe0, 0, 0x108000, 0x8020, -0x7fef8000, -0x7ff00000, 0x8020, 0, 0x108020, -0x7fefffe0, 0x100000, -0x7fff7fe0, -0x7ff00000, -0x7fef8000, 0x8000, -0x7ff00000, -0x7fff8000, 0x20, -0x7fef7fe0, 0x108020, 0x20, 0x8000, -0x80000000, 0x8020, -0x7fef8000, 0x100000, -0x7fffffe0, 0x100020, -0x7fff7fe0, -0x7fffffe0, 0x100020, 0x108000, 0, -0x7fff8000, 0x8020, -0x80000000, -0x7fefffe0, -0x7fef7fe0, 0x108000]),
+                            spfunction3: new Uint32Array([0x208, 0x8020200, 0, 0x8020008, 0x8000200, 0, 0x20208, 0x8000200, 0x20008, 0x8000008, 0x8000008, 0x20000, 0x8020208, 0x20008, 0x8020000, 0x208, 0x8000000, 0x8, 0x8020200, 0x200, 0x20200, 0x8020000, 0x8020008, 0x20208, 0x8000208, 0x20200, 0x20000, 0x8000208, 0x8, 0x8020208, 0x200, 0x8000000, 0x8020200, 0x8000000, 0x20008, 0x208, 0x20000, 0x8020200, 0x8000200, 0, 0x200, 0x20008, 0x8020208, 0x8000200, 0x8000008, 0x200, 0, 0x8020008, 0x8000208, 0x20000, 0x8000000, 0x8020208, 0x8, 0x20208, 0x20200, 0x8000008, 0x8020000, 0x8000208, 0x208, 0x8020000, 0x20208, 0x8, 0x8020008, 0x20200]),
+                            spfunction4: new Uint32Array([0x802001, 0x2081, 0x2081, 0x80, 0x802080, 0x800081, 0x800001, 0x2001, 0, 0x802000, 0x802000, 0x802081, 0x81, 0, 0x800080, 0x800001, 0x1, 0x2000, 0x800000, 0x802001, 0x80, 0x800000, 0x2001, 0x2080, 0x800081, 0x1, 0x2080, 0x800080, 0x2000, 0x802080, 0x802081, 0x81, 0x800080, 0x800001, 0x802000, 0x802081, 0x81, 0, 0, 0x802000, 0x2080, 0x800080, 0x800081, 0x1, 0x802001, 0x2081, 0x2081, 0x80, 0x802081, 0x81, 0x1, 0x2000, 0x800001, 0x2001, 0x802080, 0x800081, 0x2001, 0x2080, 0x800000, 0x802001, 0x80, 0x800000, 0x2000, 0x802080]),
+                            spfunction5: new Uint32Array([0x100, 0x2080100, 0x2080000, 0x42000100, 0x80000, 0x100, 0x40000000, 0x2080000, 0x40080100, 0x80000, 0x2000100, 0x40080100, 0x42000100, 0x42080000, 0x80100, 0x40000000, 0x2000000, 0x40080000, 0x40080000, 0, 0x40000100, 0x42080100, 0x42080100, 0x2000100, 0x42080000, 0x40000100, 0, 0x42000000, 0x2080100, 0x2000000, 0x42000000, 0x80100, 0x80000, 0x42000100, 0x100, 0x2000000, 0x40000000, 0x2080000, 0x42000100, 0x40080100, 0x2000100, 0x40000000, 0x42080000, 0x2080100, 0x40080100, 0x100, 0x2000000, 0x42080000, 0x42080100, 0x80100, 0x42000000, 0x42080100, 0x2080000, 0, 0x40080000, 0x42000000, 0x80100, 0x2000100, 0x40000100, 0x80000, 0, 0x40080000, 0x2080100, 0x40000100]),
+                            spfunction6: new Uint32Array([0x20000010, 0x20400000, 0x4000, 0x20404010, 0x20400000, 0x10, 0x20404010, 0x400000, 0x20004000, 0x404010, 0x400000, 0x20000010, 0x400010, 0x20004000, 0x20000000, 0x4010, 0, 0x400010, 0x20004010, 0x4000, 0x404000, 0x20004010, 0x10, 0x20400010, 0x20400010, 0, 0x404010, 0x20404000, 0x4010, 0x404000, 0x20404000, 0x20000000, 0x20004000, 0x10, 0x20400010, 0x404000, 0x20404010, 0x400000, 0x4010, 0x20000010, 0x400000, 0x20004000, 0x20000000, 0x4010, 0x20000010, 0x20404010, 0x404000, 0x20400000, 0x404010, 0x20404000, 0, 0x20400010, 0x10, 0x4000, 0x20400000, 0x404010, 0x4000, 0x400010, 0x20004010, 0, 0x20404000, 0x20000000, 0x400010, 0x20004010]),
+                            spfunction7: new Uint32Array([0x200000, 0x4200002, 0x4000802, 0, 0x800, 0x4000802, 0x200802, 0x4200800, 0x4200802, 0x200000, 0, 0x4000002, 0x2, 0x4000000, 0x4200002, 0x802, 0x4000800, 0x200802, 0x200002, 0x4000800, 0x4000002, 0x4200000, 0x4200800, 0x200002, 0x4200000, 0x800, 0x802, 0x4200802, 0x200800, 0x2, 0x4000000, 0x200800, 0x4000000, 0x200800, 0x200000, 0x4000802, 0x4000802, 0x4200002, 0x4200002, 0x2, 0x200002, 0x4000000, 0x4000800, 0x200000, 0x4200800, 0x802, 0x200802, 0x4200800, 0x802, 0x4000002, 0x4200802, 0x4200000, 0x200800, 0, 0x2, 0x4200802, 0, 0x200802, 0x4200000, 0x800, 0x4000002, 0x4000800, 0x800, 0x200002]),
+                            spfunction8: new Uint32Array([0x10001040, 0x1000, 0x40000, 0x10041040, 0x10000000, 0x10001040, 0x40, 0x10000000, 0x40040, 0x10040000, 0x10041040, 0x41000, 0x10041000, 0x41040, 0x1000, 0x40, 0x10040000, 0x10000040, 0x10001000, 0x1040, 0x41000, 0x40040, 0x10040040, 0x10041000, 0x1040, 0, 0, 0x10040040, 0x10000040, 0x10001000, 0x41040, 0x40000, 0x41040, 0x40000, 0x10041000, 0x1000, 0x40, 0x10040040, 0x1000, 0x41040, 0x10001000, 0x40, 0x10000040, 0x10040000, 0x10040040, 0x10000000, 0x40000, 0x10001040, 0, 0x10041040, 0x40040, 0x10000040, 0x10040000, 0x10001000, 0x10001040, 0, 0x10041040, 0x41000, 0x41000, 0x1040, 0x1040, 0x40040, 0x10000000, 0x10041000])
+                        };
+                    }
+                    var keys = des_createKeys(key);
+                    var m = 0,
+                        i,
+                        j,
+                        temp,
+                        left,
+                        right,
+                        looping;
+                    var cbcleft, cbcleft2, cbcright, cbcright2;
+                    var len = message.length;
+                    var iterations = keys.length == 32 ? 3 : 9;
+                    if (iterations == 3) {
+                        looping = encrypt ? [0, 32, 2] : [30, -2, -2];
+                    } else {
+                        looping = encrypt ? [0, 32, 2, 62, 30, -2, 64, 96, 2] : [94, 62, -2, 32, 64, 2, 30, -2, -2];
+                    }
+                    if (padding != undefined && padding != 4) {
+                        var unpaddedMessage = message;
+                        var pad = 8 - len % 8;
+                        message = new Uint8Array(len + 8);
+                        message.set(unpaddedMessage, 0);
+                        switch (padding) {
+                            case 0:
+                                message.set(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), len);
+                                break;
+                            case 1:
+                                {
+                                    message.set(new Uint8Array([pad, pad, pad, pad, pad, pad, pad, pad]), 8);
+                                    if (pad == 8) len += 8;
+                                    break;
+                                }
+                            case 2:
+                                message.set(new Uint8Array([0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20]), 8);
+                                break;
+                        }
+                        len += 8 - len % 8;
+                    }
+                    var result = new Uint8Array(len);
+                    if (mode == 1) {
+                        var m = 0;
+                        cbcleft = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
+                        cbcright = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
+                    }
+                    var rm = 0;
+                    while (m < len) {
+                        left = message[m++] << 24 | message[m++] << 16 | message[m++] << 8 | message[m++];
+                        right = message[m++] << 24 | message[m++] << 16 | message[m++] << 8 | message[m++];
+                        if (mode == 1) {
+                            if (encrypt) {
+                                left ^= cbcleft;
+                                right ^= cbcright;
+                            } else {
+                                cbcleft2 = cbcleft;
+                                cbcright2 = cbcright;
+                                cbcleft = left;
+                                cbcright = right;
+                            }
+                        }
+                        temp = (left >>> 4 ^ right) & 0x0f0f0f0f;
+                        right ^= temp;
+                        left ^= temp << 4;
+                        temp = (left >>> 16 ^ right) & 0x0000ffff;
+                        right ^= temp;
+                        left ^= temp << 16;
+                        temp = (right >>> 2 ^ left) & 0x33333333;
+                        left ^= temp;
+                        right ^= temp << 2;
+                        temp = (right >>> 8 ^ left) & 0x00ff00ff;
+                        left ^= temp;
+                        right ^= temp << 8;
+                        temp = (left >>> 1 ^ right) & 0x55555555;
+                        right ^= temp;
+                        left ^= temp << 1;
+                        left = left << 1 | left >>> 31;
+                        right = right << 1 | right >>> 31;
+                        for (j = 0; j < iterations; j += 3) {
+                            var endloop = looping[j + 1];
+                            var loopinc = looping[j + 2];
+                            for (i = looping[j]; i != endloop; i += loopinc) {
+                                var right1 = right ^ keys[i];
+                                var right2 = (right >>> 4 | right << 28) ^ keys[i + 1];
+                                temp = left;
+                                left = right;
+                                right = temp ^ (desSP.spfunction2[right1 >>> 24 & 0x3f] | desSP.spfunction4[right1 >>> 16 & 0x3f] | desSP.spfunction6[right1 >>> 8 & 0x3f] | desSP.spfunction8[right1 & 0x3f] | desSP.spfunction1[right2 >>> 24 & 0x3f] | desSP.spfunction3[right2 >>> 16 & 0x3f] | desSP.spfunction5[right2 >>> 8 & 0x3f] | desSP.spfunction7[right2 & 0x3f]);
+                            }
+                            temp = left;
+                            left = right;
+                            right = temp;
+                        }
+                        left = left >>> 1 | left << 31;
+                        right = right >>> 1 | right << 31;
+                        temp = (left >>> 1 ^ right) & 0x55555555;
+                        right ^= temp;
+                        left ^= temp << 1;
+                        temp = (right >>> 8 ^ left) & 0x00ff00ff;
+                        left ^= temp;
+                        right ^= temp << 8;
+                        temp = (right >>> 2 ^ left) & 0x33333333;
+                        left ^= temp;
+                        right ^= temp << 2;
+                        temp = (left >>> 16 ^ right) & 0x0000ffff;
+                        right ^= temp;
+                        left ^= temp << 16;
+                        temp = (left >>> 4 ^ right) & 0x0f0f0f0f;
+                        right ^= temp;
+                        left ^= temp << 4;
+                        if (mode == 1) {
+                            if (encrypt) {
+                                cbcleft = left;
+                                cbcright = right;
+                            } else {
+                                left ^= cbcleft2;
+                                right ^= cbcright2;
+                            }
+                        }
+                        result.set(new Uint8Array([left >>> 24 & 0xff, left >>> 16 & 0xff, left >>> 8 & 0xff, left & 0xff, right >>> 24 & 0xff, right >>> 16 & 0xff, right >>> 8 & 0xff, right & 0xff]), rm);
+                        rm += 8;
+                    }
+                    return result;
+                };
+
+                return DESCryptographicService;
+            })();
+
+            _export('DESCryptographicService', DESCryptographicService);
+
+            CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.IMPORT_KEY]);
 
             Enum = function Enum() {
                 _classCallCheck(this, Enum);
@@ -666,7 +1274,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Channel.prototype.sendMessage = function sendMessage(origin, message) {
-                    var _this = this;
+                    var _this4 = this;
 
                     var isResponse = message.header && message.header.isResponse;
                     if (!this._active) return;
@@ -674,8 +1282,8 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     this._endPoints.forEach(function (endPoint) {
                         if (origin != endPoint) {
                             if (endPoint.direction != Direction.OUT || isResponse) {
-                                _this._taskScheduler.queueTask(function () {
-                                    endPoint.handleMessage(message, origin, _this);
+                                _this4._taskScheduler.queueTask(function () {
+                                    endPoint.handleMessage(message, origin, _this4);
                                 });
                             }
                         }
@@ -739,27 +1347,27 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 EndPoint.prototype.detachAll = function detachAll() {
-                    var _this2 = this;
+                    var _this5 = this;
 
                     this._channels.forEach(function (channel) {
-                        channel.removeEndPoint(_this2);
+                        channel.removeEndPoint(_this5);
                     });
                     this._channels = [];
                 };
 
                 EndPoint.prototype.handleMessage = function handleMessage(message, fromEndPoint, fromChannel) {
-                    var _this3 = this;
+                    var _this6 = this;
 
                     this._messageListeners.forEach(function (messageListener) {
-                        messageListener(message, _this3, fromChannel);
+                        messageListener(message, _this6, fromChannel);
                     });
                 };
 
                 EndPoint.prototype.sendMessage = function sendMessage(message) {
-                    var _this4 = this;
+                    var _this7 = this;
 
                     this._channels.forEach(function (channel) {
-                        channel.sendMessage(_this4, message);
+                        channel.sendMessage(_this7, message);
                     });
                 };
 
@@ -854,7 +1462,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             PortInfo = function PortInfo() {
                 _classCallCheck(this, PortInfo);
 
-                this.index = 0;
+                this.count = 0;
                 this.required = false;
             };
 
@@ -879,39 +1487,43 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             _export('StoreInfo', StoreInfo);
 
             ComponentBuilder = (function () {
-                function ComponentBuilder(ctor, description, category) {
+                function ComponentBuilder(ctor, name, description, category) {
                     _classCallCheck(this, ComponentBuilder);
 
                     this.ctor = ctor;
                     ctor.componentInfo = {
-                        name: ctor.name,
+                        name: name || ctor.name,
                         description: description,
                         detailLink: '',
                         category: category,
                         author: '',
                         ports: {},
-                        stores: {}
+                        stores: {},
+                        configKind: Kind,
+                        defaultConfig: {}
                     };
                 }
 
-                ComponentBuilder.init = function init(ctor, description, category) {
-                    var builder = new ComponentBuilder(ctor, description, category);
+                ComponentBuilder.init = function init(ctor, name, description, category) {
+                    var builder = new ComponentBuilder(ctor, name, description, category);
                     return builder;
                 };
 
-                ComponentBuilder.prototype.port = function port(id, direction, opts) {
-                    opts = opts || {};
-                    this.ctor.componentInfo.ports[id] = {
-                        direction: direction,
-                        protocol: opts.protocol,
-                        index: opts.index,
-                        required: opts.required
-                    };
+                ComponentBuilder.prototype.config = function config(configKind, defaultConfig) {
+                    this.ctor.componentInfo.configKind = configKind;
+                    this.ctor.componentInfo.defaultConfig = defaultConfig;
                     return this;
                 };
 
-                ComponentBuilder.prototype.name = function name(_name) {
-                    this.ctor.componentInfo.name = _name;
+                ComponentBuilder.prototype.port = function port(id, description, direction, opts) {
+                    opts = opts || {};
+                    this.ctor.componentInfo.ports[id] = {
+                        direction: direction,
+                        description: description,
+                        protocol: opts.protocol,
+                        count: opts.count,
+                        required: opts.required
+                    };
                     return this;
                 };
 
@@ -919,12 +1531,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             })();
 
             _export('ComponentBuilder', ComponentBuilder);
-
-            C = function C() {
-                _classCallCheck(this, C);
-            };
-
-            ComponentBuilder.init(C, 'Test Component').port('p1', Direction.IN);
 
             _export('Container', Container);
 
@@ -953,188 +1559,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             })();
 
             _export('EventHub', EventHub);
-
-            Key = (function () {
-                function Key(id, key) {
-                    _classCallCheck(this, Key);
-
-                    this.id = id;
-                    if (key) this.cryptoKey = key;else {
-                        this.cryptoKey = {
-                            type: "",
-                            algorithm: "",
-                            extractable: true,
-                            usages: []
-                        };
-                    }
-                }
-
-                _createClass(Key, [{
-                    key: 'type',
-                    get: function get() {
-                        return this.cryptoKey.type;
-                    }
-                }, {
-                    key: 'algorithm',
-                    get: function get() {
-                        return this.cryptoKey.algorithm;
-                    }
-                }, {
-                    key: 'extractable',
-                    get: function get() {
-                        return this.cryptoKey.extractable;
-                    }
-                }, {
-                    key: 'usages',
-                    get: function get() {
-                        return this.cryptoKey.usages;
-                    }
-                }, {
-                    key: 'innerKey',
-                    get: function get() {
-                        return this.cryptoKey;
-                    }
-                }]);
-
-                return Key;
-            })();
-
-            _export('Key', Key);
-
-            PrivateKey = (function (_Key) {
-                _inherits(PrivateKey, _Key);
-
-                function PrivateKey() {
-                    _classCallCheck(this, PrivateKey);
-
-                    _Key.apply(this, arguments);
-                }
-
-                return PrivateKey;
-            })(Key);
-
-            _export('PrivateKey', PrivateKey);
-
-            PublicKey = (function (_Key2) {
-                _inherits(PublicKey, _Key2);
-
-                function PublicKey() {
-                    _classCallCheck(this, PublicKey);
-
-                    _Key2.apply(this, arguments);
-                }
-
-                return PublicKey;
-            })(Key);
-
-            _export('PublicKey', PublicKey);
-
-            KeyPair = function KeyPair() {
-                _classCallCheck(this, KeyPair);
-            };
-
-            _export('KeyPair', KeyPair);
-
-            CryptographicService = (function () {
-                function CryptographicService() {
-                    _classCallCheck(this, CryptographicService);
-
-                    this.crypto = window.crypto.subtle;
-                    if (!this.crypto && msrcrypto) this.crypto = msrcrypto;
-                }
-
-                CryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
-                    var _this5 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this5.crypto.decrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.digest = function digest(algorithm, data) {
-                    var _this6 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this6.crypto.digest(algorithm, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
-                    var _this7 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this7.crypto.encrypt(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.exportKey = function exportKey(format, key) {
-                    var _this8 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this8.crypto.exportKey(format, key.innerKey).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.generateKey = function generateKey(algorithm, extractable, keyUsages) {
-                    return new Promise(function (resolve, reject) {});
-                };
-
-                CryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
-                    var _this9 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this9.crypto.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages).then(function (res) {
-                            resolve(res);
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.sign = function sign(algorithm, key, data) {
-                    var _this10 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this10.crypto.sign(algorithm, key.innerKey, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                CryptographicService.prototype.verify = function verify(algorithm, key, signature, data) {
-                    var _this11 = this;
-
-                    return new Promise(function (resolve, reject) {
-                        _this11.crypto.verify(algorithm, key.innerKey, signature.backingArray, data.backingArray).then(function (res) {
-                            resolve(new ByteArray(res));
-                        })['catch'](function (err) {
-                            reject(err);
-                        });
-                    });
-                };
-
-                return CryptographicService;
-            })();
-
-            _export('CryptographicService', CryptographicService);
 
             Port = (function () {
                 function Port(owner, endPoint) {
@@ -1202,7 +1626,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 _inherits(PublicPort, _Port);
 
                 function PublicPort(owner, endPoint, attributes) {
-                    var _this12 = this;
+                    var _this8 = this;
 
                     _classCallCheck(this, PublicPort);
 
@@ -1210,10 +1634,10 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     var proxyDirection = this._endPoint.direction == Direction.IN ? Direction.OUT : this._endPoint.direction == Direction.OUT ? Direction.IN : Direction.INOUT;
                     this.proxyEndPoint = new EndPoint(this._endPoint.id, proxyDirection);
                     this.proxyEndPoint.onMessage(function (message) {
-                        _this12._endPoint.handleMessage(message, _this12.proxyEndPoint, _this12.proxyChannel);
+                        _this8._endPoint.handleMessage(message, _this8.proxyEndPoint, _this8.proxyChannel);
                     });
                     this._endPoint.onMessage(function (message) {
-                        _this12.proxyEndPoint.sendMessage(message);
+                        _this8.proxyEndPoint.sendMessage(message);
                     });
                     this.proxyChannel = null;
                 }
@@ -1241,7 +1665,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 _inherits(Node, _EventHub);
 
                 function Node(owner) {
-                    var _this13 = this;
+                    var _this9 = this;
 
                     var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -1255,7 +1679,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     this._ports = new Map();
                     this.metadata = attributes.metadata || {};
                     Object.keys(attributes.ports || {}).forEach(function (id) {
-                        _this13.addPlaceholderPort(id, attributes.ports[id]);
+                        _this9.addPlaceholderPort(id, attributes.ports[id]);
                     });
                 }
 
@@ -1274,7 +1698,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Node.prototype.updatePorts = function updatePorts(endPoints) {
-                    var _this14 = this;
+                    var _this10 = this;
 
                     var currentPorts = this._ports;
                     var newPorts = new Map();
@@ -1286,7 +1710,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                             newPorts.set(id, port);
                             currentPorts['delete'](id);
                         } else {
-                            var port = new Port(_this14, ep, { id: id, direction: ep.direction });
+                            var port = new Port(_this10, ep, { id: id, direction: ep.direction });
                             newPorts.set(id, port);
                         }
                     });
@@ -1330,7 +1754,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     this.unloadComponent();
                     var ctx = this._context = factory.createContext(this._component, this._initialData);
                     ctx.node = this;
-                    var me = this;
                     return ctx.load();
                 };
 
@@ -1399,13 +1822,13 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 }
 
                 RuntimeContext.prototype.load = function load() {
-                    var _this15 = this;
+                    var _this11 = this;
 
                     var me = this;
                     this._instance = null;
                     return new Promise(function (resolve, reject) {
                         me._runState = RunState.LOADING;
-                        _this15._factory.loadComponent(_this15, _this15._id).then(function (instance) {
+                        _this11._factory.loadComponent(_this11, _this11._id).then(function (instance) {
                             me._instance = instance;
                             me.setRunState(RunState.LOADED);
                             resolve();
@@ -1510,7 +1933,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 SystemModuleLoader.prototype.loadModule = function loadModule(id) {
-                    var _this16 = this;
+                    var _this12 = this;
 
                     var newId = System.normalizeSync(id);
                     var existing = this.moduleRegistry[newId];
@@ -1518,7 +1941,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                         return Promise.resolve(existing);
                     }
                     return System['import'](newId).then(function (m) {
-                        _this16.moduleRegistry[newId] = m;
+                        _this12.moduleRegistry[newId] = m;
                         return m;
                     });
                 };
@@ -1551,7 +1974,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 ComponentFactory.prototype.loadComponent = function loadComponent(ctx, id) {
-                    var _this17 = this;
+                    var _this13 = this;
 
                     var createComponent = function createComponent(ctor) {
                         var newInstance = ctx.container.invoke(ctor);
@@ -1559,11 +1982,11 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     };
                     var me = this;
                     return new Promise(function (resolve, reject) {
-                        var ctor = _this17.get(id);
+                        var ctor = _this13.get(id);
                         if (ctor) {
                             resolve(createComponent(ctor));
-                        } else if (_this17._loader) {
-                            _this17._loader.loadModule(id).then(function (ctor) {
+                        } else if (_this13._loader) {
+                            _this13._loader.loadModule(id).then(function (ctor) {
                                 me._components.set(id, ctor);
                                 resolve(createComponent(ctor));
                             })['catch'](function (e) {
@@ -1622,12 +2045,12 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Link.prototype.disconnect = function disconnect() {
-                    var _this18 = this;
+                    var _this14 = this;
 
                     var chan = this._channel;
                     if (chan) {
                         this._channel.endPoints.forEach(function (endPoint) {
-                            endPoint.detach(_this18._channel);
+                            endPoint.detach(_this14._channel);
                         });
                         this._channel = undefined;
                     }
@@ -1691,7 +2114,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 _inherits(Network, _EventHub2);
 
                 function Network(factory, graph) {
-                    var _this19 = this;
+                    var _this15 = this;
 
                     _classCallCheck(this, Network);
 
@@ -1708,7 +2131,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                                 node.loadComponent(me._factory).then(function () {
                                     if (Network.inState([RunState.RUNNING, RunState.PAUSED, RunState.READY], runState)) Network.setRunState(node, RunState.READY);
                                     if (Network.inState([RunState.RUNNING, RunState.PAUSED], runState)) Network.setRunState(node, runState);
-                                    _this19.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
+                                    _this15.publish(Network.EVENT_GRAPH_CHANGE, { node: node });
                                 });
                             })();
                         }
@@ -1716,12 +2139,12 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 }
 
                 Network.prototype.loadComponents = function loadComponents() {
-                    var _this20 = this;
+                    var _this16 = this;
 
                     var me = this;
                     this.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADING });
                     return this._graph.loadComponent(this._factory).then(function () {
-                        _this20.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
+                        _this16.publish(Network.EVENT_STATE_CHANGE, { state: RunState.LOADED });
                     });
                 };
 
@@ -1835,16 +2258,16 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Graph.prototype.initFromObject = function initFromObject(attributes) {
-                    var _this21 = this;
+                    var _this17 = this;
 
                     this.id = attributes.id || "$graph";
                     this._nodes = new Map();
                     this._links = new Map();
                     Object.keys(attributes.nodes || {}).forEach(function (id) {
-                        _this21.addNode(id, attributes.nodes[id]);
+                        _this17.addNode(id, attributes.nodes[id]);
                     });
                     Object.keys(attributes.links || {}).forEach(function (id) {
-                        _this21.addLink(id, attributes.links[id]);
+                        _this17.addLink(id, attributes.links[id]);
                     });
                 };
 
@@ -1862,17 +2285,17 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 };
 
                 Graph.prototype.loadComponent = function loadComponent(factory) {
-                    var _this22 = this;
+                    var _this18 = this;
 
                     return new Promise(function (resolve, reject) {
                         var pendingCount = 0;
-                        var nodes = new Map(_this22._nodes);
-                        nodes.set('$graph', _this22);
+                        var nodes = new Map(_this18._nodes);
+                        nodes.set('$graph', _this18);
                         nodes.forEach(function (node, id) {
                             var done = undefined;
                             pendingCount++;
-                            if (node == _this22) {
-                                done = _Node.prototype.loadComponent.call(_this22, factory);
+                            if (node == _this18) {
+                                done = _Node.prototype.loadComponent.call(_this18, factory);
                             } else {
                                 done = node.loadComponent(factory);
                             }

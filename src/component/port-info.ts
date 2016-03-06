@@ -9,9 +9,13 @@ import { Protocol } from '../messaging/protocol';
 export class PortInfo
 {
   /**
+  * Brief description for the port, to appear in 'hint'
+  */
+  description: string;
+
+  /**
   * Direction: IN, OUT, or INOUT
   *   for client-server, OUT=Client, IN=Server
-  *   for socket
   */
   direction: Direction;
 
@@ -23,7 +27,7 @@ export class PortInfo
   /**
   * RFU - indexable ports
   */
-  index: number = 0;
+  count: number = 0;
 
   /**
   * true is port must be connected for component to execute

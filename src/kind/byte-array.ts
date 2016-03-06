@@ -1,12 +1,44 @@
 import { HexCodec } from './hex-codec';
 import { Base64Codec } from './base64-codec';
 
+export enum ByteEncoding {
+  RAW,
+  HEX,
+  BASE64,
+  UTF8
+}
+
 export class ByteArray //extends Uint8Array
 {
-  public static BYTES = 0;
-  public static HEX = 1;
-  public static BASE64 = 2;
-  public static UTF8 = 3;
+  public static RAW = ByteEncoding.RAW;
+  public static HEX = ByteEncoding.HEX;
+  public static BASE64 = ByteEncoding.BASE64;
+  public static UTF8 = ByteEncoding.UTF8;
+
+  static encodingToString( encoding: ByteEncoding ): string {
+    switch( encoding ) {
+      case ByteEncoding.BASE64:
+        return 'BASE64';
+      case ByteEncoding.UTF8:
+        return 'UTF8';
+      case ByteEncoding.HEX:
+        return 'HEX';
+      default:
+        return 'RAW';
+    }
+  }
+
+  static stringToEncoding( encoding: string ): ByteEncoding {
+    if ( encoding.toUpperCase() == 'BASE64' )
+      return ByteEncoding.BASE64;
+    else if ( encoding.toUpperCase() == 'UTF8' )
+      return ByteEncoding.UTF8;
+    else if ( encoding.toUpperCase() == 'HEX' )
+      return ByteEncoding.HEX;
+    else
+      return ByteEncoding.RAW;
+  }
+
 
   private byteArray: Uint8Array;
   /**
@@ -19,14 +51,14 @@ export class ByteArray //extends Uint8Array
    *     an ArrayBuffer
    *     a Uint8Array
    */
-  constructor( bytes?: ByteArray | Array<number> | String | ArrayBuffer | Uint8Array, format?: number, opt?: any )
+  constructor( bytes?: ByteArray | Array<number> | String | ArrayBuffer | Uint8Array, encoding?: number, opt?: any )
   {
     if ( !bytes )
     {
       // zero-length array
       this.byteArray = new Uint8Array( 0 );
     }
-    else if ( !format || format == ByteArray.BYTES )
+    else if ( !encoding || encoding == ByteEncoding.RAW )
     {
       if ( bytes instanceof ArrayBuffer )
         this.byteArray = new Uint8Array( <ArrayBuffer>bytes );
@@ -43,15 +75,15 @@ export class ByteArray //extends Uint8Array
     }
     else if ( typeof bytes == "string" )
     {
-      if ( format == ByteArray.BASE64 )
+      if ( encoding == ByteEncoding.BASE64 )
       {
           this.byteArray = Base64Codec.decode( <string>bytes );
       }
-      else if ( format == ByteArray.HEX )
+      else if ( encoding == ByteEncoding.HEX )
       {
         this.byteArray = HexCodec.decode( <string>bytes );
       }
-      else if ( format == ByteArray.UTF8 )
+      else if ( encoding == ByteEncoding.UTF8 )
       {
         let l = ( <string>bytes ).length;
         let ba = new Uint8Array( l );

@@ -1,3 +1,4 @@
+import { Kind, KindConstructor } from '../kind/kind';
 import { EndPointCollection, Direction } from '../messaging/end-point';
 import { Protocol } from '../messaging/protocol';
 
@@ -41,6 +42,12 @@ export class ComponentInfo
   */
   ports: { [id: string]: PortInfo } = {};
   stores: { [id: string]: PortInfo } = {};
+
+  /**
+  *
+  */
+  configKind: KindConstructor;
+  defaultConfig: Kind;
 
   constructor()
   {

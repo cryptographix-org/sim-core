@@ -1,4 +1,44 @@
-  import { Graph, Node, Port, Direction, Network, ComponentFactory, RunState, Container, inject, ByteArray, Kind, KindBuilder, FieldTypes, Channel, EndPoint, Message } from 'cryptographix-sim-core';
+  import { Container, inject, ComponentBuilder, Direction, Graph, Node, Port, Network, ComponentFactory, RunState, ByteArray, Kind, KindBuilder, FieldTypes, Channel, EndPoint, Message } from 'cryptographix-sim-core';
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+class C1 {
+}
+let C2 = class {
+    constructor(c1) {
+        this.c1 = c1;
+    }
+};
+C2 = __decorate([
+    inject(), 
+    __metadata('design:paramtypes', [C1])
+], C2);
+describe("A DI Container", function () {
+    it("injects into the class constructor", () => {
+        let jector = new Container();
+        let c2 = jector.invoke(C2);
+        expect(c2.c1 instanceof C1).toBe(true);
+    });
+});
+
+/**
+* Example usage ....
+*/
+class DummyComponent {
+}
+class DummyConfig {
+}
+ComponentBuilder
+    .init(DummyComponent, 'Dummy', 'A Dummy Component for Dummies')
+    .config(DummyConfig)
+    .port('p1', 'port for input', Direction.IN);
 
 let jsonGraph1 = {
     id: "Graph1",
@@ -221,22 +261,168 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-class C1 {
-}
-let C2 = class {
-    constructor(c1) {
-        this.c1 = c1;
+let gr1 = {
+    nodes: {
+        "n1": {
+            component: "c1",
+        },
     }
 };
-C2 = __decorate([
+let C = class {
+    constructor(node) {
+        console.log('C1 got node: ' + node.id);
+    }
+    initialize(initialData) {
+        console.log('C1 created with init data' + JSON.stringify(initialData));
+        return [];
+    }
+    start() {
+        console.log('C1 started ');
+    }
+    stop() {
+        console.log('C1 stopped');
+    }
+};
+C = __decorate([
     inject(), 
-    __metadata('design:paramtypes', [C1])
-], C2);
-describe("A DI Container", function () {
-    it("injects into the class constructor", () => {
-        let jector = new Container();
-        let c2 = jector.invoke(C2);
-        expect(c2.c1 instanceof C1).toBe(true);
+    __metadata('design:paramtypes', [Node])
+], C);
+/*    let loader: ModuleLoader = {
+      loadModule: function( id: string ): Promise<any> {
+        return Promise.resolve( C );
+      }
+    }*/
+describe("A ComponentFactory", function () {
+    describe("without a loader", function () {
+        beforeEach(function () {
+            // Factory with def. container and no loader
+            this.factory = new ComponentFactory();
+            // register a test Component
+            this.factory.register('c1', C);
+        });
+        it('can be used to *load* components', function (done) {
+            let graph = new Graph(null, gr1);
+            let net = new Network(this.factory, graph);
+            // 'load' the components and initialize them
+            net.loadComponents()
+                .then(() => {
+                expect(graph.nodes.get('n1').context.instance).toBeDefined();
+                net.initialize();
+            })
+                .then(() => {
+                done();
+            });
+        });
+        /*it( "loads and registers Components", function(done) {
+          let graph = new Graph( null, gr1 );
+          let net = new Network( this.factory, graph );
+      
+          net.loadComponents()
+            .then( ()=> {
+              expect( net.graph.nodes.get('n1').context ).toBeDefined();
+      
+              net.initialize();
+            })
+            .then( () => {
+              done();
+            })
+      
+        } );*/
+    });
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+let StateLogger = class {
+    constructor() {
+        this.state = "created";
+    }
+    initialize(initialData) {
+        this.state = "initialized";
+        return [];
+    }
+    teardown() {
+        this.state = "finalized";
+    }
+    start() {
+        this.state = "started";
+    }
+    stop() {
+        this.state = "stopped";
+    }
+    pause() {
+        this.state = "paused";
+    }
+    resume() {
+        this.state = "resumed";
+    }
+};
+StateLogger = __decorate([
+    inject(), 
+    __metadata('design:paramtypes', [])
+], StateLogger);
+/*    let loader: ModuleLoader = {
+      loadModule: function( id: string ): Promise<any> {
+        return Promise.resolve( C );
+      }
+    }*/
+describe("A Runtime Context", function () {
+    let gr1 = {
+        nodes: {
+            "n1": {
+                component: "c1",
+            },
+        }
+    };
+    describe("acts as a proxy for the component", function () {
+        let factory = new ComponentFactory();
+        let graph = new Graph(null, gr1);
+        let net = new Network(factory, graph);
+        // register a test Component
+        factory.register('c1', StateLogger);
+        it('controls the component lifecycle', function (done) {
+            let ctx;
+            let comp;
+            // load the components
+            net.loadComponents()
+                .then(() => {
+                ctx = graph.nodes.get('n1').context;
+                comp = ctx.instance;
+                expect(comp instanceof StateLogger).toBe(true);
+                expect(comp.state).toEqual('created');
+                expect(ctx.runState).toEqual(RunState.LOADED);
+            })
+                .then(() => {
+                net.initialize();
+                expect(ctx.runState).toEqual(RunState.READY);
+                expect(comp.state).toEqual('initialized');
+                net.start();
+                expect(ctx.runState).toEqual(RunState.RUNNING);
+                expect(comp.state).toEqual('started');
+                net.pause();
+                expect(ctx.runState).toEqual(RunState.PAUSED);
+                expect(comp.state).toEqual('paused');
+                net.resume();
+                expect(ctx.runState).toEqual(RunState.RUNNING);
+                expect(comp.state).toEqual('resumed');
+                net.stop();
+                expect(ctx.runState).toEqual(RunState.READY);
+                expect(comp.state).toEqual('stopped');
+                net.teardown();
+                expect(ctx.runState).toEqual(RunState.LOADED);
+                expect(comp.state).toEqual('finalized');
+            })
+                .then(() => {
+                done();
+            });
+        });
     });
 });
 
@@ -433,180 +619,6 @@ describe('A Channel', function () {
             ep3.onMessage((m) => { expect(m).toBeDefined(); if (++rcv == 2)
                 done(); });
             ep1.sendMessage(new IntegerMessage(120));
-        });
-    });
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-let gr1 = {
-    nodes: {
-        "n1": {
-            component: "c1",
-        },
-    }
-};
-let C = class {
-    constructor(node) {
-        console.log('C1 got node: ' + node.id);
-    }
-    initialize(initialData) {
-        console.log('C1 created with init data' + JSON.stringify(initialData));
-        return [];
-    }
-    start() {
-        console.log('C1 started ');
-    }
-    stop() {
-        console.log('C1 stopped');
-    }
-};
-C = __decorate([
-    inject(), 
-    __metadata('design:paramtypes', [Node])
-], C);
-/*    let loader: ModuleLoader = {
-      loadModule: function( id: string ): Promise<any> {
-        return Promise.resolve( C );
-      }
-    }*/
-describe("A ComponentFactory", function () {
-    describe("without a loader", function () {
-        beforeEach(function () {
-            // Factory with def. container and no loader
-            this.factory = new ComponentFactory();
-            // register a test Component
-            this.factory.register('c1', C);
-        });
-        it('can be used to *load* components', function (done) {
-            let graph = new Graph(null, gr1);
-            let net = new Network(this.factory, graph);
-            // 'load' the components and initialize them
-            net.loadComponents()
-                .then(() => {
-                expect(graph.nodes.get('n1').context.instance).toBeDefined();
-                net.initialize();
-            })
-                .then(() => {
-                done();
-            });
-        });
-        /*it( "loads and registers Components", function(done) {
-          let graph = new Graph( null, gr1 );
-          let net = new Network( this.factory, graph );
-      
-          net.loadComponents()
-            .then( ()=> {
-              expect( net.graph.nodes.get('n1').context ).toBeDefined();
-      
-              net.initialize();
-            })
-            .then( () => {
-              done();
-            })
-      
-        } );*/
-    });
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-let StateLogger = class {
-    constructor() {
-        this.state = "created";
-    }
-    initialize(initialData) {
-        this.state = "initialized";
-        return [];
-    }
-    teardown() {
-        this.state = "finalized";
-    }
-    start() {
-        this.state = "started";
-    }
-    stop() {
-        this.state = "stopped";
-    }
-    pause() {
-        this.state = "paused";
-    }
-    resume() {
-        this.state = "resumed";
-    }
-};
-StateLogger = __decorate([
-    inject(), 
-    __metadata('design:paramtypes', [])
-], StateLogger);
-/*    let loader: ModuleLoader = {
-      loadModule: function( id: string ): Promise<any> {
-        return Promise.resolve( C );
-      }
-    }*/
-describe("A Runtime Context", function () {
-    let gr1 = {
-        nodes: {
-            "n1": {
-                component: "c1",
-            },
-        }
-    };
-    describe("acts as a proxy for the component", function () {
-        let factory = new ComponentFactory();
-        let graph = new Graph(null, gr1);
-        let net = new Network(factory, graph);
-        // register a test Component
-        factory.register('c1', StateLogger);
-        it('controls the component lifecycle', function (done) {
-            let ctx;
-            let comp;
-            // load the components
-            net.loadComponents()
-                .then(() => {
-                ctx = graph.nodes.get('n1').context;
-                comp = ctx.instance;
-                expect(comp instanceof StateLogger).toBe(true);
-                expect(comp.state).toEqual('created');
-                expect(ctx.runState).toEqual(RunState.LOADED);
-            })
-                .then(() => {
-                net.initialize();
-                expect(ctx.runState).toEqual(RunState.READY);
-                expect(comp.state).toEqual('initialized');
-                net.start();
-                expect(ctx.runState).toEqual(RunState.RUNNING);
-                expect(comp.state).toEqual('started');
-                net.pause();
-                expect(ctx.runState).toEqual(RunState.PAUSED);
-                expect(comp.state).toEqual('paused');
-                net.resume();
-                expect(ctx.runState).toEqual(RunState.RUNNING);
-                expect(comp.state).toEqual('resumed');
-                net.stop();
-                expect(ctx.runState).toEqual(RunState.READY);
-                expect(comp.state).toEqual('stopped');
-                net.teardown();
-                expect(ctx.runState).toEqual(RunState.LOADED);
-                expect(comp.state).toEqual('finalized');
-            })
-                .then(() => {
-                done();
-            });
         });
     });
 });
