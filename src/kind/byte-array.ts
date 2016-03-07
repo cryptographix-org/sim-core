@@ -290,11 +290,31 @@ export class ByteArray //extends Uint8Array
     return this;
   }
 
-  toString( format?: number, opt?: any )
+  toString( encoding?: number, opt?: any )
   {
     let s = "";
-    for( var i = 0; i < this.length; ++i )
-      s += ( "0" + this.byteArray[ i ].toString( 16 )).slice( -2 );
+    let i = 0;
+
+    switch( encoding || ByteEncoding.HEX ) {
+      case ByteEncoding.HEX:
+        //return HexCodec.encode( this.byteArray );
+        for( i = 0; i < this.length; ++i )
+          s += ( "0" + this.byteArray[ i ].toString( 16 )).slice( -2 );
+        break;
+
+      case ByteEncoding.BASE64:
+        return Base64Codec.encode( this.byteArray );
+
+      case ByteEncoding.UTF8:
+        for( i = 0; i < this.length; ++i )
+          s += String.fromCharCode( this.byteArray[ i ] );
+        break;
+
+      default:
+        for( i = 0; i < this.length; ++i )
+          s += String.fromCharCode( this.byteArray[ i ] );
+        break;
+    }
 
     return s;
   }

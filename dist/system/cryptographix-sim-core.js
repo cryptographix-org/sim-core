@@ -311,9 +311,22 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                     }return this;
                 };
 
-                ByteArray.prototype.toString = function toString(format, opt) {
+                ByteArray.prototype.toString = function toString(encoding, opt) {
                     var s = "";
-                    for (var i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).slice(-2);
+                    var i = 0;
+                    switch (encoding || ByteEncoding.HEX) {
+                        case ByteEncoding.HEX:
+                            for (i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).slice(-2);
+                            break;
+                        case ByteEncoding.BASE64:
+                            return Base64Codec.encode(this.byteArray);
+                        case ByteEncoding.UTF8:
+                            for (i = 0; i < this.length; ++i) s += String.fromCharCode(this.byteArray[i]);
+                            break;
+                        default:
+                            for (i = 0; i < this.length; ++i) s += String.fromCharCode(this.byteArray[i]);
+                            break;
+                    }
                     return s;
                 };
 
@@ -617,7 +630,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
                 _createClass(WebCryptoService, null, [{
                     key: 'subtle',
                     get: function get() {
-                        var subtle = WebCryptoService._subtle || window && window.crypto.subtle || msrcrypto;
+                        var subtle = WebCryptoService._subtle || crypto && crypto.subtle || window && window.crypto && window.crypto.subtle || msrcrypto;
                         if (!WebCryptoService._subtle) WebCryptoService._subtle = subtle;
                         return subtle;
                     }
@@ -929,6 +942,10 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             _export('DESCryptographicService', DESCryptographicService);
 
             CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.IMPORT_KEY]);
+
+            _export('Container', Container);
+
+            _export('inject', inject);
 
             Enum = function Enum() {
                 _classCallCheck(this, Enum);
@@ -1531,10 +1548,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             })();
 
             _export('ComponentBuilder', ComponentBuilder);
-
-            _export('Container', Container);
-
-            _export('inject', inject);
 
             EventHub = (function () {
                 function EventHub() {

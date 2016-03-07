@@ -12,7 +12,8 @@ export class WebCryptoService implements CryptographicService, CryptographicKeyS
   static _subtle: SubtleCrypto;
   static get subtle(): SubtleCrypto {
     let subtle = WebCryptoService._subtle
-      || ( window && window.crypto.subtle )
+      || ( crypto && crypto.subtle )
+      || ( window && window.crypto && window.crypto.subtle )
       || msrcrypto;
 
     if ( !WebCryptoService._subtle )

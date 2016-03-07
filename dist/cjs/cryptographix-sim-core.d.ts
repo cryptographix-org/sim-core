@@ -47,7 +47,7 @@ declare module 'cryptographix-sim-core'
       and(value: ByteArray): ByteArray;
       or(value: ByteArray): ByteArray;
       xor(value: ByteArray): ByteArray;
-      toString(format?: number, opt?: any): string;
+      toString(encoding?: number, opt?: any): string;
   }
 
 
@@ -153,6 +153,11 @@ declare module 'cryptographix-sim-core'
       private des(key, message, encrypt, mode, iv?, padding?);
   }
 
+
+  export { Container, inject };
+  export interface Injectable {
+      new (...args: any[]): Object;
+  }
 
 
   export class Enum {
@@ -379,11 +384,6 @@ declare module 'cryptographix-sim-core'
   export interface ComponentConstructor {
       new (...args: any[]): Component;
       componentInfo?: ComponentInfo;
-  }
-
-  export { Container, inject };
-  export interface Injectable {
-      new (...args: any[]): Object;
   }
 
   export class EventHub {
