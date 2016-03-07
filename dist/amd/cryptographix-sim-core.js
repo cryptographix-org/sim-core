@@ -9,32 +9,6 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-    var EventHub = (function () {
-        function EventHub() {
-            _classCallCheck(this, EventHub);
-
-            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
-        }
-
-        EventHub.prototype.publish = function publish(event, data) {
-            this._eventAggregator.publish(event, data);
-        };
-
-        EventHub.prototype.subscribe = function subscribe(event, handler) {
-            return this._eventAggregator.subscribe(event, handler);
-        };
-
-        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
-            return this._eventAggregator.subscribeOnce(event, handler);
-        };
-
-        return EventHub;
-    })();
-
-    exports.EventHub = EventHub;
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
-
     var HexCodec = (function () {
         function HexCodec() {
             _classCallCheck(this, HexCodec);
@@ -1556,7 +1530,34 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
 
     exports.DESCryptographicService = DESCryptographicService;
 
-    CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.IMPORT_KEY]);
+    CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+    CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+
+    var EventHub = (function () {
+        function EventHub() {
+            _classCallCheck(this, EventHub);
+
+            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
+        }
+
+        EventHub.prototype.publish = function publish(event, data) {
+            this._eventAggregator.publish(event, data);
+        };
+
+        EventHub.prototype.subscribe = function subscribe(event, handler) {
+            return this._eventAggregator.subscribe(event, handler);
+        };
+
+        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
+            return this._eventAggregator.subscribeOnce(event, handler);
+        };
+
+        return EventHub;
+    })();
+
+    exports.EventHub = EventHub;
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
 
     var Port = (function () {
         function Port(owner, endPoint) {

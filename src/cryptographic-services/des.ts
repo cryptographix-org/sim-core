@@ -341,4 +341,8 @@ export class DESCryptographicService implements CryptographicService, Cryptograp
 
 CryptographicServiceProvider.registerService( 'DES-ECB',
   DESCryptographicService,
-  [ CryptographicOperation.ENCRYPT, CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.IMPORT_KEY, ] );
+  [ CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT ] );
+
+CryptographicServiceProvider.registerKeyService( 'DES-ECB',
+  DESCryptographicService,
+  [ CryptographicOperation.IMPORT_KEY ] );

@@ -1,7 +1,7 @@
-System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], function (_export) {
+System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], function (_export) {
     'use strict';
 
-    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteEncoding, ByteArray, CryptographicOperation, CryptographicServiceRegistry, CryptographicServiceProvider, WebCryptoService, DESSecretKey, DESCryptographicService, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
+    var EventAggregator, Container, inject, HexCodec, BASE64SPECIALS, Base64Codec, ByteEncoding, ByteArray, CryptographicOperation, CryptographicServiceRegistry, CryptographicServiceProvider, WebCryptoService, DESSecretKey, DESCryptographicService, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
 
     var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -10,11 +10,11 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     return {
-        setters: [function (_aureliaDependencyInjection) {
+        setters: [function (_aureliaEventAggregator) {
+            EventAggregator = _aureliaEventAggregator.EventAggregator;
+        }, function (_aureliaDependencyInjection) {
             Container = _aureliaDependencyInjection.Container;
             inject = _aureliaDependencyInjection.autoinject;
-        }, function (_aureliaEventAggregator) {
-            EventAggregator = _aureliaEventAggregator.EventAggregator;
         }],
         execute: function () {
             HexCodec = (function () {
@@ -941,11 +941,8 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
 
             _export('DESCryptographicService', DESCryptographicService);
 
-            CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.IMPORT_KEY]);
-
-            _export('Container', Container);
-
-            _export('inject', inject);
+            CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+            CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
 
             Enum = function Enum() {
                 _classCallCheck(this, Enum);
@@ -1806,6 +1803,10 @@ System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], fu
             })(EventHub);
 
             _export('Node', Node);
+
+            _export('Container', Container);
+
+            _export('inject', inject);
 
             _export('RunState', RunState);
 
