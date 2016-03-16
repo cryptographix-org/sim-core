@@ -1,7 +1,7 @@
 declare module 'cryptographix-sim-core'
 {
-  import { EventAggregator, Subscription } from 'aurelia-event-aggregator';
   import { Container, autoinject as inject } from 'aurelia-dependency-injection';
+  import { EventAggregator, Subscription } from 'aurelia-event-aggregator';
 
   export class HexCodec {
       private static hexDecodeMap;
@@ -153,6 +153,11 @@ declare module 'cryptographix-sim-core'
       private des(key, message, encrypt, mode, iv?, padding?);
   }
 
+
+  export { Container, inject };
+  export interface Injectable {
+      new (...args: any[]): Object;
+  }
 
 
   export class Enum {
@@ -443,11 +448,6 @@ declare module 'cryptographix-sim-core'
       loadComponent(factory: ComponentFactory): Promise<void>;
       context: RuntimeContext;
       unloadComponent(): void;
-  }
-
-  export { Container, inject };
-  export interface Injectable {
-      new (...args: any[]): Object;
   }
 
 

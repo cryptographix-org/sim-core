@@ -1,7 +1,7 @@
-System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], function (_export) {
+System.register(['aurelia-dependency-injection', 'aurelia-event-aggregator'], function (_export) {
     'use strict';
 
-    var EventAggregator, Container, inject, HexCodec, BASE64SPECIALS, Base64Codec, ByteEncoding, ByteArray, CryptographicOperation, CryptographicServiceRegistry, CryptographicServiceProvider, WebCryptoService, DESSecretKey, DESCryptographicService, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
+    var Container, inject, EventAggregator, HexCodec, BASE64SPECIALS, Base64Codec, ByteEncoding, ByteArray, CryptographicOperation, CryptographicServiceRegistry, CryptographicServiceProvider, WebCryptoService, DESSecretKey, DESCryptographicService, Enum, Integer, FieldArray, FieldTypes, KindInfo, KindBuilder, Kind, Message, KindMessage, window, TaskScheduler, Channel, Direction, EndPoint, ProtocolTypeBits, Protocol, ClientServerProtocol, APDU, APDUMessage, APDUProtocol, PortInfo, ComponentInfo, StoreInfo, ComponentBuilder, EventHub, Port, PublicPort, Node, RunState, RuntimeContext, ModuleRegistryEntry, SystemModuleLoader, ComponentFactory, Link, Network, Graph, SimulationEngine;
 
     var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -10,11 +10,11 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     return {
-        setters: [function (_aureliaEventAggregator) {
-            EventAggregator = _aureliaEventAggregator.EventAggregator;
-        }, function (_aureliaDependencyInjection) {
+        setters: [function (_aureliaDependencyInjection) {
             Container = _aureliaDependencyInjection.Container;
             inject = _aureliaDependencyInjection.autoinject;
+        }, function (_aureliaEventAggregator) {
+            EventAggregator = _aureliaEventAggregator.EventAggregator;
         }],
         execute: function () {
             HexCodec = (function () {
@@ -697,8 +697,18 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
                     var _this = this;
 
                     return new Promise(function (resolve, reject) {
+                        var alg = algorithm instanceof Object ? algorithm.name : algorithm;
                         var desKey = key;
-                        resolve(new ByteArray(_this.des(desKey.keyMaterial.backingArray, data.backingArray, 1, 0)));
+                        var mode = 0,
+                            padding = 4;
+                        var iv = undefined;
+                        if (alg != desKey.algorithm.name) reject(new Error('Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt'));
+                        if (desKey.algorithm.name == 'DES-CBC') {
+                            var ivx = algorithm['iv'] || [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+                            iv = new ByteArray(ivx).backingArray;
+                            mode = 1;
+                        }
+                        if (data.length >= 8 || padding != 4) resolve(new ByteArray(_this.des(desKey.keyMaterial.backingArray, data.backingArray, 1, mode, iv, padding)));else resolve(new ByteArray());
                     });
                 };
 
@@ -706,12 +716,23 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
                     var _this2 = this;
 
                     return new Promise(function (resolve, reject) {
+                        var alg = algorithm instanceof Object ? algorithm.name : algorithm;
                         var desKey = key;
-                        resolve(new ByteArray(_this2.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
+                        var mode = 0,
+                            padding = 4;
+                        var iv = undefined;
+                        if (alg != desKey.algorithm.name) reject(new Error('Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt'));
+                        if (desKey.algorithm.name == 'DES-CBC') {
+                            var ivx = algorithm['iv'] || [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+                            iv = new ByteArray(ivx).backingArray;
+                            mode = 1;
+                        }
+                        if (data.length >= 8) resolve(new ByteArray(_this2.des(desKey.keyMaterial.backingArray, data.backingArray, 0, mode, iv, padding)));else resolve(new ByteArray());
                     });
                 };
 
                 DESCryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+                    if (!(algorithm instanceof Object)) algorithm = { name: algorithm };
                     return new Promise(function (resolve, reject) {
                         var desKey = new DESSecretKey(keyData, algorithm, extractable, keyUsages);
                         resolve(desKey);
@@ -854,9 +875,9 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
                     }
                     var result = new Uint8Array(len);
                     if (mode == 1) {
-                        var m = 0;
-                        cbcleft = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
-                        cbcright = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
+                        var mm = 0;
+                        cbcleft = iv[mm++] << 24 | iv[mm++] << 16 | iv[mm++] << 8 | iv[mm++];
+                        cbcright = iv[mm++] << 24 | iv[mm++] << 16 | iv[mm++] << 8 | iv[mm++];
                     }
                     var rm = 0;
                     while (m < len) {
@@ -942,7 +963,13 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
             _export('DESCryptographicService', DESCryptographicService);
 
             CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+            CryptographicServiceProvider.registerService('DES-CBC', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.SIGN, CryptographicOperation.VERIFY]);
             CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+            CryptographicServiceProvider.registerKeyService('DES-CBC', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+
+            _export('Container', Container);
+
+            _export('inject', inject);
 
             Enum = function Enum() {
                 _classCallCheck(this, Enum);
@@ -1803,10 +1830,6 @@ System.register(['aurelia-event-aggregator', 'aurelia-dependency-injection'], fu
             })(EventHub);
 
             _export('Node', Node);
-
-            _export('Container', Container);
-
-            _export('inject', inject);
 
             _export('RunState', RunState);
 

@@ -34,25 +34,68 @@ export class DESCryptographicService implements CryptographicService, Cryptograp
   constructor() {
   }
 
+  // padding:
+  // 0 = zero-pad
+  // 1 = PKCS7
+  // 2 = spaces
+  // 4 = no-pad
+
   encrypt( algorithm: string | Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray> {
     return new Promise<ByteArray>((resolve, reject) => {
+      let alg = (algorithm instanceof Object) ? (<Algorithm>algorithm).name : <string>algorithm;
       let desKey = key as DESSecretKey;
+      let mode = 0, padding = 4;
+      let iv;
 
-      resolve( new ByteArray( this.des( desKey.keyMaterial.backingArray, data.backingArray, 1, 0 ) ) );
+      if ( alg != desKey.algorithm.name )
+        reject( new Error( 'Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt') );
+
+      if ( desKey.algorithm.name == 'DES-CBC' ) {
+        let ivx = (<Algorithm>algorithm)['iv'] || [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ];
+
+        iv = new ByteArray( ivx ).backingArray;
+
+        mode = 1;
+      }
+
+      if ( ( data.length >= 8 ) || ( padding != 4 ) )
+        resolve( new ByteArray( this.des( desKey.keyMaterial.backingArray, data.backingArray, 1, mode, iv, padding ) ) );
+      else
+        resolve( new ByteArray() );
     });
   }
 
   decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray> {
 
     return new Promise<ByteArray>((resolve, reject) => {
+      let alg = (algorithm instanceof Object) ? (<Algorithm>algorithm).name : <string>algorithm;
       let desKey = key as DESSecretKey;
+      let mode = 0, padding = 4;
+      let iv;
 
-      resolve( new ByteArray( this.des( desKey.keyMaterial.backingArray, data.backingArray, 0, 0 ) ) );
+      if ( alg != desKey.algorithm.name )
+        reject( new Error( 'Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt') );
+
+      if ( desKey.algorithm.name == 'DES-CBC' ) {
+        let ivx = (<Algorithm>algorithm)['iv'] || [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ];
+
+        iv = new ByteArray( ivx ).backingArray;
+
+        mode = 1;
+      }
+
+      if ( data.length >= 8 )
+        resolve( new ByteArray( this.des( desKey.keyMaterial.backingArray, data.backingArray, 0, mode, iv, padding ) ) );
+      else
+        resolve( new ByteArray() );
       //catch((err) => { reject(err); });
     });
   }
 
   importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey> {
+    if ( !( algorithm instanceof Object ) )
+      algorithm = <Algorithm>{ name: <string>algorithm };
+
     return new Promise<CryptoKey>((resolve, reject) => {
       let desKey = new DESSecretKey( keyData, algorithm, extractable, keyUsages );
 
@@ -239,10 +282,10 @@ export class DESCryptographicService implements CryptographicService, Cryptograp
 
     if (mode == 1)
     { //CBC mode
-      var m = 0;
+      let mm = 0;
 
-      cbcleft =  (iv[m++] << 24) | (iv[m++] << 16) | (iv[m++] << 8) | iv[m++];
-      cbcright = (iv[m++] << 24) | (iv[m++] << 16) | (iv[m++] << 8) | iv[m++];
+      cbcleft =  (iv[mm++] << 24) | (iv[mm++] << 16) | (iv[mm++] << 8) | iv[mm++];
+      cbcright = (iv[mm++] << 24) | (iv[mm++] << 16) | (iv[mm++] << 8) | iv[mm++];
     }
 
     var rm = 0;
@@ -343,6 +386,14 @@ CryptographicServiceProvider.registerService( 'DES-ECB',
   DESCryptographicService,
   [ CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT ] );
 
+CryptographicServiceProvider.registerService( 'DES-CBC',
+  DESCryptographicService,
+  [ CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT,  CryptographicOperation.SIGN, CryptographicOperation.VERIFY ] );
+
 CryptographicServiceProvider.registerKeyService( 'DES-ECB',
+  DESCryptographicService,
+  [ CryptographicOperation.IMPORT_KEY ] );
+
+CryptographicServiceProvider.registerKeyService( 'DES-CBC',
   DESCryptographicService,
   [ CryptographicOperation.IMPORT_KEY ] );

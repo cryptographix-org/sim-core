@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], function (exports, _aureliaEventAggregator, _aureliaDependencyInjection) {
+define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], function (exports, _aureliaDependencyInjection, _aureliaEventAggregator) {
     'use strict';
 
     exports.__esModule = true;
@@ -1286,8 +1286,18 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
             var _this5 = this;
 
             return new Promise(function (resolve, reject) {
+                var alg = algorithm instanceof Object ? algorithm.name : algorithm;
                 var desKey = key;
-                resolve(new ByteArray(_this5.des(desKey.keyMaterial.backingArray, data.backingArray, 1, 0)));
+                var mode = 0,
+                    padding = 4;
+                var iv = undefined;
+                if (alg != desKey.algorithm.name) reject(new Error('Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt'));
+                if (desKey.algorithm.name == 'DES-CBC') {
+                    var ivx = algorithm['iv'] || [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+                    iv = new ByteArray(ivx).backingArray;
+                    mode = 1;
+                }
+                if (data.length >= 8 || padding != 4) resolve(new ByteArray(_this5.des(desKey.keyMaterial.backingArray, data.backingArray, 1, mode, iv, padding)));else resolve(new ByteArray());
             });
         };
 
@@ -1295,12 +1305,23 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
             var _this6 = this;
 
             return new Promise(function (resolve, reject) {
+                var alg = algorithm instanceof Object ? algorithm.name : algorithm;
                 var desKey = key;
-                resolve(new ByteArray(_this6.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
+                var mode = 0,
+                    padding = 4;
+                var iv = undefined;
+                if (alg != desKey.algorithm.name) reject(new Error('Key (' + desKey.algorithm.name + ') cannot be used for DES decrypt'));
+                if (desKey.algorithm.name == 'DES-CBC') {
+                    var ivx = algorithm['iv'] || [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+                    iv = new ByteArray(ivx).backingArray;
+                    mode = 1;
+                }
+                if (data.length >= 8) resolve(new ByteArray(_this6.des(desKey.keyMaterial.backingArray, data.backingArray, 0, mode, iv, padding)));else resolve(new ByteArray());
             });
         };
 
         DESCryptographicService.prototype.importKey = function importKey(format, keyData, algorithm, extractable, keyUsages) {
+            if (!(algorithm instanceof Object)) algorithm = { name: algorithm };
             return new Promise(function (resolve, reject) {
                 var desKey = new DESSecretKey(keyData, algorithm, extractable, keyUsages);
                 resolve(desKey);
@@ -1443,9 +1464,9 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
             }
             var result = new Uint8Array(len);
             if (mode == 1) {
-                var m = 0;
-                cbcleft = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
-                cbcright = iv[m++] << 24 | iv[m++] << 16 | iv[m++] << 8 | iv[m++];
+                var mm = 0;
+                cbcleft = iv[mm++] << 24 | iv[mm++] << 16 | iv[mm++] << 8 | iv[mm++];
+                cbcright = iv[mm++] << 24 | iv[mm++] << 16 | iv[mm++] << 8 | iv[mm++];
             }
             var rm = 0;
             while (m < len) {
@@ -1531,7 +1552,12 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
     exports.DESCryptographicService = DESCryptographicService;
 
     CryptographicServiceProvider.registerService('DES-ECB', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT]);
+    CryptographicServiceProvider.registerService('DES-CBC', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.SIGN, CryptographicOperation.VERIFY]);
     CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+    CryptographicServiceProvider.registerKeyService('DES-CBC', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
 
     var EventHub = (function () {
         function EventHub() {
@@ -1556,8 +1582,6 @@ define(['exports', 'aurelia-event-aggregator', 'aurelia-dependency-injection'], 
     })();
 
     exports.EventHub = EventHub;
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
 
     var Port = (function () {
         function Port(owner, endPoint) {
