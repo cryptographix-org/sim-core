@@ -1,4 +1,16 @@
-  import { Container, inject, Graph, Node, Port, Direction, Network, ComponentFactory, RunState, ByteArray, Kind, KindBuilder, FieldTypes, ComponentBuilder, Channel, EndPoint, Message } from 'cryptographix-sim-core';
+  import { ComponentBuilder, Direction, Container, inject, ByteArray, Kind, KindBuilder, FieldTypes, Graph, Node, Port, Network, ComponentFactory, RunState, Channel, EndPoint, Message } from 'cryptographix-sim-core';
+
+/**
+* Example usage ....
+*/
+class DummyComponent {
+}
+class DummyConfig {
+}
+ComponentBuilder
+    .init(DummyComponent, 'Dummy', 'A Dummy Component for Dummies')
+    .config(DummyConfig)
+    .port('p1', 'port for input', Direction.IN);
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25,6 +37,83 @@ describe("A DI Container", function () {
         let jector = new Container();
         let c2 = jector.invoke(C2);
         expect(c2.c1 instanceof C1).toBe(true);
+    });
+});
+
+describe('A ByteArray', () => {
+    it('stores a sequence of bytes', function () {
+        let bs = new ByteArray([0, 1, 2, 3, 4]);
+        expect(bs.toString()).toBe("0001020304");
+    });
+    it('can be instanciated from an array of bytes', function () {
+        let bs = new ByteArray([0, 1, 2, 3, 4]);
+        expect(bs.toString()).toBe("0001020304");
+        var bytes = [];
+        for (let i = 0; i < 10000; ++i)
+            bytes[i] = i & 0xff;
+        bs = new ByteArray(bytes);
+        expect(bs.length).toBe(10000);
+    });
+    it('can be compared (equal)', function () {
+        let bs1 = new ByteArray([0, 1, 2, 3, 4]);
+        let bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
+        let bs3 = bs1.clone().setByteAt(1, 0x99);
+        //    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
+        expect(bs1.equals(bs1)).toBe(true);
+        //    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
+        expect(bs1.equals(bs2)).toBe(true);
+        expect(bs1.equals(bs3)).not.toBe(true);
+    });
+});
+
+function dumpKind(kind) {
+    //  let fields = (<KindConstructor>(kind.constructor)).kindInfo.fields;
+    let fields = Kind.getKindInfo(kind).fields;
+    for (let name in fields) {
+        let field = fields[name];
+        //  fields.forEach( ( field: FieldInfo, name: String ) => {
+        let fieldType = field.fieldType;
+        console.log(name + ' => ' + (typeof fieldType));
+        if (fieldType == String)
+            console.log("string");
+        else if (fieldType == Number)
+            console.log("number");
+        else if (fieldType == FieldTypes.Integer)
+            console.log("integer");
+        else if (fieldType == Boolean)
+            console.log("boolean");
+        else if (fieldType == FieldTypes.Enum) {
+            console.log("enum: " + field.enumMap.size);
+            field.enumMap.forEach((v, i) => { console.log(v + ' = ' + i); });
+        }
+        else
+            console.log(fieldType.toString);
+    }
+}
+var Oranges;
+(function (Oranges) {
+    Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
+    Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
+    Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
+    Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
+})(Oranges || (Oranges = {}));
+/**
+* Example
+*/
+class FruityKind {
+}
+KindBuilder.init(FruityKind, 'a Collection of fruit')
+    .stringField('banana', 'a banana')
+    .numberField('apple', 'an apple')
+    .enumField('orange', 'some sort of orange', Oranges)
+    .boolField('bit', 'a bitapple')
+    .byteField('pear', 'a pear');
+describe('A Kind', () => {
+    it('is an interface implemented by classes', function () {
+        let fk = new FruityKind();
+        console.log(Kind.getKindInfo(fk).name);
+        dumpKind(fk);
+        //expect( bs.toString() ).toBe( "0001020304" );
     });
 });
 
@@ -239,95 +328,6 @@ describe("A Node", function () {
             });*/
     });
 });
-
-describe('A ByteArray', () => {
-    it('stores a sequence of bytes', function () {
-        let bs = new ByteArray([0, 1, 2, 3, 4]);
-        expect(bs.toString()).toBe("0001020304");
-    });
-    it('can be instanciated from an array of bytes', function () {
-        let bs = new ByteArray([0, 1, 2, 3, 4]);
-        expect(bs.toString()).toBe("0001020304");
-        var bytes = [];
-        for (let i = 0; i < 10000; ++i)
-            bytes[i] = i & 0xff;
-        bs = new ByteArray(bytes);
-        expect(bs.length).toBe(10000);
-    });
-    it('can be compared (equal)', function () {
-        let bs1 = new ByteArray([0, 1, 2, 3, 4]);
-        let bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
-        let bs3 = bs1.clone().setByteAt(1, 0x99);
-        //    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
-        expect(bs1.equals(bs1)).toBe(true);
-        //    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
-        expect(bs1.equals(bs2)).toBe(true);
-        expect(bs1.equals(bs3)).not.toBe(true);
-    });
-});
-
-function dumpKind(kind) {
-    //  let fields = (<KindConstructor>(kind.constructor)).kindInfo.fields;
-    let fields = Kind.getKindInfo(kind).fields;
-    for (let name in fields) {
-        let field = fields[name];
-        //  fields.forEach( ( field: FieldInfo, name: String ) => {
-        let fieldType = field.fieldType;
-        console.log(name + ' => ' + (typeof fieldType));
-        if (fieldType == String)
-            console.log("string");
-        else if (fieldType == Number)
-            console.log("number");
-        else if (fieldType == FieldTypes.Integer)
-            console.log("integer");
-        else if (fieldType == Boolean)
-            console.log("boolean");
-        else if (fieldType == FieldTypes.Enum) {
-            console.log("enum: " + field.enumMap.size);
-            field.enumMap.forEach((v, i) => { console.log(v + ' = ' + i); });
-        }
-        else
-            console.log(fieldType.toString);
-    }
-}
-var Oranges;
-(function (Oranges) {
-    Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
-    Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
-    Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
-    Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
-})(Oranges || (Oranges = {}));
-/**
-* Example
-*/
-class FruityKind {
-}
-KindBuilder.init(FruityKind, 'a Collection of fruit')
-    .stringField('banana', 'a banana')
-    .numberField('apple', 'an apple')
-    .enumField('orange', 'some sort of orange', Oranges)
-    .boolField('bit', 'a bitapple')
-    .byteField('pear', 'a pear');
-describe('A Kind', () => {
-    it('is an interface implemented by classes', function () {
-        let fk = new FruityKind();
-        console.log(Kind.getKindInfo(fk).name);
-        dumpKind(fk);
-        //expect( bs.toString() ).toBe( "0001020304" );
-    });
-});
-
-/**
-* Example usage ....
-*/
-class DummyComponent {
-}
-class DummyConfig {
-}
-ComponentBuilder
-    .init(DummyComponent, 'Dummy', 'A Dummy Component for Dummies')
-    .config(DummyConfig)
-    .port('p1', 'port for input', Direction.IN);
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;

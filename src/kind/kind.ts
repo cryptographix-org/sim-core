@@ -215,6 +215,7 @@ export class KindBuilder
 */
 export interface Kind
 {
+//  constructor?( attributes?: {} );
 }
 
 export class Kind implements Kind {
@@ -270,7 +271,7 @@ export class Kind implements Kind {
 
 export interface KindConstructor
 {
-  new ( ...args ): Kind;
+  new ( attributes?: {}, ...args ): Kind;
 
   kindInfo?: KindInfo;
 }

@@ -51,115 +51,6 @@ declare module 'cryptographix-sim-core'
   }
 
 
-  export enum CryptographicOperation {
-      ENCRYPT = 0,
-      DECRYPT = 1,
-      DIGEST = 2,
-      SIGN = 3,
-      VERIFY = 4,
-      DERIVE_BITS = 5,
-      DERIVE_KEY = 6,
-      IMPORT_KEY = 7,
-      EXPORT_KEY = 8,
-      GENERATE_KEY = 9,
-      WRAP_KEY = 10,
-      UNWRAP_KEY = 11,
-  }
-  export interface CryptographicService {
-      encrypt?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      decrypt?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      digest?(algorithm: Algorithm, data: ByteArray): Promise<ByteArray>;
-      sign?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      verify?(algorithm: Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
-      deriveBits?(algorithm: Algorithm, baseKey: CryptoKey, length: number): Promise<ByteArray>;
-  }
-  export interface CryptographicServiceConstructor {
-      new (): CryptographicService;
-      supportedOperations?: CryptographicOperation[];
-  }
-  export interface CryptographicKeyService {
-      deriveKey?(algorithm: Algorithm, baseKey: CryptoKey, derivedKeyType: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      wrapKey?(format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: Algorithm): Promise<ByteArray>;
-      unwrapKey?(format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: Algorithm, unwrappedKeyAlgorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      importKey?(format: string, keyData: ByteArray, algorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      generateKey?(algorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
-      exportKey?(format: string, key: CryptoKey): Promise<ByteArray>;
-  }
-  export interface CryptographicKeyServiceConstructor {
-      new (): CryptographicKeyService;
-      supportedOperations?: CryptographicOperation[];
-  }
-  export class CryptographicServiceRegistry {
-      private _serviceMap;
-      private _keyServiceMap;
-      constructor();
-      getService(algorithm: string | Algorithm): {
-          name: string;
-          instance: CryptographicService;
-      };
-      getKeyService(algorithm: string | Algorithm): {
-          name: string;
-          instance: CryptographicKeyService;
-      };
-      setService(algorithm: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
-      setKeyService(algorithm: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
-  }
-  export class CryptographicServiceProvider implements CryptographicService, CryptographicKeyService {
-      private static _registry;
-      static registerService(name: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
-      static registerKeyService(name: string, ctor: CryptographicKeyServiceConstructor, opers: CryptographicOperation[]): void;
-      registry: CryptographicServiceRegistry;
-      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      digest(algorithm: string | Algorithm, data: ByteArray): Promise<ByteArray>;
-      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
-      exportKey(format: string, key: CryptoKey): Promise<ByteArray>;
-      generateKey(algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
-      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      deriveKey(algorithm: Algorithm, baseKey: CryptoKey, derivedKeyType: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      deriveBits(algorithm: Algorithm, baseKey: CryptoKey, length: number): Promise<ByteArray>;
-      wrapKey(format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: Algorithm): Promise<ByteArray>;
-      unwrapKey(format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: Algorithm, unwrappedKeyAlgorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-  }
-
-
-
-  export class WebCryptoService implements CryptographicService, CryptographicKeyService {
-      protected crypto: SubtleCrypto;
-      constructor();
-      static _subtle: SubtleCrypto;
-      static subtle: SubtleCrypto;
-      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      digest(algorithm: string | Algorithm, data: ByteArray): any;
-      exportKey(format: string, key: CryptoKey): Promise<ByteArray>;
-      generateKey(algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
-      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
-  }
-
-
-
-  export class DESCryptographicService implements CryptographicService, CryptographicKeyService {
-      constructor();
-      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
-      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
-      static desPC: any;
-      static desSP: any;
-      private des(key, message, encrypt, mode, iv?, padding?);
-  }
-
-
-  export { Container, inject };
-  export interface Injectable {
-      new (...args: any[]): Object;
-  }
-
-
   export class Enum {
   }
   export class Integer extends Number {
@@ -223,7 +114,7 @@ declare module 'cryptographix-sim-core'
       static initFields(kind: Kind, attributes?: {}): void;
   }
   export interface KindConstructor {
-      new (...args: any[]): Kind;
+      new (attributes?: {}, ...args: any[]): Kind;
       kindInfo?: KindInfo;
   }
 
@@ -266,7 +157,16 @@ declare module 'cryptographix-sim-core'
 
 
 
+  export type ChannelHookInfo = {
+      message: Message<any>;
+      channel: Channel;
+      origin: EndPoint;
+      destination: EndPoint;
+      sendMessage: () => void;
+  };
   export class Channel {
+      private static _deliveryHook;
+      static setDeliveryHook(deliveryHook: (info: ChannelHookInfo) => boolean): void;
       private _active;
       private _endPoints;
       private _taskScheduler;
@@ -384,6 +284,115 @@ declare module 'cryptographix-sim-core'
   export interface ComponentConstructor {
       new (...args: any[]): Component;
       componentInfo?: ComponentInfo;
+  }
+
+
+  export enum CryptographicOperation {
+      ENCRYPT = 0,
+      DECRYPT = 1,
+      DIGEST = 2,
+      SIGN = 3,
+      VERIFY = 4,
+      DERIVE_BITS = 5,
+      DERIVE_KEY = 6,
+      IMPORT_KEY = 7,
+      EXPORT_KEY = 8,
+      GENERATE_KEY = 9,
+      WRAP_KEY = 10,
+      UNWRAP_KEY = 11,
+  }
+  export interface CryptographicService {
+      encrypt?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      decrypt?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      digest?(algorithm: Algorithm, data: ByteArray): Promise<ByteArray>;
+      sign?(algorithm: Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      verify?(algorithm: Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
+      deriveBits?(algorithm: Algorithm, baseKey: CryptoKey, length: number): Promise<ByteArray>;
+  }
+  export interface CryptographicServiceConstructor {
+      new (): CryptographicService;
+      supportedOperations?: CryptographicOperation[];
+  }
+  export interface CryptographicKeyService {
+      deriveKey?(algorithm: Algorithm, baseKey: CryptoKey, derivedKeyType: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      wrapKey?(format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: Algorithm): Promise<ByteArray>;
+      unwrapKey?(format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: Algorithm, unwrappedKeyAlgorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      importKey?(format: string, keyData: ByteArray, algorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      generateKey?(algorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
+      exportKey?(format: string, key: CryptoKey): Promise<ByteArray>;
+  }
+  export interface CryptographicKeyServiceConstructor {
+      new (): CryptographicKeyService;
+      supportedOperations?: CryptographicOperation[];
+  }
+  export class CryptographicServiceRegistry {
+      private _serviceMap;
+      private _keyServiceMap;
+      constructor();
+      getService(algorithm: string | Algorithm): {
+          name: string;
+          instance: CryptographicService;
+      };
+      getKeyService(algorithm: string | Algorithm): {
+          name: string;
+          instance: CryptographicKeyService;
+      };
+      setService(algorithm: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
+      setKeyService(algorithm: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
+  }
+  export class CryptographicServiceProvider implements CryptographicService, CryptographicKeyService {
+      private static _registry;
+      static registerService(name: string, ctor: CryptographicServiceConstructor, opers: CryptographicOperation[]): void;
+      static registerKeyService(name: string, ctor: CryptographicKeyServiceConstructor, opers: CryptographicOperation[]): void;
+      registry: CryptographicServiceRegistry;
+      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      digest(algorithm: string | Algorithm, data: ByteArray): Promise<ByteArray>;
+      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
+      exportKey(format: string, key: CryptoKey): Promise<ByteArray>;
+      generateKey(algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
+      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      deriveKey(algorithm: Algorithm, baseKey: CryptoKey, derivedKeyType: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      deriveBits(algorithm: Algorithm, baseKey: CryptoKey, length: number): Promise<ByteArray>;
+      wrapKey(format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: Algorithm): Promise<ByteArray>;
+      unwrapKey(format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: Algorithm, unwrappedKeyAlgorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+  }
+
+
+
+  export class WebCryptoService implements CryptographicService, CryptographicKeyService {
+      protected crypto: SubtleCrypto;
+      constructor();
+      static _subtle: SubtleCrypto;
+      static subtle: SubtleCrypto;
+      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      digest(algorithm: string | Algorithm, data: ByteArray): any;
+      exportKey(format: string, key: CryptoKey): Promise<ByteArray>;
+      generateKey(algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey | CryptoKeyPair>;
+      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray>;
+  }
+
+
+
+  export class DESCryptographicService implements CryptographicService, CryptographicKeyService {
+      constructor();
+      encrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+      sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray>;
+      static desPC: any;
+      static desSP: any;
+      private des(key, message, encrypt, mode, iv?, padding?);
+  }
+
+
+  export { Container, inject };
+  export interface Injectable {
+      new (...args: any[]): Object;
   }
 
   export class EventHub {

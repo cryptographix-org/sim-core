@@ -9,8 +9,18 @@ import { Message } from './message';
 * an active state, calls to sendMessage will forward the message to all
 * registered EndPoints (except the originator EndPoint).
 */
+
+export type ChannelHookInfo = { message: Message<any>; channel: Channel; origin: EndPoint; destination: EndPoint; sendMessage: () => void };
+
 export class Channel
 {
+  // preDeliveryHook( task, origin, endPoint, taskScheduler )
+  private static _deliveryHook: ( info: ChannelHookInfo ) => boolean;
+
+  static setDeliveryHook( deliveryHook: ( info: ChannelHookInfo ) => boolean ) {
+    Channel._deliveryHook = deliveryHook;
+  };
+
   /**
   * True if Channel is active
   */
@@ -142,9 +152,28 @@ export class Channel
         // reply (in a client-server) configuration
         if ( endPoint.direction != Direction.OUT || isResponse )
         {
-          this._taskScheduler.queueTask( () => {
+          let task = () => {
             endPoint.handleMessage( message, origin, this );
-          } );
+          };
+
+          let canSend = true;
+
+          if ( Channel._deliveryHook ) {
+            let scheduler = this._taskScheduler;
+
+            let messageHookInfo = {
+              message: message,
+              channel: this,
+              origin: origin,
+              destination: endPoint,
+              sendMessage: () => { scheduler.queueTask( task ) }
+            };
+
+            canSend = !Channel._deliveryHook( messageHookInfo );
+          }
+
+          if ( canSend )
+            this._taskScheduler.queueTask( task );
         }
       }
     });

@@ -8,9 +8,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _aureliaDependencyInjection = require('aurelia-dependency-injection');
-
 var _aureliaEventAggregator = require('aurelia-event-aggregator');
+
+var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
 var HexCodec = (function () {
     function HexCodec() {
@@ -356,603 +356,6 @@ ByteArray.HEX = ByteEncoding.HEX;
 ByteArray.BASE64 = ByteEncoding.BASE64;
 ByteArray.UTF8 = ByteEncoding.UTF8;
 
-var Enum = function Enum() {
-    _classCallCheck(this, Enum);
-};
-
-exports.Enum = Enum;
-
-var Integer = (function (_Number) {
-    _inherits(Integer, _Number);
-
-    function Integer() {
-        _classCallCheck(this, Integer);
-
-        _Number.apply(this, arguments);
-    }
-
-    return Integer;
-})(Number);
-
-exports.Integer = Integer;
-
-var FieldArray = function FieldArray() {
-    _classCallCheck(this, FieldArray);
-};
-
-exports.FieldArray = FieldArray;
-var FieldTypes = {
-    Boolean: Boolean,
-    Number: Number,
-    Integer: Integer,
-    ByteArray: ByteArray,
-    Enum: Enum,
-    Array: FieldArray,
-    String: String,
-    Kind: Kind
-};
-exports.FieldTypes = FieldTypes;
-
-var KindInfo = function KindInfo() {
-    _classCallCheck(this, KindInfo);
-
-    this.fields = {};
-};
-
-exports.KindInfo = KindInfo;
-
-var KindBuilder = (function () {
-    function KindBuilder(ctor, description) {
-        _classCallCheck(this, KindBuilder);
-
-        this.ctor = ctor;
-        ctor.kindInfo = {
-            name: ctor.name,
-            description: description,
-            fields: {}
-        };
-    }
-
-    KindBuilder.init = function init(ctor, description) {
-        var builder = new KindBuilder(ctor, description);
-        return builder;
-    };
-
-    KindBuilder.prototype.field = function field(name, description, fieldType) {
-        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-        var field = opts;
-        field.description = description;
-        field.fieldType = fieldType;
-        this.ctor.kindInfo.fields[name] = field;
-        return this;
-    };
-
-    KindBuilder.prototype.boolField = function boolField(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        return this.field(name, description, Boolean, opts);
-    };
-
-    KindBuilder.prototype.numberField = function numberField(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        return this.field(name, description, Number, opts);
-    };
-
-    KindBuilder.prototype.integerField = function integerField(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        return this.field(name, description, Integer, opts);
-    };
-
-    KindBuilder.prototype.uint32Field = function uint32Field(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        opts.minimum = opts.minimum || 0;
-        opts.maximum = opts.maximum || 0xFFFFFFFF;
-        return this.field(name, description, Integer, opts);
-    };
-
-    KindBuilder.prototype.byteField = function byteField(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        opts.minimum = opts.minimum || 0;
-        opts.maximum = opts.maximum || 255;
-        return this.field(name, description, Integer, opts);
-    };
-
-    KindBuilder.prototype.stringField = function stringField(name, description) {
-        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-        return this.field(name, description, String, opts);
-    };
-
-    KindBuilder.prototype.kindField = function kindField(name, description, kind) {
-        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-        opts.kind = kind;
-        return this.field(name, description, Kind, opts);
-    };
-
-    KindBuilder.prototype.enumField = function enumField(name, description, enumm) {
-        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-        opts.enumMap = new Map();
-        for (var idx in enumm) {
-            if (1 * idx == idx) opts.enumMap.set(idx, enumm[idx]);
-        }
-        return this.field(name, description, Enum, opts);
-    };
-
-    return KindBuilder;
-})();
-
-exports.KindBuilder = KindBuilder;
-
-var Kind = (function () {
-    function Kind() {
-        _classCallCheck(this, Kind);
-    }
-
-    Kind.getKindInfo = function getKindInfo(kind) {
-        return kind.constructor.kindInfo;
-    };
-
-    Kind.initFields = function initFields(kind) {
-        var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        var kindInfo = Kind.getKindInfo(kind);
-        for (var id in kindInfo.fields) {
-            var field = kindInfo.fields[id];
-            var fieldType = field.fieldType;
-            var val = undefined;
-            if (!field.calculated) {
-                if (attributes[id]) val = attributes[id];else if (field['default'] != undefined) val = field['default'];else if (fieldType == String) val = '';else if (fieldType == Number) val = 0;else if (fieldType == Integer) val = field.minimum || 0;else if (fieldType == Boolean) val = false;else if (fieldType == ByteArray) val = new ByteArray();else if (fieldType == Enum) val = field.enumMap.keys[0];else if (fieldType == Kind) {
-                    var xx = fieldType.constructor;
-                    val = Object.create(xx);
-                }
-                kind[id] = val;
-            }
-        }
-    };
-
-    return Kind;
-})();
-
-exports.Kind = Kind;
-
-var Message = (function () {
-    function Message(header, payload) {
-        _classCallCheck(this, Message);
-
-        this._header = header || {};
-        this._payload = payload;
-    }
-
-    _createClass(Message, [{
-        key: 'header',
-        get: function get() {
-            return this._header;
-        }
-    }, {
-        key: 'payload',
-        get: function get() {
-            return this._payload;
-        }
-    }]);
-
-    return Message;
-})();
-
-exports.Message = Message;
-
-var KindMessage = (function (_Message) {
-    _inherits(KindMessage, _Message);
-
-    function KindMessage() {
-        _classCallCheck(this, KindMessage);
-
-        _Message.apply(this, arguments);
-    }
-
-    return KindMessage;
-})(Message);
-
-exports.KindMessage = KindMessage;
-
-var window = window || {};
-
-var TaskScheduler = (function () {
-    function TaskScheduler() {
-        _classCallCheck(this, TaskScheduler);
-
-        this.taskQueue = [];
-        var self = this;
-        if (typeof TaskScheduler.BrowserMutationObserver === 'function') {
-            this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromMutationObserver(function () {
-                return self.flushTaskQueue();
-            });
-        } else {
-            this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromTimer(function () {
-                return self.flushTaskQueue();
-            });
-        }
-    }
-
-    TaskScheduler.makeRequestFlushFromMutationObserver = function makeRequestFlushFromMutationObserver(flush) {
-        var toggle = 1;
-        var observer = new TaskScheduler.BrowserMutationObserver(flush);
-        var node = document.createTextNode('');
-        observer.observe(node, { characterData: true });
-        return function requestFlush() {
-            toggle = -toggle;
-            node["data"] = toggle;
-        };
-    };
-
-    TaskScheduler.makeRequestFlushFromTimer = function makeRequestFlushFromTimer(flush) {
-        return function requestFlush() {
-            var timeoutHandle = setTimeout(handleFlushTimer, 0);
-            var intervalHandle = setInterval(handleFlushTimer, 50);
-            function handleFlushTimer() {
-                clearTimeout(timeoutHandle);
-                clearInterval(intervalHandle);
-                flush();
-            }
-        };
-    };
-
-    TaskScheduler.prototype.shutdown = function shutdown() {};
-
-    TaskScheduler.prototype.queueTask = function queueTask(task) {
-        if (this.taskQueue.length < 1) {
-            this.requestFlushTaskQueue();
-        }
-        this.taskQueue.push(task);
-    };
-
-    TaskScheduler.prototype.flushTaskQueue = function flushTaskQueue() {
-        var queue = this.taskQueue,
-            capacity = TaskScheduler.taskQueueCapacity,
-            index = 0,
-            task;
-        while (index < queue.length) {
-            task = queue[index];
-            try {
-                task.call();
-            } catch (error) {
-                this.onError(error, task);
-            }
-            index++;
-            if (index > capacity) {
-                for (var scan = 0; scan < index; scan++) {
-                    queue[scan] = queue[scan + index];
-                }
-                queue.length -= index;
-                index = 0;
-            }
-        }
-        queue.length = 0;
-    };
-
-    TaskScheduler.prototype.onError = function onError(error, task) {
-        if ('onError' in task) {
-            task.onError(error);
-        } else if (TaskScheduler.hasSetImmediate) {
-            setImmediate(function () {
-                throw error;
-            });
-        } else {
-            setTimeout(function () {
-                throw error;
-            }, 0);
-        }
-    };
-
-    return TaskScheduler;
-})();
-
-exports.TaskScheduler = TaskScheduler;
-
-TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["WebKitMutationObserver"];
-TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
-TaskScheduler.taskQueueCapacity = 1024;
-
-var Channel = (function () {
-    function Channel() {
-        _classCallCheck(this, Channel);
-
-        this._active = false;
-        this._endPoints = [];
-    }
-
-    Channel.prototype.shutdown = function shutdown() {
-        this._active = false;
-        this._endPoints = [];
-        if (this._taskScheduler) {
-            this._taskScheduler.shutdown();
-            this._taskScheduler = undefined;
-        }
-    };
-
-    Channel.prototype.activate = function activate() {
-        this._taskScheduler = new TaskScheduler();
-        this._active = true;
-    };
-
-    Channel.prototype.deactivate = function deactivate() {
-        this._taskScheduler = undefined;
-        this._active = false;
-    };
-
-    Channel.prototype.addEndPoint = function addEndPoint(endPoint) {
-        this._endPoints.push(endPoint);
-    };
-
-    Channel.prototype.removeEndPoint = function removeEndPoint(endPoint) {
-        var idx = this._endPoints.indexOf(endPoint);
-        if (idx >= 0) {
-            this._endPoints.splice(idx, 1);
-        }
-    };
-
-    Channel.prototype.sendMessage = function sendMessage(origin, message) {
-        var _this = this;
-
-        var isResponse = message.header && message.header.isResponse;
-        if (!this._active) return;
-        if (origin.direction == Direction.IN && !isResponse) throw new Error('Unable to send on IN port');
-        this._endPoints.forEach(function (endPoint) {
-            if (origin != endPoint) {
-                if (endPoint.direction != Direction.OUT || isResponse) {
-                    _this._taskScheduler.queueTask(function () {
-                        endPoint.handleMessage(message, origin, _this);
-                    });
-                }
-            }
-        });
-    };
-
-    _createClass(Channel, [{
-        key: 'active',
-        get: function get() {
-            return this._active;
-        }
-    }, {
-        key: 'endPoints',
-        get: function get() {
-            return this._endPoints;
-        }
-    }]);
-
-    return Channel;
-})();
-
-exports.Channel = Channel;
-var Direction;
-exports.Direction = Direction;
-(function (Direction) {
-    Direction[Direction["IN"] = 1] = "IN";
-    Direction[Direction["OUT"] = 2] = "OUT";
-    Direction[Direction["INOUT"] = 3] = "INOUT";
-})(Direction || (exports.Direction = Direction = {}));
-;
-
-var EndPoint = (function () {
-    function EndPoint(id) {
-        var direction = arguments.length <= 1 || arguments[1] === undefined ? Direction.INOUT : arguments[1];
-
-        _classCallCheck(this, EndPoint);
-
-        this._id = id;
-        this._direction = direction;
-        this._channels = [];
-        this._messageListeners = [];
-    }
-
-    EndPoint.prototype.shutdown = function shutdown() {
-        this.detachAll();
-        this._messageListeners = [];
-    };
-
-    EndPoint.prototype.attach = function attach(channel) {
-        this._channels.push(channel);
-        channel.addEndPoint(this);
-    };
-
-    EndPoint.prototype.detach = function detach(channelToDetach) {
-        var idx = this._channels.indexOf(channelToDetach);
-        if (idx >= 0) {
-            channelToDetach.removeEndPoint(this);
-            this._channels.splice(idx, 1);
-        }
-    };
-
-    EndPoint.prototype.detachAll = function detachAll() {
-        var _this2 = this;
-
-        this._channels.forEach(function (channel) {
-            channel.removeEndPoint(_this2);
-        });
-        this._channels = [];
-    };
-
-    EndPoint.prototype.handleMessage = function handleMessage(message, fromEndPoint, fromChannel) {
-        var _this3 = this;
-
-        this._messageListeners.forEach(function (messageListener) {
-            messageListener(message, _this3, fromChannel);
-        });
-    };
-
-    EndPoint.prototype.sendMessage = function sendMessage(message) {
-        var _this4 = this;
-
-        this._channels.forEach(function (channel) {
-            channel.sendMessage(_this4, message);
-        });
-    };
-
-    EndPoint.prototype.onMessage = function onMessage(messageListener) {
-        this._messageListeners.push(messageListener);
-    };
-
-    _createClass(EndPoint, [{
-        key: 'id',
-        get: function get() {
-            return this._id;
-        }
-    }, {
-        key: 'attached',
-        get: function get() {
-            return this._channels.length > 0;
-        }
-    }, {
-        key: 'direction',
-        get: function get() {
-            return this._direction;
-        }
-    }]);
-
-    return EndPoint;
-})();
-
-exports.EndPoint = EndPoint;
-var ProtocolTypeBits;
-exports.ProtocolTypeBits = ProtocolTypeBits;
-(function (ProtocolTypeBits) {
-    ProtocolTypeBits[ProtocolTypeBits["PACKET"] = 0] = "PACKET";
-    ProtocolTypeBits[ProtocolTypeBits["STREAM"] = 1] = "STREAM";
-    ProtocolTypeBits[ProtocolTypeBits["ONEWAY"] = 0] = "ONEWAY";
-    ProtocolTypeBits[ProtocolTypeBits["CLIENTSERVER"] = 4] = "CLIENTSERVER";
-    ProtocolTypeBits[ProtocolTypeBits["PEER2PEER"] = 6] = "PEER2PEER";
-    ProtocolTypeBits[ProtocolTypeBits["UNTYPED"] = 0] = "UNTYPED";
-    ProtocolTypeBits[ProtocolTypeBits["TYPED"] = 8] = "TYPED";
-})(ProtocolTypeBits || (exports.ProtocolTypeBits = ProtocolTypeBits = {}));
-
-var Protocol = function Protocol() {
-    _classCallCheck(this, Protocol);
-};
-
-exports.Protocol = Protocol;
-
-Protocol.protocolType = 0;
-
-var ClientServerProtocol = (function (_Protocol) {
-    _inherits(ClientServerProtocol, _Protocol);
-
-    function ClientServerProtocol() {
-        _classCallCheck(this, ClientServerProtocol);
-
-        _Protocol.apply(this, arguments);
-    }
-
-    return ClientServerProtocol;
-})(Protocol);
-
-ClientServerProtocol.protocolType = ProtocolTypeBits.CLIENTSERVER | ProtocolTypeBits.TYPED;
-
-var APDU = function APDU() {
-    _classCallCheck(this, APDU);
-};
-
-var APDUMessage = (function (_Message2) {
-    _inherits(APDUMessage, _Message2);
-
-    function APDUMessage() {
-        _classCallCheck(this, APDUMessage);
-
-        _Message2.apply(this, arguments);
-    }
-
-    return APDUMessage;
-})(Message);
-
-var APDUProtocol = (function (_ClientServerProtocol) {
-    _inherits(APDUProtocol, _ClientServerProtocol);
-
-    function APDUProtocol() {
-        _classCallCheck(this, APDUProtocol);
-
-        _ClientServerProtocol.apply(this, arguments);
-    }
-
-    return APDUProtocol;
-})(ClientServerProtocol);
-
-var PortInfo = function PortInfo() {
-    _classCallCheck(this, PortInfo);
-
-    this.count = 0;
-    this.required = false;
-};
-
-exports.PortInfo = PortInfo;
-
-var ComponentInfo = function ComponentInfo() {
-    _classCallCheck(this, ComponentInfo);
-
-    this.detailLink = '';
-    this.category = '';
-    this.author = '';
-    this.ports = {};
-    this.stores = {};
-};
-
-exports.ComponentInfo = ComponentInfo;
-
-var StoreInfo = function StoreInfo() {
-    _classCallCheck(this, StoreInfo);
-};
-
-exports.StoreInfo = StoreInfo;
-
-var ComponentBuilder = (function () {
-    function ComponentBuilder(ctor, name, description, category) {
-        _classCallCheck(this, ComponentBuilder);
-
-        this.ctor = ctor;
-        ctor.componentInfo = {
-            name: name || ctor.name,
-            description: description,
-            detailLink: '',
-            category: category,
-            author: '',
-            ports: {},
-            stores: {},
-            configKind: Kind,
-            defaultConfig: {}
-        };
-    }
-
-    ComponentBuilder.init = function init(ctor, name, description, category) {
-        var builder = new ComponentBuilder(ctor, name, description, category);
-        return builder;
-    };
-
-    ComponentBuilder.prototype.config = function config(configKind, defaultConfig) {
-        this.ctor.componentInfo.configKind = configKind;
-        this.ctor.componentInfo.defaultConfig = defaultConfig;
-        return this;
-    };
-
-    ComponentBuilder.prototype.port = function port(id, description, direction, opts) {
-        opts = opts || {};
-        this.ctor.componentInfo.ports[id] = {
-            direction: direction,
-            description: description,
-            protocol: opts.protocol,
-            count: opts.count,
-            required: opts.required
-        };
-        return this;
-    };
-
-    return ComponentBuilder;
-})();
-
-exports.ComponentBuilder = ComponentBuilder;
 var CryptographicOperation;
 exports.CryptographicOperation = CryptographicOperation;
 (function (CryptographicOperation) {
@@ -1286,7 +689,7 @@ var DESCryptographicService = (function () {
     }
 
     DESCryptographicService.prototype.encrypt = function encrypt(algorithm, key, data) {
-        var _this5 = this;
+        var _this = this;
 
         return new Promise(function (resolve, reject) {
             var alg = algorithm instanceof Object ? algorithm.name : algorithm;
@@ -1300,12 +703,12 @@ var DESCryptographicService = (function () {
                 iv = new ByteArray(ivx).backingArray;
                 mode = 1;
             }
-            if (data.length >= 8 || padding != 4) resolve(new ByteArray(_this5.des(desKey.keyMaterial.backingArray, data.backingArray, 1, mode, iv, padding)));else resolve(new ByteArray());
+            if (data.length >= 8 || padding != 4) resolve(new ByteArray(_this.des(desKey.keyMaterial.backingArray, data.backingArray, 1, mode, iv, padding)));else resolve(new ByteArray());
         });
     };
 
     DESCryptographicService.prototype.decrypt = function decrypt(algorithm, key, data) {
-        var _this6 = this;
+        var _this2 = this;
 
         return new Promise(function (resolve, reject) {
             var alg = algorithm instanceof Object ? algorithm.name : algorithm;
@@ -1319,7 +722,7 @@ var DESCryptographicService = (function () {
                 iv = new ByteArray(ivx).backingArray;
                 mode = 1;
             }
-            if (data.length >= 8) resolve(new ByteArray(_this6.des(desKey.keyMaterial.backingArray, data.backingArray, 0, mode, iv, padding)));else resolve(new ByteArray());
+            if (data.length >= 8) resolve(new ByteArray(_this2.des(desKey.keyMaterial.backingArray, data.backingArray, 0, mode, iv, padding)));else resolve(new ByteArray());
         });
     };
 
@@ -1332,11 +735,11 @@ var DESCryptographicService = (function () {
     };
 
     DESCryptographicService.prototype.sign = function sign(algorithm, key, data) {
-        var _this7 = this;
+        var _this3 = this;
 
         return new Promise(function (resolve, reject) {
             var desKey = key;
-            resolve(new ByteArray(_this7.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
+            resolve(new ByteArray(_this3.des(desKey.keyMaterial.backingArray, data.backingArray, 0, 0)));
         });
     };
 
@@ -1559,8 +962,626 @@ CryptographicServiceProvider.registerService('DES-CBC', DESCryptographicService,
 CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
 CryptographicServiceProvider.registerKeyService('DES-CBC', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
 
-exports.Container = _aureliaDependencyInjection.Container;
-exports.inject = _aureliaDependencyInjection.autoinject;
+var Enum = function Enum() {
+    _classCallCheck(this, Enum);
+};
+
+exports.Enum = Enum;
+
+var Integer = (function (_Number) {
+    _inherits(Integer, _Number);
+
+    function Integer() {
+        _classCallCheck(this, Integer);
+
+        _Number.apply(this, arguments);
+    }
+
+    return Integer;
+})(Number);
+
+exports.Integer = Integer;
+
+var FieldArray = function FieldArray() {
+    _classCallCheck(this, FieldArray);
+};
+
+exports.FieldArray = FieldArray;
+var FieldTypes = {
+    Boolean: Boolean,
+    Number: Number,
+    Integer: Integer,
+    ByteArray: ByteArray,
+    Enum: Enum,
+    Array: FieldArray,
+    String: String,
+    Kind: Kind
+};
+exports.FieldTypes = FieldTypes;
+
+var KindInfo = function KindInfo() {
+    _classCallCheck(this, KindInfo);
+
+    this.fields = {};
+};
+
+exports.KindInfo = KindInfo;
+
+var KindBuilder = (function () {
+    function KindBuilder(ctor, description) {
+        _classCallCheck(this, KindBuilder);
+
+        this.ctor = ctor;
+        ctor.kindInfo = {
+            name: ctor.name,
+            description: description,
+            fields: {}
+        };
+    }
+
+    KindBuilder.init = function init(ctor, description) {
+        var builder = new KindBuilder(ctor, description);
+        return builder;
+    };
+
+    KindBuilder.prototype.field = function field(name, description, fieldType) {
+        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+        var field = opts;
+        field.description = description;
+        field.fieldType = fieldType;
+        this.ctor.kindInfo.fields[name] = field;
+        return this;
+    };
+
+    KindBuilder.prototype.boolField = function boolField(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        return this.field(name, description, Boolean, opts);
+    };
+
+    KindBuilder.prototype.numberField = function numberField(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        return this.field(name, description, Number, opts);
+    };
+
+    KindBuilder.prototype.integerField = function integerField(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        return this.field(name, description, Integer, opts);
+    };
+
+    KindBuilder.prototype.uint32Field = function uint32Field(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        opts.minimum = opts.minimum || 0;
+        opts.maximum = opts.maximum || 0xFFFFFFFF;
+        return this.field(name, description, Integer, opts);
+    };
+
+    KindBuilder.prototype.byteField = function byteField(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        opts.minimum = opts.minimum || 0;
+        opts.maximum = opts.maximum || 255;
+        return this.field(name, description, Integer, opts);
+    };
+
+    KindBuilder.prototype.stringField = function stringField(name, description) {
+        var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        return this.field(name, description, String, opts);
+    };
+
+    KindBuilder.prototype.kindField = function kindField(name, description, kind) {
+        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+        opts.kind = kind;
+        return this.field(name, description, Kind, opts);
+    };
+
+    KindBuilder.prototype.enumField = function enumField(name, description, enumm) {
+        var opts = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+        opts.enumMap = new Map();
+        for (var idx in enumm) {
+            if (1 * idx == idx) opts.enumMap.set(idx, enumm[idx]);
+        }
+        return this.field(name, description, Enum, opts);
+    };
+
+    return KindBuilder;
+})();
+
+exports.KindBuilder = KindBuilder;
+
+var Kind = (function () {
+    function Kind() {
+        _classCallCheck(this, Kind);
+    }
+
+    Kind.getKindInfo = function getKindInfo(kind) {
+        return kind.constructor.kindInfo;
+    };
+
+    Kind.initFields = function initFields(kind) {
+        var attributes = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var kindInfo = Kind.getKindInfo(kind);
+        for (var id in kindInfo.fields) {
+            var field = kindInfo.fields[id];
+            var fieldType = field.fieldType;
+            var val = undefined;
+            if (!field.calculated) {
+                if (attributes[id]) val = attributes[id];else if (field['default'] != undefined) val = field['default'];else if (fieldType == String) val = '';else if (fieldType == Number) val = 0;else if (fieldType == Integer) val = field.minimum || 0;else if (fieldType == Boolean) val = false;else if (fieldType == ByteArray) val = new ByteArray();else if (fieldType == Enum) val = field.enumMap.keys[0];else if (fieldType == Kind) {
+                    var xx = fieldType.constructor;
+                    val = Object.create(xx);
+                }
+                kind[id] = val;
+            }
+        }
+    };
+
+    return Kind;
+})();
+
+exports.Kind = Kind;
+
+var Message = (function () {
+    function Message(header, payload) {
+        _classCallCheck(this, Message);
+
+        this._header = header || {};
+        this._payload = payload;
+    }
+
+    _createClass(Message, [{
+        key: 'header',
+        get: function get() {
+            return this._header;
+        }
+    }, {
+        key: 'payload',
+        get: function get() {
+            return this._payload;
+        }
+    }]);
+
+    return Message;
+})();
+
+exports.Message = Message;
+
+var KindMessage = (function (_Message) {
+    _inherits(KindMessage, _Message);
+
+    function KindMessage() {
+        _classCallCheck(this, KindMessage);
+
+        _Message.apply(this, arguments);
+    }
+
+    return KindMessage;
+})(Message);
+
+exports.KindMessage = KindMessage;
+
+var window = window || {};
+
+var TaskScheduler = (function () {
+    function TaskScheduler() {
+        _classCallCheck(this, TaskScheduler);
+
+        this.taskQueue = [];
+        var self = this;
+        if (typeof TaskScheduler.BrowserMutationObserver === 'function') {
+            this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromMutationObserver(function () {
+                return self.flushTaskQueue();
+            });
+        } else {
+            this.requestFlushTaskQueue = TaskScheduler.makeRequestFlushFromTimer(function () {
+                return self.flushTaskQueue();
+            });
+        }
+    }
+
+    TaskScheduler.makeRequestFlushFromMutationObserver = function makeRequestFlushFromMutationObserver(flush) {
+        var toggle = 1;
+        var observer = new TaskScheduler.BrowserMutationObserver(flush);
+        var node = document.createTextNode('');
+        observer.observe(node, { characterData: true });
+        return function requestFlush() {
+            toggle = -toggle;
+            node["data"] = toggle;
+        };
+    };
+
+    TaskScheduler.makeRequestFlushFromTimer = function makeRequestFlushFromTimer(flush) {
+        return function requestFlush() {
+            var timeoutHandle = setTimeout(handleFlushTimer, 0);
+            var intervalHandle = setInterval(handleFlushTimer, 50);
+            function handleFlushTimer() {
+                clearTimeout(timeoutHandle);
+                clearInterval(intervalHandle);
+                flush();
+            }
+        };
+    };
+
+    TaskScheduler.prototype.shutdown = function shutdown() {};
+
+    TaskScheduler.prototype.queueTask = function queueTask(task) {
+        if (this.taskQueue.length < 1) {
+            this.requestFlushTaskQueue();
+        }
+        this.taskQueue.push(task);
+    };
+
+    TaskScheduler.prototype.flushTaskQueue = function flushTaskQueue() {
+        var queue = this.taskQueue,
+            capacity = TaskScheduler.taskQueueCapacity,
+            index = 0,
+            task;
+        while (index < queue.length) {
+            task = queue[index];
+            try {
+                task.call();
+            } catch (error) {
+                this.onError(error, task);
+            }
+            index++;
+            if (index > capacity) {
+                for (var scan = 0; scan < index; scan++) {
+                    queue[scan] = queue[scan + index];
+                }
+                queue.length -= index;
+                index = 0;
+            }
+        }
+        queue.length = 0;
+    };
+
+    TaskScheduler.prototype.onError = function onError(error, task) {
+        if ('onError' in task) {
+            task.onError(error);
+        } else if (TaskScheduler.hasSetImmediate) {
+            setImmediate(function () {
+                throw error;
+            });
+        } else {
+            setTimeout(function () {
+                throw error;
+            }, 0);
+        }
+    };
+
+    return TaskScheduler;
+})();
+
+exports.TaskScheduler = TaskScheduler;
+
+TaskScheduler.BrowserMutationObserver = window["MutationObserver"] || window["WebKitMutationObserver"];
+TaskScheduler.hasSetImmediate = typeof setImmediate === 'function';
+TaskScheduler.taskQueueCapacity = 1024;
+
+var Channel = (function () {
+    function Channel() {
+        _classCallCheck(this, Channel);
+
+        this._active = false;
+        this._endPoints = [];
+    }
+
+    Channel.setDeliveryHook = function setDeliveryHook(deliveryHook) {
+        Channel._deliveryHook = deliveryHook;
+    };
+
+    Channel.prototype.shutdown = function shutdown() {
+        this._active = false;
+        this._endPoints = [];
+        if (this._taskScheduler) {
+            this._taskScheduler.shutdown();
+            this._taskScheduler = undefined;
+        }
+    };
+
+    Channel.prototype.activate = function activate() {
+        this._taskScheduler = new TaskScheduler();
+        this._active = true;
+    };
+
+    Channel.prototype.deactivate = function deactivate() {
+        this._taskScheduler = undefined;
+        this._active = false;
+    };
+
+    Channel.prototype.addEndPoint = function addEndPoint(endPoint) {
+        this._endPoints.push(endPoint);
+    };
+
+    Channel.prototype.removeEndPoint = function removeEndPoint(endPoint) {
+        var idx = this._endPoints.indexOf(endPoint);
+        if (idx >= 0) {
+            this._endPoints.splice(idx, 1);
+        }
+    };
+
+    Channel.prototype.sendMessage = function sendMessage(origin, message) {
+        var _this4 = this;
+
+        var isResponse = message.header && message.header.isResponse;
+        if (!this._active) return;
+        if (origin.direction == Direction.IN && !isResponse) throw new Error('Unable to send on IN port');
+        this._endPoints.forEach(function (endPoint) {
+            if (origin != endPoint) {
+                if (endPoint.direction != Direction.OUT || isResponse) {
+                    (function () {
+                        var task = function task() {
+                            endPoint.handleMessage(message, origin, _this4);
+                        };
+                        var canSend = true;
+                        if (Channel._deliveryHook) {
+                            (function () {
+                                var scheduler = _this4._taskScheduler;
+                                var messageHookInfo = {
+                                    message: message,
+                                    channel: _this4,
+                                    origin: origin,
+                                    destination: endPoint,
+                                    sendMessage: function sendMessage() {
+                                        scheduler.queueTask(task);
+                                    }
+                                };
+                                canSend = !Channel._deliveryHook(messageHookInfo);
+                            })();
+                        }
+                        if (canSend) _this4._taskScheduler.queueTask(task);
+                    })();
+                }
+            }
+        });
+    };
+
+    _createClass(Channel, [{
+        key: 'active',
+        get: function get() {
+            return this._active;
+        }
+    }, {
+        key: 'endPoints',
+        get: function get() {
+            return this._endPoints;
+        }
+    }]);
+
+    return Channel;
+})();
+
+exports.Channel = Channel;
+var Direction;
+exports.Direction = Direction;
+(function (Direction) {
+    Direction[Direction["IN"] = 1] = "IN";
+    Direction[Direction["OUT"] = 2] = "OUT";
+    Direction[Direction["INOUT"] = 3] = "INOUT";
+})(Direction || (exports.Direction = Direction = {}));
+;
+
+var EndPoint = (function () {
+    function EndPoint(id) {
+        var direction = arguments.length <= 1 || arguments[1] === undefined ? Direction.INOUT : arguments[1];
+
+        _classCallCheck(this, EndPoint);
+
+        this._id = id;
+        this._direction = direction;
+        this._channels = [];
+        this._messageListeners = [];
+    }
+
+    EndPoint.prototype.shutdown = function shutdown() {
+        this.detachAll();
+        this._messageListeners = [];
+    };
+
+    EndPoint.prototype.attach = function attach(channel) {
+        this._channels.push(channel);
+        channel.addEndPoint(this);
+    };
+
+    EndPoint.prototype.detach = function detach(channelToDetach) {
+        var idx = this._channels.indexOf(channelToDetach);
+        if (idx >= 0) {
+            channelToDetach.removeEndPoint(this);
+            this._channels.splice(idx, 1);
+        }
+    };
+
+    EndPoint.prototype.detachAll = function detachAll() {
+        var _this5 = this;
+
+        this._channels.forEach(function (channel) {
+            channel.removeEndPoint(_this5);
+        });
+        this._channels = [];
+    };
+
+    EndPoint.prototype.handleMessage = function handleMessage(message, fromEndPoint, fromChannel) {
+        var _this6 = this;
+
+        this._messageListeners.forEach(function (messageListener) {
+            messageListener(message, _this6, fromChannel);
+        });
+    };
+
+    EndPoint.prototype.sendMessage = function sendMessage(message) {
+        var _this7 = this;
+
+        this._channels.forEach(function (channel) {
+            channel.sendMessage(_this7, message);
+        });
+    };
+
+    EndPoint.prototype.onMessage = function onMessage(messageListener) {
+        this._messageListeners.push(messageListener);
+    };
+
+    _createClass(EndPoint, [{
+        key: 'id',
+        get: function get() {
+            return this._id;
+        }
+    }, {
+        key: 'attached',
+        get: function get() {
+            return this._channels.length > 0;
+        }
+    }, {
+        key: 'direction',
+        get: function get() {
+            return this._direction;
+        }
+    }]);
+
+    return EndPoint;
+})();
+
+exports.EndPoint = EndPoint;
+var ProtocolTypeBits;
+exports.ProtocolTypeBits = ProtocolTypeBits;
+(function (ProtocolTypeBits) {
+    ProtocolTypeBits[ProtocolTypeBits["PACKET"] = 0] = "PACKET";
+    ProtocolTypeBits[ProtocolTypeBits["STREAM"] = 1] = "STREAM";
+    ProtocolTypeBits[ProtocolTypeBits["ONEWAY"] = 0] = "ONEWAY";
+    ProtocolTypeBits[ProtocolTypeBits["CLIENTSERVER"] = 4] = "CLIENTSERVER";
+    ProtocolTypeBits[ProtocolTypeBits["PEER2PEER"] = 6] = "PEER2PEER";
+    ProtocolTypeBits[ProtocolTypeBits["UNTYPED"] = 0] = "UNTYPED";
+    ProtocolTypeBits[ProtocolTypeBits["TYPED"] = 8] = "TYPED";
+})(ProtocolTypeBits || (exports.ProtocolTypeBits = ProtocolTypeBits = {}));
+
+var Protocol = function Protocol() {
+    _classCallCheck(this, Protocol);
+};
+
+exports.Protocol = Protocol;
+
+Protocol.protocolType = 0;
+
+var ClientServerProtocol = (function (_Protocol) {
+    _inherits(ClientServerProtocol, _Protocol);
+
+    function ClientServerProtocol() {
+        _classCallCheck(this, ClientServerProtocol);
+
+        _Protocol.apply(this, arguments);
+    }
+
+    return ClientServerProtocol;
+})(Protocol);
+
+ClientServerProtocol.protocolType = ProtocolTypeBits.CLIENTSERVER | ProtocolTypeBits.TYPED;
+
+var APDU = function APDU() {
+    _classCallCheck(this, APDU);
+};
+
+var APDUMessage = (function (_Message2) {
+    _inherits(APDUMessage, _Message2);
+
+    function APDUMessage() {
+        _classCallCheck(this, APDUMessage);
+
+        _Message2.apply(this, arguments);
+    }
+
+    return APDUMessage;
+})(Message);
+
+var APDUProtocol = (function (_ClientServerProtocol) {
+    _inherits(APDUProtocol, _ClientServerProtocol);
+
+    function APDUProtocol() {
+        _classCallCheck(this, APDUProtocol);
+
+        _ClientServerProtocol.apply(this, arguments);
+    }
+
+    return APDUProtocol;
+})(ClientServerProtocol);
+
+var PortInfo = function PortInfo() {
+    _classCallCheck(this, PortInfo);
+
+    this.count = 0;
+    this.required = false;
+};
+
+exports.PortInfo = PortInfo;
+
+var ComponentInfo = function ComponentInfo() {
+    _classCallCheck(this, ComponentInfo);
+
+    this.detailLink = '';
+    this.category = '';
+    this.author = '';
+    this.ports = {};
+    this.stores = {};
+};
+
+exports.ComponentInfo = ComponentInfo;
+
+var StoreInfo = function StoreInfo() {
+    _classCallCheck(this, StoreInfo);
+};
+
+exports.StoreInfo = StoreInfo;
+
+var ComponentBuilder = (function () {
+    function ComponentBuilder(ctor, name, description, category) {
+        _classCallCheck(this, ComponentBuilder);
+
+        this.ctor = ctor;
+        ctor.componentInfo = {
+            name: name || ctor.name,
+            description: description,
+            detailLink: '',
+            category: category,
+            author: '',
+            ports: {},
+            stores: {},
+            configKind: Kind,
+            defaultConfig: {}
+        };
+    }
+
+    ComponentBuilder.init = function init(ctor, name, description, category) {
+        var builder = new ComponentBuilder(ctor, name, description, category);
+        return builder;
+    };
+
+    ComponentBuilder.prototype.config = function config(configKind, defaultConfig) {
+        this.ctor.componentInfo.configKind = configKind;
+        this.ctor.componentInfo.defaultConfig = defaultConfig;
+        return this;
+    };
+
+    ComponentBuilder.prototype.port = function port(id, description, direction, opts) {
+        opts = opts || {};
+        this.ctor.componentInfo.ports[id] = {
+            direction: direction,
+            description: description,
+            protocol: opts.protocol,
+            count: opts.count,
+            required: opts.required
+        };
+        return this;
+    };
+
+    return ComponentBuilder;
+})();
+
+exports.ComponentBuilder = ComponentBuilder;
 
 var EventHub = (function () {
     function EventHub() {
@@ -1585,6 +1606,8 @@ var EventHub = (function () {
 })();
 
 exports.EventHub = EventHub;
+exports.Container = _aureliaDependencyInjection.Container;
+exports.inject = _aureliaDependencyInjection.autoinject;
 
 var Port = (function () {
     function Port(owner, endPoint) {

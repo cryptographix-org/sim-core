@@ -664,6 +664,10 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
             this._endPoints = [];
         }
 
+        Channel.setDeliveryHook = function setDeliveryHook(deliveryHook) {
+            Channel._deliveryHook = deliveryHook;
+        };
+
         Channel.prototype.shutdown = function shutdown() {
             this._active = false;
             this._endPoints = [];
@@ -703,9 +707,28 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
             this._endPoints.forEach(function (endPoint) {
                 if (origin != endPoint) {
                     if (endPoint.direction != Direction.OUT || isResponse) {
-                        _this._taskScheduler.queueTask(function () {
-                            endPoint.handleMessage(message, origin, _this);
-                        });
+                        (function () {
+                            var task = function task() {
+                                endPoint.handleMessage(message, origin, _this);
+                            };
+                            var canSend = true;
+                            if (Channel._deliveryHook) {
+                                (function () {
+                                    var scheduler = _this._taskScheduler;
+                                    var messageHookInfo = {
+                                        message: message,
+                                        channel: _this,
+                                        origin: origin,
+                                        destination: endPoint,
+                                        sendMessage: function sendMessage() {
+                                            scheduler.queueTask(task);
+                                        }
+                                    };
+                                    canSend = !Channel._deliveryHook(messageHookInfo);
+                                })();
+                            }
+                            if (canSend) _this._taskScheduler.queueTask(task);
+                        })();
                     }
                 }
             });
@@ -950,6 +973,32 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     })();
 
     exports.ComponentBuilder = ComponentBuilder;
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
+
+    var EventHub = (function () {
+        function EventHub() {
+            _classCallCheck(this, EventHub);
+
+            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
+        }
+
+        EventHub.prototype.publish = function publish(event, data) {
+            this._eventAggregator.publish(event, data);
+        };
+
+        EventHub.prototype.subscribe = function subscribe(event, handler) {
+            return this._eventAggregator.subscribe(event, handler);
+        };
+
+        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
+            return this._eventAggregator.subscribeOnce(event, handler);
+        };
+
+        return EventHub;
+    })();
+
+    exports.EventHub = EventHub;
     var CryptographicOperation;
     exports.CryptographicOperation = CryptographicOperation;
     (function (CryptographicOperation) {
@@ -1555,33 +1604,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     CryptographicServiceProvider.registerService('DES-CBC', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.SIGN, CryptographicOperation.VERIFY]);
     CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
     CryptographicServiceProvider.registerKeyService('DES-CBC', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
-
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
-
-    var EventHub = (function () {
-        function EventHub() {
-            _classCallCheck(this, EventHub);
-
-            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
-        }
-
-        EventHub.prototype.publish = function publish(event, data) {
-            this._eventAggregator.publish(event, data);
-        };
-
-        EventHub.prototype.subscribe = function subscribe(event, handler) {
-            return this._eventAggregator.subscribe(event, handler);
-        };
-
-        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
-            return this._eventAggregator.subscribeOnce(event, handler);
-        };
-
-        return EventHub;
-    })();
-
-    exports.EventHub = EventHub;
 
     var Port = (function () {
         function Port(owner, endPoint) {
