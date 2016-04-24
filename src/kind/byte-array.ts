@@ -194,7 +194,7 @@ export class ByteArray //extends Uint8Array
   /**
   * Extract a section (offset, count) from the ByteArray
   * @fluent
-  * @returns a new ByteArray containing a section.
+  * @returns a ByteArray containing a clone of the requested section.
   */
   bytesAt( offset: number, count?: number ): ByteArray
   {
@@ -207,7 +207,7 @@ export class ByteArray //extends Uint8Array
   /**
   * Create a view into the ByteArray
   *
-  * @returns a ByteArray referencing a section of original ByteArray.
+  * @returns a ByteArray referencing the requested section of original ByteArray.
   */
   viewAt( offset: number, count?: number ): ByteArray
   {
@@ -223,7 +223,10 @@ export class ByteArray //extends Uint8Array
   */
   addByte( value: number ): ByteArray
   {
-    this.byteArray[ this.byteArray.length ] = value;
+    let len = this.byteArray.length;
+
+    this.length++;
+    this.byteArray[ len ] = value;
 
     return this;
   }
@@ -237,12 +240,13 @@ export class ByteArray //extends Uint8Array
 
   concat( bytes: ByteArray ): ByteArray
   {
-    let ba = this.byteArray;
+    let orig = this.byteArray;
+    let len = this.length;
 
-    this.byteArray = new Uint8Array( ba.length + bytes.length );
+    this.length += bytes.length;
 
-    this.byteArray.set( ba );
-    this.byteArray.set( bytes.byteArray, ba.length );
+    this.byteArray.set( orig );
+    this.byteArray.set( bytes.byteArray, len );
 
     return this;
   }
@@ -299,7 +303,7 @@ export class ByteArray //extends Uint8Array
       case ByteEncoding.HEX:
         //return HexCodec.encode( this.byteArray );
         for( i = 0; i < this.length; ++i )
-          s += ( "0" + this.byteArray[ i ].toString( 16 )).slice( -2 );
+          s += ( "0" + this.byteArray[ i ].toString( 16 )).slice( -2 ).toUpperCase();
         break;
 
       case ByteEncoding.BASE64:
