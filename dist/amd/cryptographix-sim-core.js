@@ -255,7 +255,9 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         };
 
         ByteArray.prototype.addByte = function addByte(value) {
-            this.byteArray[this.byteArray.length] = value;
+            var len = this.byteArray.length;
+            this.length++;
+            this.byteArray[len] = value;
             return this;
         };
 
@@ -265,10 +267,11 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         };
 
         ByteArray.prototype.concat = function concat(bytes) {
-            var ba = this.byteArray;
-            this.byteArray = new Uint8Array(ba.length + bytes.length);
-            this.byteArray.set(ba);
-            this.byteArray.set(bytes.byteArray, ba.length);
+            var orig = this.byteArray;
+            var len = this.length;
+            this.length += bytes.length;
+            this.byteArray.set(orig);
+            this.byteArray.set(bytes.byteArray, len);
             return this;
         };
 
@@ -308,7 +311,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
             var i = 0;
             switch (encoding || ByteEncoding.HEX) {
                 case ByteEncoding.HEX:
-                    for (i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).slice(-2);
+                    for (i = 0; i < this.length; ++i) s += ("0" + this.byteArray[i].toString(16)).slice(-2).toUpperCase();
                     break;
                 case ByteEncoding.BASE64:
                     return Base64Codec.encode(this.byteArray);
@@ -388,6 +391,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         String: String,
         Kind: Kind
     };
+
     exports.FieldTypes = FieldTypes;
 
     var KindInfo = function KindInfo() {
@@ -440,7 +444,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         KindBuilder.prototype.integerField = function integerField(name, description) {
             var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-            return this.field(name, description, Integer, opts);
+            return this.field(name, description, FieldTypes.Integer, opts);
         };
 
         KindBuilder.prototype.uint32Field = function uint32Field(name, description) {
@@ -448,7 +452,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
 
             opts.minimum = opts.minimum || 0;
             opts.maximum = opts.maximum || 0xFFFFFFFF;
-            return this.field(name, description, Integer, opts);
+            return this.field(name, description, FieldTypes.Integer, opts);
         };
 
         KindBuilder.prototype.byteField = function byteField(name, description) {
@@ -456,7 +460,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
 
             opts.minimum = opts.minimum || 0;
             opts.maximum = opts.maximum || 255;
-            return this.field(name, description, Integer, opts);
+            return this.field(name, description, FieldTypes.Integer, opts);
         };
 
         KindBuilder.prototype.stringField = function stringField(name, description) {
@@ -479,7 +483,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
             for (var idx in enumm) {
                 if (1 * idx == idx) opts.enumMap.set(idx, enumm[idx]);
             }
-            return this.field(name, description, Enum, opts);
+            return this.field(name, description, FieldTypes.Enum, opts);
         };
 
         return KindBuilder;
@@ -491,6 +495,14 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         function Kind() {
             _classCallCheck(this, Kind);
         }
+
+        Kind.isKind = function isKind(kind) {
+            return !!(kind && kind.constructor && kind.constructor.kindInfo);
+        };
+
+        Kind.getKindConstructor = function getKindConstructor(kind) {
+            return kind && kind.constructor && kind.constructor;
+        };
 
         Kind.getKindInfo = function getKindInfo(kind) {
             return kind.constructor.kindInfo;
@@ -505,9 +517,9 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
                 var fieldType = field.fieldType;
                 var val = undefined;
                 if (!field.calculated) {
-                    if (attributes[id]) val = attributes[id];else if (field['default'] != undefined) val = field['default'];else if (fieldType == String) val = '';else if (fieldType == Number) val = 0;else if (fieldType == Integer) val = field.minimum || 0;else if (fieldType == Boolean) val = false;else if (fieldType == ByteArray) val = new ByteArray();else if (fieldType == Enum) val = field.enumMap.keys[0];else if (fieldType == Kind) {
-                        var xx = fieldType.constructor;
-                        val = Object.create(xx);
+                    if (attributes[id]) val = attributes[id];else if (field['default'] != undefined) val = field['default'];else if (fieldType == String) val = '';else if (fieldType == Number) val = 0;else if (fieldType == FieldTypes.Integer) val = field.minimum || 0;else if (fieldType == Boolean) val = false;else if (fieldType == FieldTypes.ByteArray) val = new ByteArray();else if (fieldType == FieldTypes.Enum) val = field.enumMap.keys[0];else if (fieldType == Kind) {
+                        var ctor = fieldType.constructor;
+                        val = Object.create(ctor);
                     }
                     kind[id] = val;
                 }
@@ -973,32 +985,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     })();
 
     exports.ComponentBuilder = ComponentBuilder;
-    exports.Container = _aureliaDependencyInjection.Container;
-    exports.inject = _aureliaDependencyInjection.autoinject;
-
-    var EventHub = (function () {
-        function EventHub() {
-            _classCallCheck(this, EventHub);
-
-            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
-        }
-
-        EventHub.prototype.publish = function publish(event, data) {
-            this._eventAggregator.publish(event, data);
-        };
-
-        EventHub.prototype.subscribe = function subscribe(event, handler) {
-            return this._eventAggregator.subscribe(event, handler);
-        };
-
-        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
-            return this._eventAggregator.subscribeOnce(event, handler);
-        };
-
-        return EventHub;
-    })();
-
-    exports.EventHub = EventHub;
     var CryptographicOperation;
     exports.CryptographicOperation = CryptographicOperation;
     (function (CryptographicOperation) {
@@ -1268,7 +1254,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
         _createClass(WebCryptoService, null, [{
             key: 'subtle',
             get: function get() {
-                var subtle = WebCryptoService._subtle || crypto && crypto.subtle || window && window.crypto && window.crypto.subtle || msrcrypto;
+                var subtle = WebCryptoService._subtle || window && window.crypto && window.crypto.subtle;
                 if (!WebCryptoService._subtle) WebCryptoService._subtle = subtle;
                 return subtle;
             }
@@ -1604,6 +1590,33 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-event-aggregator'], 
     CryptographicServiceProvider.registerService('DES-CBC', DESCryptographicService, [CryptographicOperation.ENCRYPT, CryptographicOperation.DECRYPT, CryptographicOperation.SIGN, CryptographicOperation.VERIFY]);
     CryptographicServiceProvider.registerKeyService('DES-ECB', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
     CryptographicServiceProvider.registerKeyService('DES-CBC', DESCryptographicService, [CryptographicOperation.IMPORT_KEY]);
+
+    exports.Container = _aureliaDependencyInjection.Container;
+    exports.inject = _aureliaDependencyInjection.autoinject;
+
+    var EventHub = (function () {
+        function EventHub() {
+            _classCallCheck(this, EventHub);
+
+            this._eventAggregator = new _aureliaEventAggregator.EventAggregator();
+        }
+
+        EventHub.prototype.publish = function publish(event, data) {
+            this._eventAggregator.publish(event, data);
+        };
+
+        EventHub.prototype.subscribe = function subscribe(event, handler) {
+            return this._eventAggregator.subscribe(event, handler);
+        };
+
+        EventHub.prototype.subscribeOnce = function subscribeOnce(event, handler) {
+            return this._eventAggregator.subscribeOnce(event, handler);
+        };
+
+        return EventHub;
+    })();
+
+    exports.EventHub = EventHub;
 
     var Port = (function () {
         function Port(owner, endPoint) {

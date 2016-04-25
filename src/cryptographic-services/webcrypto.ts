@@ -1,7 +1,7 @@
 import { ByteArray } from '../kind/byte-array';
 import { CryptographicServiceProvider, CryptographicOperation, CryptographicService, CryptographicKeyService } from './cryptographic-service-registry';
 
-declare var msrcrypto;
+declare var msrcrypto, crypto, window;
 
 export class WebCryptoService implements CryptographicService, CryptographicKeyService {
   protected crypto: SubtleCrypto;
@@ -12,9 +12,10 @@ export class WebCryptoService implements CryptographicService, CryptographicKeyS
   static _subtle: SubtleCrypto;
   static get subtle(): SubtleCrypto {
     let subtle = WebCryptoService._subtle
-      || ( crypto && crypto.subtle )
+//      || ( crypto && crypto.subtle )
       || ( window && window.crypto && window.crypto.subtle )
-      || msrcrypto;
+//      || msrcrypto
+      ;
 
     if ( !WebCryptoService._subtle )
        WebCryptoService._subtle = subtle;

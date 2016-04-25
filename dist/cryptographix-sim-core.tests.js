@@ -1,4 +1,4 @@
-  import { ComponentBuilder, Direction, Container, inject, ByteArray, Kind, KindBuilder, FieldTypes, Graph, Node, Port, Network, ComponentFactory, RunState, Channel, EndPoint, Message } from 'cryptographix-sim-core';
+  import { ComponentBuilder, Direction, Container, inject, Graph, Node, Port, Network, ComponentFactory, RunState, ByteArray, Kind, KindBuilder, FieldTypes, Channel, EndPoint, Message } from 'cryptographix-sim-core';
 
 /**
 * Example usage ....
@@ -37,83 +37,6 @@ describe("A DI Container", function () {
         let jector = new Container();
         let c2 = jector.invoke(C2);
         expect(c2.c1 instanceof C1).toBe(true);
-    });
-});
-
-describe('A ByteArray', () => {
-    it('stores a sequence of bytes', function () {
-        let bs = new ByteArray([0, 1, 2, 3, 4]);
-        expect(bs.toString()).toBe("0001020304");
-    });
-    it('can be instanciated from an array of bytes', function () {
-        let bs = new ByteArray([0, 1, 2, 3, 4]);
-        expect(bs.toString()).toBe("0001020304");
-        var bytes = [];
-        for (let i = 0; i < 10000; ++i)
-            bytes[i] = i & 0xff;
-        bs = new ByteArray(bytes);
-        expect(bs.length).toBe(10000);
-    });
-    it('can be compared (equal)', function () {
-        let bs1 = new ByteArray([0, 1, 2, 3, 4]);
-        let bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
-        let bs3 = bs1.clone().setByteAt(1, 0x99);
-        //    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
-        expect(bs1.equals(bs1)).toBe(true);
-        //    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
-        expect(bs1.equals(bs2)).toBe(true);
-        expect(bs1.equals(bs3)).not.toBe(true);
-    });
-});
-
-function dumpKind(kind) {
-    //  let fields = (<KindConstructor>(kind.constructor)).kindInfo.fields;
-    let fields = Kind.getKindInfo(kind).fields;
-    for (let name in fields) {
-        let field = fields[name];
-        //  fields.forEach( ( field: FieldInfo, name: String ) => {
-        let fieldType = field.fieldType;
-        console.log(name + ' => ' + (typeof fieldType));
-        if (fieldType == String)
-            console.log("string");
-        else if (fieldType == Number)
-            console.log("number");
-        else if (fieldType == FieldTypes.Integer)
-            console.log("integer");
-        else if (fieldType == Boolean)
-            console.log("boolean");
-        else if (fieldType == FieldTypes.Enum) {
-            console.log("enum: " + field.enumMap.size);
-            field.enumMap.forEach((v, i) => { console.log(v + ' = ' + i); });
-        }
-        else
-            console.log(fieldType.toString);
-    }
-}
-var Oranges;
-(function (Oranges) {
-    Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
-    Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
-    Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
-    Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
-})(Oranges || (Oranges = {}));
-/**
-* Example
-*/
-class FruityKind {
-}
-KindBuilder.init(FruityKind, 'a Collection of fruit')
-    .stringField('banana', 'a banana')
-    .numberField('apple', 'an apple')
-    .enumField('orange', 'some sort of orange', Oranges)
-    .boolField('bit', 'a bitapple')
-    .byteField('pear', 'a pear');
-describe('A Kind', () => {
-    it('is an interface implemented by classes', function () {
-        let fk = new FruityKind();
-        console.log(Kind.getKindInfo(fk).name);
-        dumpKind(fk);
-        //expect( bs.toString() ).toBe( "0001020304" );
     });
 });
 
@@ -329,6 +252,203 @@ describe("A Node", function () {
     });
 });
 
+describe('A ByteArray', () => {
+    it('stores a sequence of bytes', function () {
+        let bs = new ByteArray([0, 1, 2, 3, 4]);
+        expect(bs.toString()).toBe("0001020304");
+    });
+    it('can be instanciated from an array of bytes', function () {
+        let bs = new ByteArray([0, 1, 2, 3, 4]);
+        expect(bs.toString()).toBe("0001020304");
+        var bytes = [];
+        for (let i = 0; i < 10000; ++i)
+            bytes[i] = i & 0xff;
+        bs = new ByteArray(bytes);
+        expect(bs.length).toBe(10000);
+    });
+    it('can be compared (equal)', function () {
+        let bs1 = new ByteArray([0, 1, 2, 3, 4]);
+        let bs2 = new ByteArray("00 01 02 03 04", ByteArray.HEX);
+        let bs3 = bs1.clone().setByteAt(1, 0x99);
+        //    console.log( bs1.equals( bs1 ) + ':' + bs1.toString() );
+        expect(bs1.equals(bs1)).toBe(true);
+        //    console.log( bs1.equals( bs2 )  + ':' + bs2.toString() );
+        expect(bs1.equals(bs2)).toBe(true);
+        expect(bs1.equals(bs3)).not.toBe(true);
+    });
+});
+
+function dumpKind(kind) {
+    //  let fields = (<KindConstructor>(kind.constructor)).kindInfo.fields;
+    let fields = Kind.getKindInfo(kind).fields;
+    for (let name in fields) {
+        let field = fields[name];
+        //  fields.forEach( ( field: FieldInfo, name: String ) => {
+        let fieldType = field.fieldType;
+        console.log(name + ' => ' + (typeof fieldType));
+        if (fieldType == String)
+            console.log("string");
+        else if (fieldType == Number)
+            console.log("number");
+        else if (fieldType == FieldTypes.Integer)
+            console.log("integer");
+        else if (fieldType == Boolean)
+            console.log("boolean");
+        else if (fieldType == FieldTypes.Enum) {
+            console.log("enum: " + field.enumMap.size);
+            field.enumMap.forEach((v, i) => { console.log(v + ' = ' + i); });
+        }
+        else
+            console.log(fieldType.toString);
+    }
+}
+var Oranges;
+(function (Oranges) {
+    Oranges[Oranges["BLOOD"] = 0] = "BLOOD";
+    Oranges[Oranges["SEVILLE"] = 1] = "SEVILLE";
+    Oranges[Oranges["SATSUMA"] = 2] = "SATSUMA";
+    Oranges[Oranges["NAVEL"] = 3] = "NAVEL";
+})(Oranges || (Oranges = {}));
+/**
+* Example
+*/
+class FruityKind {
+}
+KindBuilder.init(FruityKind, 'a Collection of fruit')
+    .stringField('banana', 'a banana')
+    .numberField('apple', 'an apple')
+    .enumField('orange', 'some sort of orange', Oranges)
+    .boolField('bit', 'a bitapple')
+    .byteField('pear', 'a pear');
+describe('A Kind', () => {
+    it('is an interface implemented by classes', function () {
+        let fk = new FruityKind();
+        console.log(Kind.getKindInfo(fk).name);
+        dumpKind(fk);
+        //expect( bs.toString() ).toBe( "0001020304" );
+    });
+});
+
+class IntegerMessage extends Message {
+    constructor(value) {
+        super(undefined, value);
+    }
+}
+describe('A Channel', function () {
+    describe('can be active or inactive', function () {
+        let ch = new Channel();
+        it('is initially inactive', function () {
+            expect(ch.active).toBe(false);
+        });
+        it('can be activated', function () {
+            expect(ch.active).toBe(false);
+            ch.activate();
+            expect(ch.active).toBe(true);
+            ch.activate();
+            expect(ch.active).toBe(true);
+        });
+        it('can be deactivated', function () {
+            expect(ch.active).toBe(true);
+            ch.deactivate();
+            expect(ch.active).toBe(false);
+            ch.deactivate();
+            expect(ch.active).toBe(false);
+        });
+    });
+    describe('has a registry of EndPoints', function () {
+        let ch = new Channel();
+        var ep1 = new EndPoint('ep1');
+        var ep2 = new EndPoint('ep2');
+        it('to which EndPoints can be added', function () {
+            // add an EndPoint
+            ch.addEndPoint(ep1);
+            expect(ch.endPoints.length).toBe(1);
+            // add another
+            ch.addEndPoint(ep2);
+            expect(ch.endPoints.length).toBe(2);
+        });
+        it('... and removed', function () {
+            // remove first EndPoint
+            ch.removeEndPoint(ep1);
+            expect(ch.endPoints).toContain(ep2);
+            ch.removeEndPoint(ep2);
+            expect(ch.endPoints.length).toBe(0);
+        });
+        it('... even when Channel is activated', function () {
+            ch.activate();
+            expect(ch.active).toBe(true);
+            ch.addEndPoint(new EndPoint('epx'));
+            ch.addEndPoint(new EndPoint('epx'));
+            ch.addEndPoint(ep1);
+            expect(ch.endPoints).toContain(ep1);
+            expect(ch.endPoints.length).toBe(3);
+            ch.removeEndPoint(ep1);
+            expect(ch.endPoints).not.toContain(ep1);
+            ch.shutdown();
+            expect(ch.endPoints.length).toBe(0);
+        });
+    });
+    describe('communicates between INOUT endpoints', function () {
+        let ch = new Channel();
+        var ep1 = new EndPoint('ep1', Direction.INOUT);
+        var ep2 = new EndPoint('ep2', Direction.INOUT);
+        ep1.attach(ch);
+        ep2.attach(ch);
+        ch.activate();
+        it('can send messages from 1(IO) to 2(IO)', function (done) {
+            ep2.onMessage((m) => { expect(m).toBeDefined(); done(); });
+            ep1.sendMessage(new IntegerMessage(101));
+        });
+        it('can send messages from 2(IO) to 1(IO)', (done) => {
+            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
+            ep2.sendMessage(new IntegerMessage(102));
+        });
+        it('can send messages from 1(IO) to 2(IO) and back to 1(IO)', (done) => {
+            ep2.onMessage((m, ep) => { ep2.sendMessage(m); });
+            ep1.sendMessage(new IntegerMessage(100));
+            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
+        });
+    });
+    describe('communicates from OUT to IN', function () {
+        let ch = new Channel();
+        var ep1 = new EndPoint('ep1', Direction.OUT);
+        var ep2 = new EndPoint('ep2', Direction.IN);
+        ep1.attach(ch);
+        ep2.attach(ch);
+        ch.activate();
+        it('can send messages from (OUT) to (IN)', (done) => {
+            ep2.onMessage((m) => { expect(m).toBeDefined(); done(); });
+            ep1.sendMessage(new IntegerMessage(101));
+        });
+        it('cannot send messages from (IN) to (OUT)', function () {
+            expect(() => { ep2.sendMessage(new IntegerMessage(102)); }).toThrow();
+        });
+        it('can reply, messages from (OUT) to (IN) and respond to (OUT)', (done) => {
+            ep2.onMessage((m, ep) => { m.header.isResponse = true; ep2.sendMessage(m); });
+            ep1.sendMessage(new IntegerMessage(100));
+            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
+        });
+    });
+    describe('can distribute to multiple endpoints', function () {
+        let ch = new Channel();
+        var ep1 = new EndPoint('ep1', Direction.OUT);
+        var ep2 = new EndPoint('ep2', Direction.IN);
+        var ep3 = new EndPoint('ep3', Direction.IN);
+        ep1.attach(ch);
+        ep2.attach(ch);
+        ep3.attach(ch);
+        ch.activate();
+        it('can send messages from 1 to 2', (done) => {
+            var rcv = 0;
+            ep2.onMessage((m) => { expect(m).toBeDefined(); if (++rcv == 2)
+                done(); });
+            ep3.onMessage((m) => { expect(m).toBeDefined(); if (++rcv == 2)
+                done(); });
+            ep1.sendMessage(new IntegerMessage(120));
+        });
+    });
+});
+
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -499,126 +619,6 @@ describe("A Runtime Context", function () {
                 .then(() => {
                 done();
             });
-        });
-    });
-});
-
-class IntegerMessage extends Message {
-    constructor(value) {
-        super(undefined, value);
-    }
-}
-describe('A Channel', function () {
-    describe('can be active or inactive', function () {
-        let ch = new Channel();
-        it('is initially inactive', function () {
-            expect(ch.active).toBe(false);
-        });
-        it('can be activated', function () {
-            expect(ch.active).toBe(false);
-            ch.activate();
-            expect(ch.active).toBe(true);
-            ch.activate();
-            expect(ch.active).toBe(true);
-        });
-        it('can be deactivated', function () {
-            expect(ch.active).toBe(true);
-            ch.deactivate();
-            expect(ch.active).toBe(false);
-            ch.deactivate();
-            expect(ch.active).toBe(false);
-        });
-    });
-    describe('has a registry of EndPoints', function () {
-        let ch = new Channel();
-        var ep1 = new EndPoint('ep1');
-        var ep2 = new EndPoint('ep2');
-        it('to which EndPoints can be added', function () {
-            // add an EndPoint
-            ch.addEndPoint(ep1);
-            expect(ch.endPoints.length).toBe(1);
-            // add another
-            ch.addEndPoint(ep2);
-            expect(ch.endPoints.length).toBe(2);
-        });
-        it('... and removed', function () {
-            // remove first EndPoint
-            ch.removeEndPoint(ep1);
-            expect(ch.endPoints).toContain(ep2);
-            ch.removeEndPoint(ep2);
-            expect(ch.endPoints.length).toBe(0);
-        });
-        it('... even when Channel is activated', function () {
-            ch.activate();
-            expect(ch.active).toBe(true);
-            ch.addEndPoint(new EndPoint('epx'));
-            ch.addEndPoint(new EndPoint('epx'));
-            ch.addEndPoint(ep1);
-            expect(ch.endPoints).toContain(ep1);
-            expect(ch.endPoints.length).toBe(3);
-            ch.removeEndPoint(ep1);
-            expect(ch.endPoints).not.toContain(ep1);
-            ch.shutdown();
-            expect(ch.endPoints.length).toBe(0);
-        });
-    });
-    describe('communicates between INOUT endpoints', function () {
-        let ch = new Channel();
-        var ep1 = new EndPoint('ep1', Direction.INOUT);
-        var ep2 = new EndPoint('ep2', Direction.INOUT);
-        ep1.attach(ch);
-        ep2.attach(ch);
-        ch.activate();
-        it('can send messages from 1(IO) to 2(IO)', function (done) {
-            ep2.onMessage((m) => { expect(m).toBeDefined(); done(); });
-            ep1.sendMessage(new IntegerMessage(101));
-        });
-        it('can send messages from 2(IO) to 1(IO)', (done) => {
-            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
-            ep2.sendMessage(new IntegerMessage(102));
-        });
-        it('can send messages from 1(IO) to 2(IO) and back to 1(IO)', (done) => {
-            ep2.onMessage((m, ep) => { ep2.sendMessage(m); });
-            ep1.sendMessage(new IntegerMessage(100));
-            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
-        });
-    });
-    describe('communicates from OUT to IN', function () {
-        let ch = new Channel();
-        var ep1 = new EndPoint('ep1', Direction.OUT);
-        var ep2 = new EndPoint('ep2', Direction.IN);
-        ep1.attach(ch);
-        ep2.attach(ch);
-        ch.activate();
-        it('can send messages from (OUT) to (IN)', (done) => {
-            ep2.onMessage((m) => { expect(m).toBeDefined(); done(); });
-            ep1.sendMessage(new IntegerMessage(101));
-        });
-        it('cannot send messages from (IN) to (OUT)', function () {
-            expect(() => { ep2.sendMessage(new IntegerMessage(102)); }).toThrow();
-        });
-        it('can reply, messages from (OUT) to (IN) and respond to (OUT)', (done) => {
-            ep2.onMessage((m, ep) => { m.header.isResponse = true; ep2.sendMessage(m); });
-            ep1.sendMessage(new IntegerMessage(100));
-            ep1.onMessage((m) => { expect(m).toBeDefined(); done(); });
-        });
-    });
-    describe('can distribute to multiple endpoints', function () {
-        let ch = new Channel();
-        var ep1 = new EndPoint('ep1', Direction.OUT);
-        var ep2 = new EndPoint('ep2', Direction.IN);
-        var ep3 = new EndPoint('ep3', Direction.IN);
-        ep1.attach(ch);
-        ep2.attach(ch);
-        ep3.attach(ch);
-        ch.activate();
-        it('can send messages from 1 to 2', (done) => {
-            var rcv = 0;
-            ep2.onMessage((m) => { expect(m).toBeDefined(); if (++rcv == 2)
-                done(); });
-            ep3.onMessage((m) => { expect(m).toBeDefined(); if (++rcv == 2)
-                done(); });
-            ep1.sendMessage(new IntegerMessage(120));
         });
     });
 });

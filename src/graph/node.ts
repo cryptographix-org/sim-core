@@ -201,7 +201,7 @@ export class Node extends EventHub
     // Make ourselves visible to context (and instance)
     ctx.node = this;
 
-    let me = this;
+    //let me = this;
 
     // Load component
     return ctx.load();

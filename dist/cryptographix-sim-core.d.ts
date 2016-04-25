@@ -51,6 +51,7 @@ declare module 'cryptographix-sim-core'
   }
 
 
+
   export class Enum {
   }
   export class Integer extends Number {
@@ -60,7 +61,7 @@ declare module 'cryptographix-sim-core'
   export type FieldType = String | Number | Integer | Enum | ByteArray | Kind | FieldArray;
   export class FieldArray implements FieldArray {
   }
-  export var FieldTypes: {
+  export const FieldTypes: {
       Boolean: BooleanConstructor;
       Number: NumberConstructor;
       Integer: typeof Integer;
@@ -83,6 +84,9 @@ declare module 'cryptographix-sim-core'
       description: string;
       fieldType: FieldType;
   }
+
+
+
   export class KindInfo {
       name: string;
       description: string;
@@ -93,7 +97,6 @@ declare module 'cryptographix-sim-core'
   export class KindBuilder {
       private ctor;
       constructor(ctor: KindConstructor, description: string);
-      private kindInfo;
       static init(ctor: KindConstructor, description: string): KindBuilder;
       field(name: string, description: string, fieldType: FieldType, opts?: FieldOptions): KindBuilder;
       boolField(name: string, description: string, opts?: FieldOptions): KindBuilder;
@@ -108,8 +111,13 @@ declare module 'cryptographix-sim-core'
       }, opts?: FieldOptions): KindBuilder;
   }
   export interface Kind {
+      toJSON?(): {};
+      encodeBytes?(options?: {}): ByteArray;
+      decodeBytes?(byteArray: ByteArray, options?: {}): this;
   }
   export class Kind implements Kind {
+      static isKind(kind: Kind): boolean;
+      static getKindConstructor(kind: Kind): KindConstructor;
       static getKindInfo(kind: Kind): KindInfo;
       static initFields(kind: Kind, attributes?: {}): void;
   }
