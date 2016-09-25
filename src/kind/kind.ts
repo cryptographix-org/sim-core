@@ -92,8 +92,9 @@ export class KindBuilder
     opts.enumMap = new Map<number,string>( );
 
     for( let idx in enumm ) {
-      if ( 1 * idx == idx )
-        opts.enumMap.set( idx, enumm[ idx ] );
+      let idxx = parseInt( idx );
+      if ( idxx != NaN )
+        opts.enumMap.set( idxx, enumm[ idx ] );
     }
 
     return this.field( name, description, FieldTypes.Enum, opts );

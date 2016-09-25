@@ -1,6 +1,4 @@
-import { EventAggregator, Subscription, Handler as EventHandler } from 'aurelia-event-aggregator';
-
-//export { EventHandler };
+import { EventAggregator, Subscription } from 'aurelia-event-aggregator';
 
 export class EventHub
 {

@@ -26,32 +26,37 @@ export class WebCryptoService implements CryptographicService, CryptographicKeyS
   encrypt( algorithm: string | Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray> {
     return new Promise<ByteArray>((resolve, reject) => {
       WebCryptoService.subtle.encrypt(algorithm, key, data.backingArray)
-        .then((res) => { resolve(new ByteArray(res)); })
-        .catch((err) => { reject(err); });
+        .then((res) => { resolve(new ByteArray(res)); },
+              (err) => { reject(err); });
     });
   }
 
   decrypt(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray> {
     return new Promise<ByteArray>((resolve, reject) => {
       WebCryptoService.subtle.decrypt(algorithm, key, data.backingArray)
-        .then((res) => { resolve(new ByteArray(res)); })
-        .catch((err) => { reject(err); });
+        .then((res) => { resolve(new ByteArray(res)); },
+              (err) => { reject(err); });
     });
   }
 
   digest(algorithm: string | Algorithm, data: ByteArray): any {
     return new Promise<ByteArray>((resolve, reject) => {
       WebCryptoService.subtle.digest(algorithm, data.backingArray)
-       .then((res) => { resolve(new ByteArray(res)); })
-       .catch((err) => { reject(err); });
+       .then((res) => { resolve(new ByteArray(res)); },
+             (err) => { reject(err); });
     });
   }
 
-  exportKey( format: string, key: CryptoKey ): Promise<ByteArray> {
-    return new Promise<ByteArray>((resolve, reject) => {
+  exportKey( format: string, key: CryptoKey ): Promise<ByteArray | JsonWebKey> {
+    return new Promise<ByteArray | JsonWebKey>((resolve, reject) => {
+      // TODO: support JsonWebKey
       WebCryptoService.subtle.exportKey(format, key)
-        .then((res) => { resolve(new ByteArray(res)); })
-        .catch((err) => { reject(err); });
+        .then((res) => {
+          if ( res instanceof ArrayBuffer )
+            resolve( new ByteArray( res ) );
+          else
+            resolve( res as JsonWebKey );
+        }, (err) => { reject(err); });
     });
   }
 
@@ -64,24 +69,26 @@ export class WebCryptoService implements CryptographicService, CryptographicKeyS
   importKey(format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey> {
     return new Promise<CryptoKey>((resolve, reject) => {
       WebCryptoService.subtle.importKey(format, keyData.backingArray, algorithm, extractable, keyUsages)
-        .then((res) => { resolve(res); })
-        .catch((err) => { reject(err); });
+        .then((res) => { resolve(res); },
+              (err) => { reject(err); });
    });
   }
 
   sign(algorithm: string | Algorithm, key: CryptoKey, data: ByteArray): Promise<ByteArray> {
     return new Promise<ByteArray>((resolve, reject) => {
-      WebCryptoService.subtle.sign(algorithm, key, data.backingArray)
-        .then((res) => { resolve(new ByteArray(res)); })
-        .catch((err) => { reject(err); });
+      // cast algorithm to string, since sign prototype is restrictive
+      WebCryptoService.subtle.sign(algorithm as string, key, data.backingArray)
+        .then((res) => { resolve(new ByteArray(res)); },
+              (err) => { reject(err); });
     });
   }
 
-  verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<ByteArray> {
-    return new Promise<ByteArray>((resolve, reject) => {
-      WebCryptoService.subtle.verify(algorithm, key, signature.backingArray, data.backingArray)
-        .then((res) => { resolve(new ByteArray(res)); })
-        .catch((err) => { reject(err); });
+  verify(algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      // cast algorithm to string, since sign prototype is restrictive
+      WebCryptoService.subtle.verify( algorithm as string, key, signature.backingArray, data.backingArray)
+        .then((res) => { resolve( res ); },
+              (err) => { reject(err); });
     });
   }
 }

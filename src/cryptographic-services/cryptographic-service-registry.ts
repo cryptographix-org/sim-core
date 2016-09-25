@@ -17,15 +17,15 @@ export enum CryptographicOperation {
 }
 
 export interface CryptographicService {
-  encrypt?( algorithm: Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
-  decrypt?( algorithm: Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
+  encrypt?( algorithm: string | Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
+  decrypt?( algorithm: string | Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
 
-  digest?( algorithm: Algorithm, data: ByteArray ): Promise<ByteArray>;
+  digest?( algorithm: string | Algorithm, data: ByteArray ): Promise<ByteArray>;
 
-  sign?( algorithm: Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
-  verify?( algorithm: Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray ): Promise<ByteArray>;
+  sign?( algorithm: string | Algorithm, key: CryptoKey, data: ByteArray ): Promise<ByteArray>;
+  verify?( algorithm: string | Algorithm, key: CryptoKey, signature: ByteArray, data: ByteArray ): Promise<ByteArray>;
 
-  deriveBits?( algorithm: Algorithm, baseKey: CryptoKey, length: number ): Promise<ByteArray>;
+  deriveBits?( algorithm: string | Algorithm, baseKey: CryptoKey, length: number ): Promise<ByteArray>;
 }
 
 export interface CryptographicServiceConstructor {
@@ -35,13 +35,13 @@ export interface CryptographicServiceConstructor {
 }
 
 export interface CryptographicKeyService {
-  deriveKey?( algorithm: Algorithm, baseKey: CryptoKey, derivedKeyType: Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey>;
+  deriveKey?( algorithm: string | Algorithm, baseKey: CryptoKey, derivedKeyType: string | Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey>;
 
-  wrapKey?( format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: Algorithm ): Promise<ByteArray>;
-  unwrapKey?( format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: Algorithm, unwrappedKeyAlgorithm: Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
+  wrapKey?( format: string, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: string | Algorithm): Promise<ByteArray>;
+  unwrapKey?( format: string, wrappedKey: ByteArray, unwrappingKey: CryptoKey, unwrapAlgorithm: string | Algorithm, unwrappedKeyAlgorithm: string | Algorithm, extractable: boolean, keyUsages: string[]): Promise<CryptoKey>;
 
-  importKey?( format: string, keyData: ByteArray, algorithm: Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey>;
-  generateKey?( algorithm: Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey | CryptoKeyPair>;
+  importKey?( format: string, keyData: ByteArray, algorithm: string | Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey>;
+  generateKey?( algorithm: string | Algorithm, extractable: boolean, keyUsages: string[] ): Promise<CryptoKey | CryptoKeyPair>;
   exportKey?( format: string, key: CryptoKey ): Promise<ByteArray>;
 }
 
@@ -67,8 +67,8 @@ export class CryptographicServiceRegistry {
     return { name: algo, instance: service ? new service() : null };
   }
 
-  getKeyService( algorithm: string | Algorithm ): { name: string, instance: CryptographicKeyService } {
-    let algo = ( algorithm instanceof Object ) ? (<Algorithm>algorithm).name : <string>algorithm;
+  getKeyService( algorithm: string | KeyAlgorithm ): { name: string, instance: CryptographicKeyService } {
+    let algo = ( algorithm instanceof Object ) ? (<KeyAlgorithm>algorithm).name : <string>algorithm;
     let service = this._keyServiceMap.get( algo );
 
     return { name: algo, instance: service ? new service() : null };
